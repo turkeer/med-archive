@@ -300,6 +300,15 @@ demek. Elle yazılan "2022-2023" metni "2022-23", "2022/2023" ve yazım
 hatalarını davet ediyor, hiçbiri de sıralanmıyor. Akademik yıl sonbaharda
 başladığı için Ocak 2026 tarihli bir gün 2025-2026'ya düşüyor.
 
+Seçenekler **2018-2019'da duruyor** (`AcademicYear.earliestStartYear`); daha
+eski çıkmışlar ortalıkta yok ve dolu bir liste sadece kaydırma demek. Kayıtlı
+bir değer bu aralığın dışındaysa listede korunuyor, yani eski bir kayıt kendi
+yılını kaybetmiyor.
+
+**Segment seçici kullanılmıyor** burada: gruplu bir `Form` içindeki
+`DisclosureGroup`'ta satırdan yüksek olup üstteki satırın altında kalıyor.
+Dil de yıl gibi açılır liste.
+
 Dosyalar ayrı bir varlık değil, aynı `LectureFile`: bir dosya kaydının
 sahibi ya bir oturum ya bir çıkmış sınav. Böylece ikisi aynı yol çözümünü,
 aynı önizlemeyi ve aynı "hiçbir şeyi kopyalamaz" güvencesini paylaşıyor;

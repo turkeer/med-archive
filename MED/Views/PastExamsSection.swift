@@ -72,15 +72,17 @@ struct PastExamsSection: View {
                 )
             }
 
+            // Not a segmented control: inside a DisclosureGroup in a grouped
+            // Form it is taller than the row and gets clipped by the one
+            // above. A dropdown also matches the year picker below it.
             Picker("Dil", selection: languageBinding(exam)) {
                 ForEach(ExamLanguage.allCases) { language in
                     Text(language.title).tag(language)
                 }
             }
-            .pickerStyle(.segmented)
 
             Picker("Yıl", selection: yearBinding(exam)) {
-                ForEach(AcademicYear.choices(), id: \.self) { year in
+                ForEach(AcademicYear.choices(including: exam.startYear), id: \.self) { year in
                     Text(AcademicYear.label(startYear: year)).tag(year)
                 }
             }

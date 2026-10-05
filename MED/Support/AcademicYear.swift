@@ -20,9 +20,22 @@ enum AcademicYear {
         "\(startYear)-\(startYear + 1)"
     }
 
-    /// Years to choose from, newest first: this one and the ones before it.
-    static func choices(back years: Int = 15, from date: Date = Date()) -> [Int] {
+    /// The oldest year worth offering. Papers older than this are not around
+    /// any more, and a picker full of them is just scrolling.
+    static let earliestStartYear = 2018
+
+    /// Years to choose from, newest first, down to `earliestStartYear`.
+    ///
+    /// `including` keeps a year that is already stored but outside the range
+    /// in the list, so an existing record never loses its own value.
+    static func choices(including stored: Int? = nil, from date: Date = Date()) -> [Int] {
         let current = startYear(for: date)
-        return (0...years).map { current - $0 }
+        var years = Set(stride(from: current, through: min(earliestStartYear, current), by: -1))
+
+        if let stored {
+            years.insert(stored)
+        }
+
+        return years.sorted(by: >)
     }
 }
