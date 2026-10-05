@@ -54,7 +54,15 @@ final class LectureFile {
     var addedAt: Date = Date()
 
     /// Inverse is declared on `Lecture.files`, with a cascade delete rule.
+    ///
+    /// A file record belongs to a lecture **or** to a past paper; whichever
+    /// created it sets its side and the other stays nil. Sharing one record
+    /// type means both get the same path handling, preview and "never copies
+    /// anything" guarantee rather than a second near-identical entity.
     var lecture: Lecture?
+
+    /// Inverse is declared on `PastExam.files`, with a cascade delete rule.
+    var exam: PastExam?
 
     init(
         fileName: String = "",

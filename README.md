@@ -67,7 +67,8 @@ Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.
 | `Committee` | Komite I, II… | Aylık takvimdeki nokta rengi **dersten** gelir, komiteden değil — komite haftalarca sürdüğü için ayın her gününü aynı renge boyar ve hiçbir şey anlatmaz. `name` gerçek başlık ("Introduction to Medicine"), `code` kısa hali ("Komite I") — uzun ad çipe sığmıyor. Tarih aralığı oturumun komitesini belirliyor. |
 | `Instructor` | Akademisyen | Akademik unvan alanının adı `titleText` — `Lecture.title` ile karışmasın. |
 | `Tag` | Serbest etiket | Oturumları **enine kesen** konular: membran, sınavda çıktı. Yapısal seviye `Course`, serbest etiket `Tag`. `name` tekil (`@Attribute(.unique)`). |
-| `LectureFile` | Diskteki bir dosyaya işaretçi | Yol `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. |
+| `PastExam` | Bir komitenin çıkmış sınavı | Yıl (`startYear`) ve dil (Türkçe/İngilizce). Komiteye bağlı; komite silinirse kayıtlar da silinir. |
+| `LectureFile` | Diskteki bir dosyaya işaretçi | Yol `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. Sahibi bir **oturum ya da bir çıkmış sınav**. |
 
 `Course`, `Committee` ve `Instructor` oturumda tekil ve boş bırakılabilir.
 `Tag` çoklu ve çift yönlü. `LectureFile` çoklu ve tek bir oturuma ait.
@@ -87,7 +88,7 @@ Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kay
 | Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
 | Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
 | Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
-| Komiteler | Tarih aralığına göre sıralı | Ad, tarih aralığı, renk, oturumlar **derse göre gruplu** |
+| Komiteler | Tarih aralığına göre sıralı | Ad, tarih aralığı, renk, **çıkmışlar**, oturumlar **derse göre gruplu** |
 | Etiketler | Ad, oturum sayısı | Ad, renk, oturumlar, **başka etiketle birleştirme** |
 
 Her bölüm kendi seçimini `AppNavigation` içinde tutuyor, yani
@@ -287,6 +288,22 @@ Diskteki klasör hiyerarşisi veri modeliyle birebir örtüşüyor:
 Komite I  /  Biyofizik  /  2026-10-01 | Basic Principles in Biophysics.pdf
 Committee     Course                    Lecture.date   Lecture.title (konu)
 ```
+
+## Çıkmış sınavlar
+
+Komite detayında **Çıkmışlar** bölümü. Her kayıt için iki tanım var: hangi
+akademik yıl ve hangi dil (Türkçe / İngilizce). Satırı açınca dosyaları,
+yıl ve dil seçicileri ve silme düğmesi çıkıyor — ayrı bir ekrana gitmeden.
+
+Yıl `startYear` olarak **tek bir sayı** tutuluyor; 2022 demek 2022-2023
+demek. Elle yazılan "2022-2023" metni "2022-23", "2022/2023" ve yazım
+hatalarını davet ediyor, hiçbiri de sıralanmıyor. Akademik yıl sonbaharda
+başladığı için Ocak 2026 tarihli bir gün 2025-2026'ya düşüyor.
+
+Dosyalar ayrı bir varlık değil, aynı `LectureFile`: bir dosya kaydının
+sahibi ya bir oturum ya bir çıkmış sınav. Böylece ikisi aynı yol çözümünü,
+aynı önizlemeyi ve aynı "hiçbir şeyi kopyalamaz" güvencesini paylaşıyor;
+neredeyse birebir ikinci bir varlık yazmak gerekmiyor.
 
 ## Dosyalar
 

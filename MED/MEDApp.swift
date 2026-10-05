@@ -22,7 +22,8 @@ struct MEDApp: App {
                 Instructor.self,
                 Committee.self,
                 Tag.self,
-                LectureFile.self
+                LectureFile.self,
+                PastExam.self
             )
             storeError = nil
         } catch {

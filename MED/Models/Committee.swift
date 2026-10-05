@@ -22,6 +22,11 @@ final class Committee {
     @Relationship(deleteRule: .nullify, inverse: \Lecture.committee)
     var lectures: [Lecture] = []
 
+    /// Past papers, which only mean anything as part of a committee, so these
+    /// go with it. The PDFs on disk are untouched.
+    @Relationship(deleteRule: .cascade, inverse: \PastExam.committee)
+    var pastExams: [PastExam] = []
+
     init(
         name: String = "",
         code: String = "",

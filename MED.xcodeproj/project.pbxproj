@@ -58,6 +58,11 @@
         ED0000000000000000000231 /* LectureSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000131 /* LectureSearch.swift */; };
         ED0000000000000000000232 /* FormTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000132 /* FormTextField.swift */; };
         ED0000000000000000000233 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000133 /* FlowLayout.swift */; };
+        ED0000000000000000000234 /* AcademicYear.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000134 /* AcademicYear.swift */; };
+        ED0000000000000000000235 /* PastExam.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000135 /* PastExam.swift */; };
+        ED0000000000000000000236 /* FileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000136 /* FileRow.swift */; };
+        ED0000000000000000000237 /* FileAttaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000137 /* FileAttaching.swift */; };
+        ED0000000000000000000238 /* PastExamsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000138 /* PastExamsSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -113,6 +118,11 @@
         ED0000000000000000000131 /* LectureSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureSearch.swift; sourceTree = "<group>"; };
         ED0000000000000000000132 /* FormTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormTextField.swift; sourceTree = "<group>"; };
         ED0000000000000000000133 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
+        ED0000000000000000000134 /* AcademicYear.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademicYear.swift; sourceTree = "<group>"; };
+        ED0000000000000000000135 /* PastExam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExam.swift; sourceTree = "<group>"; };
+        ED0000000000000000000136 /* FileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileRow.swift; sourceTree = "<group>"; };
+        ED0000000000000000000137 /* FileAttaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileAttaching.swift; sourceTree = "<group>"; };
+        ED0000000000000000000138 /* PastExamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExamsSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +166,7 @@
         ED0000000000000000000011 /* Models */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000135 /* PastExam.swift */,
                 ED0000000000000000000129 /* LectureFormat.swift */,
                 ED0000000000000000000113 /* Course.swift */,
                 ED0000000000000000000102 /* Lecture.swift */,
@@ -170,6 +181,7 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000138 /* PastExamsSection.swift */,
                 ED000000000000000000012D /* StoreFailureView.swift */,
                 ED000000000000000000012B /* CalendarWeekView.swift */,
                 ED0000000000000000000127 /* SettingsView.swift */,
@@ -195,6 +207,8 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000137 /* FileAttaching.swift */,
+                ED0000000000000000000134 /* AcademicYear.swift */,
                 ED0000000000000000000131 /* LectureSearch.swift */,
                 ED0000000000000000000130 /* LectureGrouping.swift */,
                 ED000000000000000000012E /* DayTimetable.swift */,
@@ -217,6 +231,7 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000136 /* FileRow.swift */,
                 ED0000000000000000000133 /* FlowLayout.swift */,
                 ED0000000000000000000132 /* FormTextField.swift */,
                 ED000000000000000000012F /* QuickPickRow.swift */,
@@ -300,6 +315,11 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000238 /* PastExamsSection.swift in Sources */,
+                ED0000000000000000000237 /* FileAttaching.swift in Sources */,
+                ED0000000000000000000236 /* FileRow.swift in Sources */,
+                ED0000000000000000000235 /* PastExam.swift in Sources */,
+                ED0000000000000000000234 /* AcademicYear.swift in Sources */,
                 ED0000000000000000000233 /* FlowLayout.swift in Sources */,
                 ED0000000000000000000232 /* FormTextField.swift in Sources */,
                 ED0000000000000000000231 /* LectureSearch.swift in Sources */,

@@ -159,7 +159,8 @@ def main():
                        | set(re.findall(r'\blet\s+(\w+)', code))
                        | set(re.findall(r'\bcase\s+(\w+)', code))
                        | set(re.findall(r'(\w+)\s*:\s*\(.*?\)\s*->', code)))
-            called = set(re.findall(r'(?<![\w.$])([a-z]\w*)\s*\(', code))
+            # `@` da dışlanıyor: @escaping, @Sendable gibi niteleyiciler çağrı değil.
+            called = set(re.findall(r'(?<![\w.$@])([a-z]\w*)\s*\(', code))
             for name in sorted(called - defined - KNOWN - KEYWORDS):
                 problems.append(f"{filename}: '{name}(...)' tanımsız olabilir")
 

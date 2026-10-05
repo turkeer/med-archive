@@ -34,6 +34,8 @@ struct CommitteeDetailView: View {
                 }
             }
 
+            PastExamsSection(committee: committee)
+
             // New lectures pick up their committee from the date on their own.
             // This is for the ones that came before this committee existed.
             Section {
@@ -71,7 +73,7 @@ struct CommitteeDetailView: View {
             ToolbarItem {
                 DeleteRecordButton(
                     question: "Bu komite silinsin mi?",
-                    explanation: "Oturumlar silinmez — yalnızca komite alanları boşalır."
+                    explanation: "Oturumlar silinmez, yalnızca komite alanları boşalır. Bu komitenin çıkmış sınav kayıtları ise silinir — diskteki PDF'lere dokunulmaz."
                 ) {
                     context.delete(committee)
                 }
