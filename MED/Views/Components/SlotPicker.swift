@@ -44,13 +44,13 @@ struct SlotPicker: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .frame(width: 200)
+                    // Sized by its own labels, never to a number measured
+                    // against one language: "1 ders" fits 200pt and
+                    // "3 lessons" does not, and a segmented control that does
+                    // not fit draws over whatever is beside it instead of
+                    // shrinking.
+                    .fixedSize(horizontal: true, vertical: false)
                 }
-
-                Text(statusText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
 
                 Spacer(minLength: 0)
 
@@ -63,6 +63,15 @@ struct SlotPicker: View {
                     .font(.caption)
                 }
             }
+
+            // On its own line rather than beside the control: it is the
+            // hovered period's hours as often as it is the chosen ones, so it
+            // needs the width, and nothing it grows into can collide with it.
+            Text(statusText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
         .padding(.vertical, 2)
     }
