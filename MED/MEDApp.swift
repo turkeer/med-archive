@@ -43,9 +43,23 @@ struct MEDApp: App {
             }
         }
         .defaultSize(width: 980, height: 660)
+        .commands {
+            // Dışa aktarma Dosya menüsünde, çünkü oraya bakılır. Panel ve
+            // yazma işi `ArchiveExport`'ta: burada tutulacak bir durum yok,
+            // o yüzden görünüm katmanına da ihtiyaç yok.
+            CommandGroup(replacing: .importExport) {
+                Button("JSON olarak dışa aktar…") {
+                    if let modelContainer {
+                        ArchiveExport.save(from: modelContainer.mainContext)
+                    }
+                }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .disabled(modelContainer == nil)
+            }
+        }
 
         Settings {
-            SettingsView()
+            SettingsView(storeURL: modelContainer?.configurations.first?.url)
                 .environment(library)
         }
     }

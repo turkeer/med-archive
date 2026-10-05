@@ -449,6 +449,29 @@ Uygulanan satırlar listeden düşüyor, klasör yeniden gezilmiyor: yeni tarama
 `fileRecords` sorgusunu okur ve bir an önce eklenen kayıtlar o sorgunun
 sonucunda henüz yok — bağlanan her dosya tekrar bulgu olarak geri gelirdi.
 
+## Dışa aktarma ve yedek
+
+**Dosya → JSON olarak dışa aktar…** (⌘⇧E) arşivin tamamını tek bir okunabilir
+dosyaya yazıyor: dersler, akademisyenler, komiteler (çıkmışlarıyla),
+etiketler, oturumlar (dosya bağlarıyla).
+
+Her kayıt kısa bir kimlik taşıyor (`c1`, `i2`, `k1`, `t3`) ve oturumlar bu
+kimlikleri gösteriyor. `PersistentIdentifier` daha az iş olurdu ve uygulamanın
+dışında hiçbir işe yaramazdı: opak, ve okuyamadığın bir yedek kontrol
+edemediğin bir yedektir. Bedava gelen türetilmiş alanlar da yazılıyor
+(komitenin etiketi, dersin saat aralığı) — dosyanın amacı onu yazan uygulama
+olmadan da anlaşılır olmak.
+
+Anahtarlar sıralı, tarihler ISO: aynı arşivin iki aktarımı aynı baytlar
+oluyor, böylece bir diff neyin değiştiğini gösteriyor, sözlüğün o gün hangi
+sırayla dizildiğini değil.
+
+**İçe aktarma yok, bilerek.** Bir dosyayı geri okumak, hâlihazırda var olan
+her kayıt için ne yapılacağına karar vermek demek — birleştir, değiştir,
+çoğalt — ve bunu sessizce yanlış yapmak bir arşivi ikiye katlar. Gerçek geri
+yükleme yolu veritabanı dosyasının kendisi; Ayarlar (⌘,) onu gösteriyor ve
+Finder'da açıyor. Kopyalanacak şey o.
+
 ## Önerilen klasör düzeni
 
 PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
@@ -468,7 +491,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 - [x] **4. Aylık takvim** — ızgara, gün seçimi, günden oturum ekleme
 - [x] **5. Dosya bağlama ve QuickLook** — elle ekleme, önizleme, Finder'da gösterme
 - [x] **6. Klasör tarama ve eşleştirme** — elle tetiklenen tarama, üç güvenlik seviyesi, onay kutuları
-- [ ] 7. ~~Arama~~ ve JSON dışa aktarma — arama ve filtre Konular ekranında bitti
+- [x] **7. Arama ve JSON dışa aktarma** — arama/filtre Konular ekranında, dışa aktarma Dosya menüsünde
 
 ## Dosya düzeni
 

@@ -1,8 +1,14 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings, reachable with ⌘, — just the library root for now.
+/// Settings, reachable with ⌘, — the library root and where the data lives.
 struct SettingsView: View {
+    /// Where SwiftData keeps the store. Shown rather than hidden, because
+    /// this one file *is* the archive: the JSON export is for reading, and
+    /// what gets copied to iCloud or Time Machine is this.
+    var storeURL: URL?
+
     @Environment(LibraryRoot.self) private var library
 
     @State private var isChoosingFolder = false
@@ -58,6 +64,33 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+
+            Section {
+                if let storeURL {
+                    LabeledContent("Veritabanı") {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(storeURL.path(percentEncoded: false))
+                                .lineLimit(2)
+                                .truncationMode(.head)
+                                .textSelection(.enabled)
+
+                            Button("Finder'da göster") {
+                                NSWorkspace.shared.activateFileViewerSelecting([storeURL])
+                            }
+                            .buttonStyle(.link)
+                        }
+                    }
+                } else {
+                    Text("Veritabanı açılamadı.")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Yedek")
+            } footer: {
+                Text("Dosya menüsünden (⌘⇧E) arşivin tamamını okunabilir bir JSON dosyasına aktarabilirsin: ne var ne yok görmek ve veriyi başka bir yere taşımak için. Geri yükleme yapmıyor — asıl yedek yukarıdaki veritabanı dosyası, onu düzenli olarak kopyala.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .fileImporter(
@@ -68,6 +101,6 @@ struct SettingsView: View {
                 library.set(url)
             }
         }
-        .frame(width: 540, height: 320)
+        .frame(width: 540, height: 440)
     }
 }
