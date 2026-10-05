@@ -67,3 +67,25 @@ enum DayTimetable {
         return segments
     }
 }
+
+extension DaySegment {
+    /// The periods this run covers.
+    var slots: [LessonSlot] {
+        let start = slot.number - 1
+        return Array(LessonSlot.all[start ..< min(start + span, LessonSlot.all.count)])
+    }
+
+    /// "2. ders", or "2.–3. ders" for a run of several.
+    var label: String {
+        guard let last = slots.last, last.number != slot.number else { return slot.label }
+        return "\(slot.number).–\(last.number). ders"
+    }
+
+    /// "09:40", or "09:40–11:10" for a run of several.
+    var timeText: String {
+        guard let last = slots.last, last.number != slot.number else {
+            return TimeOfDay.text(slot.start)
+        }
+        return "\(TimeOfDay.text(slot.start))–\(TimeOfDay.text(last.end))"
+    }
+}

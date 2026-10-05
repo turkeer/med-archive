@@ -83,7 +83,7 @@ Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kay
 
 | Bölüm | Liste | Detay |
 | --- | --- | --- |
-| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | **Hafta** veya **Gün** — araç çubuğundan seçilir |
+| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | **Hafta** (ızgara) veya **Gün** (satır satır) — araç çubuğundan seçilir |
 | Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
 | Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
 | Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
@@ -148,6 +148,12 @@ ders oluyor, görebildiğin bir şeyi aramak gereksiz iş.
 Günler yanda, dokuz ders saati altta; her oturum dersinin rengiyle dolu bir
 kutu. Boş hücre `+` ile o güne ve o saate oturum açıyor — bir haftanın
 programını girmenin en hızlı yolu bu.
+
+Hem hafta ızgarası hem gün görünümü aynı `DayTimetable` üzerinden
+diziliyor — bir günü "N derslik blok" ve "boş hücre" dizisine çeviren tek
+mantık. Gün görünümünde bir blok `2.–3. ders · 09:40–11:10` etiketli tek
+satır oluyor; bilgiler bir kez yazılıyor, ikinci satırda "devam ediyor"
+demek yerine.
 
 Izgara **satır satır değil, gün gün** diziliyor. Sebebi çift ders: iki
 ders saatlik bir oturum, iki ayrı hücre değil **tek uzun bir kutu** olmalı,

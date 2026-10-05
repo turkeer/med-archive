@@ -1,9 +1,14 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
-/// The selected day, laid out as the school's nine periods. Empty periods
-/// offer to fill themselves; a lecture row hands you off to that lecture on
-/// the Konular screen, the same way the related screens do.
+/// The selected day, laid out as the school's periods. Empty periods offer to
+/// fill themselves; a lecture row hands you off to that lecture on the Konular
+/// screen, the same way the related screens do.
+///
+/// Rows are runs, not periods. A lecture covering two periods gets one row
+/// labelled "2.–3. ders" with its details written once, rather than a row that
+/// says it and a second that only says "continues" — the same reasoning as the
+/// merged blocks in the week grid, and the same `DayTimetable` behind both.
 ///
 /// Weekends have no timetable, so they fall back to a plain list.
 struct CalendarDayColumn: View {
@@ -24,14 +29,17 @@ struct CalendarDayColumn: View {
     }
 
     private func content(for day: Date) -> some View {
-        Form {
+        // Computed once for the day rather than once per row.
+        let parts = LectureGrouping.partNumbers(for: dayLectures(on: day))
+
+        return Form {
             if calendar.isDateInWeekend(day) {
                 LectureLinkList(lectures: dayLectures(on: day), dayMode: true)
             } else {
                 Section("Ders saatleri") {
-                    ForEach(LessonSlot.all) { slot in
-                        SlotRow(slot: slot, lectures: timetabled(on: day)) {
-                            add(on: day, in: slot)
+                    ForEach(DayTimetable.segments(for: timetabled(on: day))) { segment in
+                        SegmentRow(segment: segment, parts: parts) {
+                            newLectureRequest = NewLectureRequest(day: day, slot: segment.slot)
                         }
                     }
                 }
@@ -52,7 +60,7 @@ struct CalendarDayColumn: View {
         .toolbar {
             ToolbarItem {
                 Button {
-                    add(on: day, in: nil)
+                    newLectureRequest = NewLectureRequest(day: day, slot: nil)
                 } label: {
                     Label("Bu güne oturum ekle", systemImage: "plus")
                 }
@@ -61,10 +69,6 @@ struct CalendarDayColumn: View {
         .sheet(item: $newLectureRequest) { request in
             NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
         }
-    }
-
-    private func add(on day: Date, in slot: LessonSlot?) {
-        newLectureRequest = NewLectureRequest(day: day, slot: slot)
     }
 
     private func dayLectures(on day: Date) -> [Lecture] {
@@ -87,61 +91,44 @@ struct CalendarDayColumn: View {
     }
 }
 
-/// One period: what is in it, or an invitation to put something there.
-private struct SlotRow: View {
-    let slot: LessonSlot
-
-    /// Only the day's timetabled lectures, so an off-grid seminar cannot
-    /// make a period look occupied.
-    let lectures: [Lecture]
-
+/// One run of periods: what is in it, or an invitation to put something there.
+private struct SegmentRow: View {
+    let segment: DaySegment
+    let parts: [PersistentIdentifier: (index: Int, total: Int)]
     let add: () -> Void
 
     @Environment(AppNavigation.self) private var nav
 
-    private var starting: [Lecture] {
-        lectures
-            .filter { $0.startMinutes == slot.start }
-            .sorted { $0.displayTitle < $1.displayTitle }
-    }
-
-    /// A double period starting earlier still occupies this one.
-    private var isCovered: Bool {
-        lectures.contains { slot.overlaps(start: $0.startMinutes, end: $0.endMinutes) }
-    }
-
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
+            // Centred, so a run of two periods reads as one row with its
+            // label beside the middle of it.
             VStack(alignment: .leading, spacing: 1) {
-                Text(slot.label)
+                Text(segment.label)
                     .font(.caption.weight(.semibold))
-                Text(slot.timeText)
+                Text(segment.timeText)
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            .frame(width: 78, alignment: .leading)
+            .frame(width: 96, alignment: .leading)
 
-            if !starting.isEmpty {
-                VStack(alignment: .leading, spacing: 5) {
-                    ForEach(starting) { lecture in
-                        lectureButton(lecture)
-                    }
-                }
-            } else if isCovered {
-                Text("devam ediyor")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            } else {
+            if segment.isFree {
                 Button(action: add) {
                     Label("Ekle", systemImage: "plus")
                         .font(.caption)
                 }
                 .buttonStyle(.borderless)
+            } else {
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(segment.lectures) { lecture in
+                        lectureButton(lecture)
+                    }
+                }
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, segment.span > 1 ? 8 : 2)
     }
 
     private func lectureButton(_ lecture: Lecture) -> some View {
@@ -162,19 +149,10 @@ private struct SlotRow: View {
                             .foregroundStyle(Color(hex: course.colorHex))
                     }
 
-                    Text(lecture.displayTitle)
+                    Text(titleText(for: lecture))
                 }
 
                 FormatBadge(format: lecture.format)
-
-                if spanLength(of: lecture) > 1 {
-                    Text("\(spanLength(of: lecture)) ders")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.14), in: Capsule())
-                }
 
                 Image(systemName: "chevron.right")
                     .font(.caption2)
@@ -185,7 +163,12 @@ private struct SlotRow: View {
         .buttonStyle(.plain)
     }
 
-    private func spanLength(of lecture: Lecture) -> Int {
-        LessonSlot.span(start: lecture.startMinutes, end: lecture.endMinutes).count
+    /// Parts of one topic say which part they are. A lecture that merely
+    /// spans several periods does not — the row label already says so.
+    private func titleText(for lecture: Lecture) -> String {
+        guard let part = parts[lecture.persistentModelID], lecture.hasTopic else {
+            return lecture.displayTitle
+        }
+        return "\(lecture.displayTitle) (\(part.index))"
     }
 }
