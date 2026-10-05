@@ -192,11 +192,7 @@ struct LectureLinkList: View {
                 VStack(alignment: .leading, spacing: 1) {
                     meta(for: group, showCourse: showCourse)
 
-                    HStack(spacing: 5) {
-                        Text(group.first.displayTitle)
-
-                        FormatBadge(format: group.first.format)
-                    }
+                    Text(group.first.displayTitle)
                 }
 
                 Spacer()
@@ -218,8 +214,8 @@ struct LectureLinkList: View {
         .help(helpText(for: group))
     }
 
-    /// The caption line above a row's topic: the course it belongs to, and how
-    /// many lessons the topic took.
+    /// The caption line above a row's topic: the course it belongs to, whether
+    /// it is a lab or an exam, and how many lessons the topic took.
     ///
     /// The count used to sit next to the topic, which was the wrong place: it
     /// ate into the width the topic had to wrap in, so a long name took an
@@ -227,13 +223,17 @@ struct LectureLinkList: View {
     /// name is two words and the line is otherwise empty.
     @ViewBuilder
     private func meta(for group: LectureGroup, showCourse: Bool) -> some View {
-        if showsCourseName(group, showCourse: showCourse) || group.count > 1 {
+        if showsCourseName(group, showCourse: showCourse)
+            || group.first.format != .theoretical
+            || group.count > 1 {
             HStack(spacing: 5) {
                 if showsCourseName(group, showCourse: showCourse), let course = group.first.course {
                     Text(course.name)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(Color(hex: course.colorHex))
                 }
+
+                FormatBadge(format: group.first.format)
 
                 if group.count > 1 {
                     Text("\(group.count) ders")

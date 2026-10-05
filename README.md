@@ -303,9 +303,16 @@ tür filtresinde görünmezdi.
 
 Listelerde ve ızgarada **yalnızca pratik ve sınav** işaretleniyor. Teorik
 oturumlar ezici çoğunluk olduğu için onları da etiketlemek neredeyse her
-satıra bir işaret koyar ve hiçbir şey anlatmaz. Sınav rozeti satırın rengini
-ödünç almıyor, kendi turuncusunu kullanıyor: sınav dersin bir çeşidi değil,
-derslerin hazırlandığı şey.
+satıra bir işaret koyar ve hiçbir şey anlatmaz.
+
+İki rozet de **dolu zemin, beyaz yazı** — satırın renginin soluk bir tonu
+değil. Bir ayı gözle tararken kaçırmayı göze alamayacağın iki oturum bunlar,
+ve %22 saydamlıktaki bir harfi atlamak satırın geri kalanını atlamak kadar
+kolay. İkisi ayrı renk (**pratik kırmızı, sınav mor**), çünkü aynı kırmızıdaki
+iki dolu rozet bir bakışta aynı şey gibi okunur — ki rozetin tek işi o.
+
+Rozet de ders adının yanında, konu adının yanında değil: aynı gerekçe, konunun
+sarılacağı genişliği yemesin.
 
 ## Ders saatleri
 

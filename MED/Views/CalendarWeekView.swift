@@ -366,7 +366,7 @@ private struct LectureBlock: View {
                             .font(.caption2.weight(.semibold))
                             .lineLimit(1)
 
-                        FormatBadge(format: lecture.format, tint: color)
+                        FormatBadge(format: lecture.format)
                     }
 
                     if lecture.hasTopic {

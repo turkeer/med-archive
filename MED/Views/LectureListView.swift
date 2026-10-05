@@ -349,24 +349,34 @@ private struct LectureRow: View {
         return "\(lecture.displayTitle) (\(part.index)/\(part.total))"
     }
 
+    /// Hidden when the row has no topic of its own — `displayTitle` is then
+    /// showing the course name already.
+    private var showsCourseName: Bool {
+        lecture.course != nil && lecture.hasTopic
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 1) {
-                    // Only when there is a topic of its own — otherwise
-                    // displayTitle is already showing the course name.
-                    if let course = lecture.course, lecture.hasTopic {
-                        Text(course.name)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(hex: course.colorHex))
+                    // The course and the badge go above the topic, not beside
+                    // it: beside it they eat the width the topic has to wrap
+                    // in, and a long topic spends an extra line saying the
+                    // same thing.
+                    if showsCourseName || lecture.format != .theoretical {
+                        HStack(spacing: 5) {
+                            if showsCourseName, let course = lecture.course {
+                                Text(course.name)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color(hex: course.colorHex))
+                            }
+
+                            FormatBadge(format: lecture.format)
+                        }
                     }
 
-                    HStack(spacing: 5) {
-                        Text(titleText)
-                            .font(.headline)
-
-                        FormatBadge(format: lecture.format)
-                    }
+                    Text(titleText)
+                        .font(.headline)
                 }
 
                 Spacer()
