@@ -170,6 +170,8 @@ private struct SlotRow: View {
                     Text(lecture.displayTitle)
                 }
 
+                FormatBadge(format: lecture.format)
+
                 if spanLength(of: lecture) > 1 {
                     Text("\(spanLength(of: lecture)) ders")
                         .font(.caption2)

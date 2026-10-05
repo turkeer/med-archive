@@ -20,6 +20,10 @@ final class Lecture {
     /// End time as minutes since midnight. `nil` means unknown.
     var endMinutes: Int?
 
+    /// Lecture or lab. Existing records read as theoretical, which is what
+    /// the great majority of them are.
+    var format: LectureFormat = LectureFormat.theoretical
+
     var notes: String = ""
     var createdAt: Date = Date()
 
@@ -48,6 +52,7 @@ final class Lecture {
         date: Date = Date(),
         startMinutes: Int? = nil,
         endMinutes: Int? = nil,
+        format: LectureFormat = .theoretical,
         notes: String = "",
         course: Course? = nil,
         instructor: Instructor? = nil,
@@ -58,6 +63,7 @@ final class Lecture {
         self.date = Calendar.current.startOfDay(for: date)
         self.startMinutes = startMinutes
         self.endMinutes = endMinutes
+        self.format = format
         self.notes = notes
         self.createdAt = Date()
         self.course = course

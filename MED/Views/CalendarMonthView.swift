@@ -7,6 +7,9 @@ struct CalendarMonthView: View {
     @Binding var visibleMonth: Date
     @Binding var selectedDay: Date?
 
+    /// Drives what the wide trailing column shows: the week grid or one day.
+    @Binding var mode: CalendarMode
+
     @Query private var lectures: [Lecture]
 
     private let calendar = Calendar.current
@@ -48,6 +51,16 @@ struct CalendarMonthView: View {
         .padding(12)
         .navigationTitle("Takvim")
         .toolbar {
+            ToolbarItem {
+                Picker("Görünüm", selection: $mode) {
+                    ForEach(CalendarMode.allCases) { candidate in
+                        Text(candidate.title).tag(candidate)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+
             ToolbarItem {
                 Button("Bugün", action: goToToday)
             }

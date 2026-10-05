@@ -27,7 +27,11 @@ struct ContentView: View {
     private var contentColumn: some View {
         switch nav.section {
         case .calendar:
-            CalendarMonthView(visibleMonth: $nav.visibleMonth, selectedDay: $nav.selectedDay)
+            CalendarMonthView(
+                visibleMonth: $nav.visibleMonth,
+                selectedDay: $nav.selectedDay,
+                mode: $nav.calendarMode
+            )
         case .lectures:
             LectureListView(selection: $nav.lectureID)
         case .courses:
@@ -43,11 +47,27 @@ struct ContentView: View {
         }
     }
 
+    /// The week grid needs the wide column — five columns of lectures do not
+    /// fit a list-width one — so the month grid stays on the left and this
+    /// side switches between the week and a single day.
+    @ViewBuilder
+    private var calendarDetail: some View {
+        switch nav.calendarMode {
+        case .week:
+            CalendarWeekView(
+                selectedDay: $nav.selectedDay,
+                visibleMonth: $nav.visibleMonth
+            )
+        case .day:
+            CalendarDayColumn(day: nav.selectedDay)
+        }
+    }
+
     @ViewBuilder
     private var detailColumn: some View {
         switch nav.section {
         case .calendar:
-            CalendarDayColumn(day: nav.selectedDay)
+            calendarDetail
         case .lectures:
             LectureDetailColumn(lectureID: nav.lectureID)
         case .courses:

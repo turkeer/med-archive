@@ -47,6 +47,10 @@
         ED0000000000000000000226 /* LectureFilesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000126 /* LectureFilesSection.swift */; };
         ED0000000000000000000227 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000127 /* SettingsView.swift */; };
         ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000128 /* ModelContext+Inference.swift */; };
+        ED0000000000000000000229 /* LectureFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000129 /* LectureFormat.swift */; };
+        ED000000000000000000022A /* WeekGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012A /* WeekGrid.swift */; };
+        ED000000000000000000022B /* CalendarWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012B /* CalendarWeekView.swift */; };
+        ED000000000000000000022C /* FormatBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012C /* FormatBadge.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -91,6 +95,10 @@
         ED0000000000000000000126 /* LectureFilesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilesSection.swift; sourceTree = "<group>"; };
         ED0000000000000000000127 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
         ED0000000000000000000128 /* ModelContext+Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+Inference.swift"; sourceTree = "<group>"; };
+        ED0000000000000000000129 /* LectureFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFormat.swift; sourceTree = "<group>"; };
+        ED000000000000000000012A /* WeekGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekGrid.swift; sourceTree = "<group>"; };
+        ED000000000000000000012B /* CalendarWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarWeekView.swift; sourceTree = "<group>"; };
+        ED000000000000000000012C /* FormatBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBadge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -134,6 +142,7 @@
         ED0000000000000000000011 /* Models */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000129 /* LectureFormat.swift */,
                 ED0000000000000000000113 /* Course.swift */,
                 ED0000000000000000000102 /* Lecture.swift */,
                 ED0000000000000000000103 /* Instructor.swift */,
@@ -147,6 +156,7 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012B /* CalendarWeekView.swift */,
                 ED0000000000000000000127 /* SettingsView.swift */,
                 ED0000000000000000000126 /* LectureFilesSection.swift */,
                 ED0000000000000000000121 /* CalendarDayColumn.swift */,
@@ -170,6 +180,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012A /* WeekGrid.swift */,
                 ED0000000000000000000128 /* ModelContext+Inference.swift */,
                 ED0000000000000000000125 /* LibraryRoot.swift */,
                 ED0000000000000000000124 /* FileNaming.swift */,
@@ -188,6 +199,7 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012C /* FormatBadge.swift */,
                 ED0000000000000000000123 /* SlotPicker.swift */,
                 ED000000000000000000011E /* DeleteRecordButton.swift */,
                 ED000000000000000000011D /* LectureLinkList.swift */,
@@ -267,6 +279,10 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000022C /* FormatBadge.swift in Sources */,
+                ED000000000000000000022B /* CalendarWeekView.swift in Sources */,
+                ED000000000000000000022A /* WeekGrid.swift in Sources */,
+                ED0000000000000000000229 /* LectureFormat.swift in Sources */,
                 ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */,
                 ED0000000000000000000227 /* SettingsView.swift in Sources */,
                 ED0000000000000000000226 /* LectureFilesSection.swift in Sources */,

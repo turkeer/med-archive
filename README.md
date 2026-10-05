@@ -36,7 +36,7 @@ Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.
 
 | Varlık | Ne | Not |
 | --- | --- | --- |
-| `Lecture` | Bir oturum | `title` o günün **konusu**. Saatler `startMinutes` / `endMinutes` olarak gece yarısından itibaren dakika cinsinden; `date` yalnızca günü taşır. |
+| `Lecture` | Bir oturum | `title` o günün **konusu**, `format` teorik/pratik. Saatler `startMinutes` / `endMinutes` olarak gece yarısından itibaren dakika cinsinden; `date` yalnızca günü taşır. |
 | `Course` | Tekrar eden ders — Anatomi, Biyofizik | Diskteki ders klasörünün karşılığı. Bilerek komiteye bağlı **değil**: aynı ders birden çok komitede geçiyor. |
 | `Committee` | Komite I, II… | `name` gerçek başlık ("Introduction to Medicine"), `code` kısa hali ("Komite I") — uzun ad çipe sığmıyor. Tarih aralığı oturumun komitesini belirliyor. |
 | `Instructor` | Akademisyen | Akademik unvan alanının adı `titleText` — `Lecture.title` ile karışmasın. |
@@ -57,7 +57,7 @@ Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kay
 
 | Bölüm | Liste | Detay |
 | --- | --- | --- |
-| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | Hafta içi: dokuz ders saati, boş olanlar doldurulmaya hazır. Hafta sonu: düz liste |
+| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | **Hafta** veya **Gün** — araç çubuğundan seçilir |
 | Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
 | Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
 | Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
@@ -94,6 +94,34 @@ Komiteyi sonradan açtığında geriye dönük atama var: komite detayında
 
 Ders seçimi arama alanı değil, **bütün dersler düğme** — yıl içinde sekiz on
 ders oluyor, görebildiğin bir şeyi aramak gereksiz iş.
+
+## Haftalık ızgara
+
+Günler yanda, dokuz ders saati altta; her oturum dersinin rengiyle dolu bir
+kutu. Çift ders tek blok gibi okunuyor, boş hücre `+` ile o güne ve o saate
+oturum açıyor — bir haftanın programını girmenin en hızlı yolu bu.
+
+Yerleşim kararı: haftalık ızgara **geniş olan sağ kolonda**, aylık ızgara
+solda kalıyor. Beş sütun ders bloğu liste genişliğindeki bir kolona sığmıyor.
+Ay ızgarasından bir güne tıklamak haftayı oraya taşıyor; hafta oklarıyla
+gezinmek de ay ızgarasını takip ettiriyor.
+
+Hafta içi beş gün her zaman görünüyor. Hafta sonu sütunları yalnızca o güne
+bir şey kayıtlıysa ekleniyor — tek seferlik bir cumartesi dersi gizlenmiyor.
+Programa oturmayan kayıtlar (seminer, sınav) ızgaranın altında ayrı bir
+satırda.
+
+Hafta sınırı hesabı Python'da doğrulandı: 2024-2030 arası 252 tarih, hem
+Pazartesi hem Pazar başlangıçlı takvimle.
+
+## Teorik ve pratik
+
+`Lecture.format` iki değerli: teorik ya da pratik. Editörde ikili seçim,
+varsayılan teorik — eldeki kayıtlar da teorik olarak geliyor.
+
+Listelerde ve ızgarada **yalnızca pratik** işaretleniyor. Teorik oturumlar
+ezici çoğunluk olduğu için onları da etiketlemek neredeyse her satıra bir
+işaret koyar ve hiçbir şey anlatmaz.
 
 ## Ders saatleri
 
@@ -192,6 +220,7 @@ MED/
     SidebarView         kalıcı kenar çubuğu
     CalendarMonthView   aylık ızgara
     CalendarDayColumn   seçili günün oturumları
+    CalendarWeekView    haftalık ders programı ızgarası
     LectureListView     Konular listesi
     LectureEditor       oturum alanları — detay ve yeni kayıt aynı kodu kullanıyor
     LectureDetailView   oturum detayı
@@ -203,6 +232,7 @@ MED/
     Components/
       NameSuggestField  tamamlamalı isim alanı
       SlotPicker        ders saati seçici
+      FormatBadge       pratik işareti
       NameListColumn    dört bölümün paylaştığı liste kolonu
       LectureLinkList   "ait olduğu oturumlar" listesi, oturuma atlar
       ColorSwatchPicker  Chip  DeleteRecordButton
@@ -211,6 +241,7 @@ MED/
     TimeOfDay           dakika ↔ Date köprüsü
     MonthGrid           aylık ızgaranın 42 hücresi
     LessonSlot          okulun dokuz ders saati
+    WeekGrid            bir haftanın günleri
     LibraryRoot         PDF kök klasörü (UserDefaults)
     FileNaming          dosya adından tür tahmini
     SearchText          Türkçe duyarlı metin katlama

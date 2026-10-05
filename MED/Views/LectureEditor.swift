@@ -47,6 +47,13 @@ struct LectureEditor: View {
                 }
 
                 TextField("Konu", text: $lecture.title, prompt: Text("O günün konusu"))
+
+                Picker("Tür", selection: $lecture.format) {
+                    ForEach(LectureFormat.allCases) { format in
+                        Text(format.title).tag(format)
+                    }
+                }
+                .pickerStyle(.segmented)
             }
 
             Section("Zaman") {

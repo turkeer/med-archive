@@ -78,8 +78,12 @@ private struct LectureRow: View {
                             .foregroundStyle(Color(hex: course.colorHex))
                     }
 
-                    Text(lecture.displayTitle)
-                        .font(.headline)
+                    HStack(spacing: 5) {
+                        Text(lecture.displayTitle)
+                            .font(.headline)
+
+                        FormatBadge(format: lecture.format)
+                    }
                 }
 
                 Spacer()

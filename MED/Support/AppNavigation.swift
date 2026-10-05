@@ -36,12 +36,29 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     }
 }
 
+/// How the calendar's right-hand column reads the selected week.
+enum CalendarMode: String, CaseIterable, Identifiable {
+    case week
+    case day
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .week: return "Hafta"
+        case .day:  return "Gün"
+        }
+    }
+}
+
 /// What is selected, in one place, so that the related screens can hand you
 /// off to a lecture: clicking a lecture under an instructor switches the
 /// sidebar to Konular and selects it, rather than opening a dead end.
 @Observable
 final class AppNavigation {
     var section: SidebarSection? = .lectures
+
+    var calendarMode: CalendarMode = .week
 
     /// The month the calendar is showing, and the day picked inside it.
     var visibleMonth = Date()
