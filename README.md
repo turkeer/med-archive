@@ -160,6 +160,11 @@ zaten cevaplıyor.
   erişmek, bir filtre/arama ya da varsayılan dışı bir sıralama açık olduğu
   anda silinen satırdan başka bir oturumu silerdi.
 
+Satırın üst satırında ders adı ve **kaç ders sürdüğü** yazıyor, konu adının
+yanında değil: oraya konmuş bir çip konunun sarılacağı genişliği yiyor, uzun
+bir ad aynı şeyi söylemek için fazladan bir satır harcıyordu. Yukarıda hiçbir
+şeye mal olmuyor — ders adı iki kelime ve satır zaten boş.
+
 Satırlarda **ataç ikonu** dosyası olanları gösteriyor. Asıl faydası tersi:
 hangi konuların slaytı eksik, listeye bakınca görünüyor.
 

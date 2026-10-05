@@ -190,25 +190,12 @@ struct LectureLinkList: View {
                     .frame(width: 92, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    if showCourse, let course = group.first.course, group.first.hasTopic {
-                        Text(course.name)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Color(hex: course.colorHex))
-                    }
+                    meta(for: group, showCourse: showCourse)
 
                     HStack(spacing: 5) {
                         Text(group.first.displayTitle)
 
                         FormatBadge(format: group.first.format)
-
-                        if group.count > 1 {
-                            Text("\(group.count) ders")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(Color.secondary.opacity(0.16), in: Capsule())
-                        }
                     }
                 }
 
@@ -229,6 +216,41 @@ struct LectureLinkList: View {
         }
         .buttonStyle(.plain)
         .help(helpText(for: group))
+    }
+
+    /// The caption line above a row's topic: the course it belongs to, and how
+    /// many lessons the topic took.
+    ///
+    /// The count used to sit next to the topic, which was the wrong place: it
+    /// ate into the width the topic had to wrap in, so a long name took an
+    /// extra line to say the same thing. Up here it costs nothing — the course
+    /// name is two words and the line is otherwise empty.
+    @ViewBuilder
+    private func meta(for group: LectureGroup, showCourse: Bool) -> some View {
+        if showsCourseName(group, showCourse: showCourse) || group.count > 1 {
+            HStack(spacing: 5) {
+                if showsCourseName(group, showCourse: showCourse), let course = group.first.course {
+                    Text(course.name)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color(hex: course.colorHex))
+                }
+
+                if group.count > 1 {
+                    Text("\(group.count) ders")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Color.secondary.opacity(0.16), in: Capsule())
+                }
+            }
+        }
+    }
+
+    /// Hidden when the list is already grouped by course, and when the row has
+    /// no topic of its own — `displayTitle` is then showing the course name.
+    private func showsCourseName(_ group: LectureGroup, showCourse: Bool) -> Bool {
+        showCourse && group.first.course != nil && group.first.hasTopic
     }
 
     private func hasFiles(_ group: LectureGroup) -> Bool {
