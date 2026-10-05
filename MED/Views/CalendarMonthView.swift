@@ -49,10 +49,10 @@ struct CalendarMonthView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .navigationTitle("Takvim")
+        .navigationTitle(L.calendar)
         .toolbar {
             ToolbarItem {
-                Picker("Görünüm", selection: $mode) {
+                Picker(L.pick("Görünüm", "View"), selection: $mode) {
                     ForEach(CalendarMode.allCases) { candidate in
                         Text(candidate.title).tag(candidate)
                     }
@@ -62,7 +62,7 @@ struct CalendarMonthView: View {
             }
 
             ToolbarItem {
-                Button("Bugün", action: goToToday)
+                Button(L.pick("Bugün", "Today"), action: goToToday)
             }
         }
     }
@@ -75,7 +75,7 @@ struct CalendarMonthView: View {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.borderless)
-            .help("Önceki ay")
+            .help(L.pick("Önceki ay", "Previous month"))
 
             Spacer()
 
@@ -90,7 +90,7 @@ struct CalendarMonthView: View {
                 Image(systemName: "chevron.right")
             }
             .buttonStyle(.borderless)
-            .help("Sonraki ay")
+            .help(L.pick("Sonraki ay", "Next month"))
         }
     }
 
@@ -179,7 +179,7 @@ private struct DayCell: View {
             .contentShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
-        .help(lectures.isEmpty ? "" : "\(lectures.count) oturum")
+        .help(lectures.isEmpty ? "" : L.sessionCount(lectures.count))
     }
 
     private var cellBackground: Color {

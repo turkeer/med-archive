@@ -12,24 +12,24 @@ struct CommitteeDetailView: View {
 
     var body: some View {
         Form {
-            Section("Komite") {
-                TextField("Ad", text: $committee.name, prompt: Text("Introduction to Medicine"))
+            Section(L.committee) {
+                TextField(L.name, text: $committee.name, prompt: Text("Introduction to Medicine"))
                     .formTextField()
-                TextField("Kısa ad", text: $committee.code, prompt: Text("Komite I"))
+                TextField(L.pick("Kısa ad", "Short name"), text: $committee.code, prompt: Text(L.pick("Komite I", "Committee I")))
                     .formTextField()
 
                 DatePicker(
-                    "Başlangıç",
+                    L.pick("Başlangıç", "Starts"),
                     selection: dayBinding(for: \.startDate),
                     displayedComponents: .date
                 )
                 DatePicker(
-                    "Bitiş",
+                    L.pick("Bitiş", "Ends"),
                     selection: dayBinding(for: \.endDate),
                     displayedComponents: .date
                 )
 
-                LabeledContent("Renk") {
+                LabeledContent(L.color) {
                     ColorSwatchPicker(hex: $committee.colorHex)
                 }
             }
@@ -40,15 +40,18 @@ struct CommitteeDetailView: View {
             // This is for the ones that came before this committee existed.
             Section {
                 if pending.isEmpty {
-                    Text("Bu aralıkta komitesi boş oturum yok.")
+                    Text(L.pick("Bu aralıkta komitesi boş oturum yok.", "No sessions in this range are missing a committee."))
                         .foregroundStyle(.secondary)
                 } else {
                     HStack {
-                        Text("Bu aralıkta komitesi boş \(pending.count) oturum var.")
+                        Text(L.pick(
+                            "Bu aralıkta komitesi boş \(pending.count) oturum var.",
+                            "\(pending.count) sessions in this range have no committee."
+                        ))
 
                         Spacer()
 
-                        Button("\(committee.shortLabel) olarak ata") {
+                        Button(L.pick("\(committee.shortLabel) olarak ata", "Set them to \(committee.shortLabel)")) {
                             for lecture in pending {
                                 lecture.committee = committee
                             }
@@ -56,9 +59,12 @@ struct CommitteeDetailView: View {
                     }
                 }
             } header: {
-                Text("Geriye dönük atama")
+                Text(L.pick("Geriye dönük atama", "Backfill"))
             } footer: {
-                Text("Yalnızca komitesi boş olanlara dokunur; elle seçtiğin komiteleri değiştirmez.")
+                Text(L.pick(
+                    "Yalnızca komitesi boş olanlara dokunur; elle seçtiğin komiteleri değiştirmez.",
+                    "Touches only the ones with no committee; it never changes a committee you set by hand."
+                ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -67,13 +73,16 @@ struct CommitteeDetailView: View {
             LectureLinkList(lectures: committee.lectures, groupByCourse: true)
         }
         .formStyle(.grouped)
-        .navigationTitle(committee.fullLabel.isEmpty ? "(adsız komite)" : committee.fullLabel)
-        .navigationSubtitle("\(committee.dateRangeText) · \(committee.lectures.count) oturum")
+        .navigationTitle(committee.fullLabel.isEmpty ? L.pick("(adsız komite)", "(unnamed committee)") : committee.fullLabel)
+        .navigationSubtitle("\(committee.dateRangeText) · " + L.sessionCount(committee.lectures.count))
         .toolbar {
             ToolbarItem {
                 DeleteRecordButton(
-                    question: "Bu komite silinsin mi?",
-                    explanation: "Oturumlar silinmez, yalnızca komite alanları boşalır. Bu komitenin çıkmış sınav kayıtları ise silinir — diskteki PDF'lere dokunulmaz."
+                    question: L.pick("Bu komite silinsin mi?", "Delete this committee?"),
+                    explanation: L.pick(
+                        "Oturumlar silinmez, yalnızca komite alanları boşalır. Bu komitenin çıkmış sınav kayıtları ise silinir — diskteki PDF'lere dokunulmaz.",
+                        "The sessions stay; only their committee field is cleared. This committee's past-paper records are deleted — the PDFs on disk are untouched."
+                    )
                 ) {
                     context.delete(committee)
                 }

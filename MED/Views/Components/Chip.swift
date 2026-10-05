@@ -17,7 +17,7 @@ struct Chip: View {
                         .font(.system(size: 8, weight: .bold))
                 }
                 .buttonStyle(.plain)
-                .help("Kaldır")
+                .help(L.remove)
             }
         }
         .padding(.horizontal, 8)

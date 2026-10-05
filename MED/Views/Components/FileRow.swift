@@ -45,7 +45,7 @@ struct FileRow: View {
                         .truncationMode(.middle)
 
                     if !isOnDisk {
-                        Text("Dosya bulunamadı")
+                        Text(L.pick("Dosya bulunamadı", "File not found"))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     } else if let locationText {
@@ -61,7 +61,7 @@ struct FileRow: View {
             }
             .buttonStyle(.plain)
             .disabled(!isOnDisk)
-            .help(isOnDisk ? "Önizle" : "Dosya bulunamadı")
+            .help(isOnDisk ? L.pick("Önizle", "Preview") : L.pick("Dosya bulunamadı", "File not found"))
 
             if let url, isOnDisk {
                 Button {
@@ -70,7 +70,7 @@ struct FileRow: View {
                     Image(systemName: "folder")
                 }
                 .buttonStyle(.borderless)
-                .help("Finder'da göster")
+                .help(L.showInFinder)
 
                 Button {
                     NSWorkspace.shared.open(url)
@@ -78,12 +78,12 @@ struct FileRow: View {
                     Image(systemName: "arrow.up.forward.app")
                 }
                 .buttonStyle(.borderless)
-                .help("Varsayılan uygulamada aç")
+                .help(L.pick("Varsayılan uygulamada aç", "Open in default app"))
             }
 
             Menu {
                 if let setKind {
-                    Picker("Tür", selection: kindBinding(setKind)) {
+                    Picker(L.format, selection: kindBinding(setKind)) {
                         ForEach(LectureFileKind.allCases) { kind in
                             Text(kind.sectionTitle).tag(kind)
                         }
@@ -92,7 +92,7 @@ struct FileRow: View {
                     Divider()
                 }
 
-                Button("Listeden kaldır", role: .destructive, action: remove)
+                Button(L.pick("Listeden kaldır", "Remove from list"), role: .destructive, action: remove)
             } label: {
                 Image(systemName: "ellipsis.circle")
             }

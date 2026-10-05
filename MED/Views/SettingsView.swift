@@ -31,8 +31,6 @@ struct SettingsView: View {
                         Text(choice.endonym).tag(choice)
                     }
                 }
-            } header: {
-                Text(L.pick("Dil", "Language"))
             } footer: {
                 Text(L.pick(
                     "Hemen değişir, uygulamayı kapatmak gerekmez. Ders adları, konular ve notlar senin yazdığın gibi kalır — çevrilen yalnızca arayüz.",
@@ -44,7 +42,7 @@ struct SettingsView: View {
 
             Section {
                 if let url = library.url {
-                    LabeledContent("Klasör") {
+                    LabeledContent(L.pick("Klasör", "Folder")) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(url.path(percentEncoded: false))
                                 .lineLimit(2)
@@ -52,41 +50,44 @@ struct SettingsView: View {
                                 .textSelection(.enabled)
 
                             if !library.exists {
-                                Label("Bu klasör şu an diskte yok", systemImage: "exclamationmark.triangle.fill")
+                                Label(L.pick("Bu klasör şu an diskte yok", "This folder is not on disk right now"), systemImage: "exclamationmark.triangle.fill")
                                     .font(.caption)
                                     .foregroundStyle(.orange)
                             }
                         }
                     }
                 } else {
-                    Text("Seçilmedi")
+                    Text(L.pick("Seçilmedi", "Not chosen"))
                         .foregroundStyle(.secondary)
                 }
 
                 HStack {
-                    Button("Klasör seç…") {
+                    Button(L.chooseFolder) {
                         isChoosingFolder = true
                     }
 
                     if library.url == nil && LibraryRoot.suggestionExists {
-                        Button("Önerilen konumu kullan") {
+                        Button(L.pick("Önerilen konumu kullan", "Use the suggested location")) {
                             library.set(LibraryRoot.suggestedURL)
                         }
                     }
 
                     if library.url != nil {
-                        Button("Kaldır") {
+                        Button(L.remove) {
                             library.set(nil)
                         }
                     }
                 }
             } header: {
-                Text("PDF kök klasörü")
+                Text(L.pick("PDF kök klasörü", "PDF root folder"))
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Önerilen konum:\n\(LibraryRoot.suggestedURL.path(percentEncoded: false))")
+                    Text(L.pick("Önerilen konum:", "Suggested location:") + "\n\(LibraryRoot.suggestedURL.path(percentEncoded: false))")
 
-                    Text("Kök klasörün altındaki dosyalar klasöre göre kaydedilir, böylece klasörü taşısan ya da yeniden adlandırsan da bağlar kopmaz. Uygulama dosyaları hiç kopyalamaz, taşımaz, silmez.")
+                    Text(L.pick(
+                        "Kök klasörün altındaki dosyalar klasöre göre kaydedilir, böylece klasörü taşısan ya da yeniden adlandırsan da bağlar kopmaz. Uygulama dosyaları hiç kopyalamaz, taşımaz, silmez.",
+                        "Files under the root folder are stored relative to it, so moving or renaming the folder does not break the links. The app never copies, moves or deletes a file."
+                    ))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -94,27 +95,30 @@ struct SettingsView: View {
 
             Section {
                 if let storeURL {
-                    LabeledContent("Veritabanı") {
+                    LabeledContent(L.pick("Veritabanı", "Database")) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(storeURL.path(percentEncoded: false))
                                 .lineLimit(2)
                                 .truncationMode(.head)
                                 .textSelection(.enabled)
 
-                            Button("Finder'da göster") {
+                            Button(L.showInFinder) {
                                 NSWorkspace.shared.activateFileViewerSelecting([storeURL])
                             }
                             .buttonStyle(.link)
                         }
                     }
                 } else {
-                    Text("Veritabanı açılamadı.")
+                    Text(L.pick("Veritabanı açılamadı.", "The database could not be opened."))
                         .foregroundStyle(.secondary)
                 }
             } header: {
-                Text("Yedek")
+                Text(L.pick("Yedek", "Backup"))
             } footer: {
-                Text("Dosya menüsünden (⌘⇧E) arşivin tamamını okunabilir bir JSON dosyasına aktarabilirsin: ne var ne yok görmek ve veriyi başka bir yere taşımak için. Geri yükleme yapmıyor — asıl yedek yukarıdaki veritabanı dosyası, onu düzenli olarak kopyala.")
+                Text(L.pick(
+                    "Dosya menüsünden (⌘⇧E) arşivin tamamını okunabilir bir JSON dosyasına aktarabilirsin: ne var ne yok görmek ve veriyi başka bir yere taşımak için. Geri yükleme yapmıyor — asıl yedek yukarıdaki veritabanı dosyası, onu düzenli olarak kopyala.",
+                    "The File menu (⌘⇧E) exports the whole archive as a readable JSON file: for checking what is there and for carrying the data elsewhere. It does not restore — the real backup is the database file above, so copy that regularly."
+                ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

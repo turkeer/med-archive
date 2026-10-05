@@ -44,7 +44,7 @@ struct NewLectureSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Yeni oturum")
+            Text(L.newSession)
                 .font(.headline)
                 .padding(.top, 14)
 
@@ -59,10 +59,10 @@ struct NewLectureSheet: View {
             HStack {
                 Spacer()
 
-                Button("Vazgeç", role: .cancel, action: cancel)
+                Button(L.cancel, role: .cancel, action: cancel)
                     .keyboardShortcut(.cancelAction)
 
-                Button("Kaydet", action: save)
+                Button(L.save, action: save)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
             }

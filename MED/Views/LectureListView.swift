@@ -42,8 +42,8 @@ struct LectureListView: View {
             }
             .onDelete(perform: deleteLectures)
         }
-        .navigationTitle("Konular")
-        .searchable(text: $query, prompt: "Ara")
+        .navigationTitle(L.topics)
+        .searchable(text: $query, prompt: L.search)
         .safeAreaInset(edge: .top, spacing: 0) {
             activeFilterBar
         }
@@ -63,17 +63,17 @@ struct LectureListView: View {
                 Button {
                     isShowingScan = true
                 } label: {
-                    Label("Klasörü tara", systemImage: "doc.text.magnifyingglass")
+                    Label(L.pick("Klasörü tara", "Scan folder"), systemImage: "doc.text.magnifyingglass")
                 }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
-                .help("Bir klasördeki dosyaları oturumlarla eşleştir")
+                .help(L.pick("Bir klasördeki dosyaları oturumlarla eşleştir", "Match the files in a folder to sessions"))
             }
 
             ToolbarItem {
                 Button {
                     newLectureRequest = NewLectureRequest()
                 } label: {
-                    Label("Yeni ders", systemImage: "plus")
+                    Label(L.newSession, systemImage: "plus")
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
@@ -133,20 +133,20 @@ struct LectureListView: View {
     private var emptyState: some View {
         if lectures.isEmpty {
             ContentUnavailableView(
-                "Henüz oturum yok",
+                L.pick("Henüz oturum yok", "No sessions yet"),
                 systemImage: "calendar.badge.plus",
-                description: Text("Sağ üstteki + ile ilk kaydını ekle.")
+                description: Text(L.pick("Sağ üstteki + ile ilk kaydını ekle.", "Add your first with the + at the top right."))
             )
         } else if rows.isEmpty {
             // Says which of the two narrowed it down to nothing, because the
             // fix differs: clear the box, or clear the filter.
             ContentUnavailableView {
-                Label("Eşleşen oturum yok", systemImage: "magnifyingglass")
+                Label(L.pick("Eşleşen oturum yok", "No matching sessions"), systemImage: "magnifyingglass")
             } description: {
                 Text(emptyReason)
             } actions: {
                 if filter.isActive {
-                    Button("Filtreleri temizle") {
+                    Button(L.clearFilters) {
                         filter = LectureFilter()
                     }
                 }
@@ -158,12 +158,15 @@ struct LectureListView: View {
         let hasQuery = !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
         if hasQuery, filter.isActive {
-            return "“\(query)” aramasına ve açık filtrelere uyan oturum yok."
+            return L.pick(
+                "“\(query)” aramasına ve açık filtrelere uyan oturum yok.",
+                "No session matches “\(query)” together with the active filters."
+            )
         }
         if hasQuery {
-            return "“\(query)” ile eşleşen oturum yok."
+            return L.pick("“\(query)” ile eşleşen oturum yok.", "No session matches “\(query)”.")
         }
-        return "Açık filtrelere uyan oturum yok."
+        return L.pick("Açık filtrelere uyan oturum yok.", "No session matches the active filters.")
     }
 
     // MARK: Sorting
@@ -176,17 +179,17 @@ struct LectureListView: View {
                 }
             }
         } label: {
-            Label("Sıralama", systemImage: "arrow.up.arrow.down")
+            Label(L.sort, systemImage: "arrow.up.arrow.down")
         }
-        .help("Sıralama: \(sort.title)")
+        .help(L.sort + ": \(sort.title)")
     }
 
     // MARK: Filtering
 
     private var filterMenu: some View {
         Menu {
-            Section("Ders") {
-                pickButton("Hepsi", isOn: filter.courseID == nil) {
+            Section(L.course) {
+                pickButton(L.all, isOn: filter.courseID == nil) {
                     filter.courseID = nil
                 }
                 ForEach(courses) { course in
@@ -196,8 +199,8 @@ struct LectureListView: View {
                 }
             }
 
-            Section("Akademisyen") {
-                pickButton("Hepsi", isOn: filter.instructorID == nil) {
+            Section(L.instructor) {
+                pickButton(L.all, isOn: filter.instructorID == nil) {
                     filter.instructorID = nil
                 }
                 ForEach(instructors) { instructor in
@@ -210,8 +213,8 @@ struct LectureListView: View {
                 }
             }
 
-            Section("Komite") {
-                pickButton("Hepsi", isOn: filter.committeeID == nil) {
+            Section(L.committee) {
+                pickButton(L.all, isOn: filter.committeeID == nil) {
                     filter.committeeID = nil
                 }
                 ForEach(committees) { committee in
@@ -224,8 +227,8 @@ struct LectureListView: View {
                 }
             }
 
-            Section("Tür") {
-                pickButton("Hepsi", isOn: filter.format == nil) {
+            Section(L.format) {
+                pickButton(L.all, isOn: filter.format == nil) {
                     filter.format = nil
                 }
                 ForEach(LectureFormat.allCases) { format in
@@ -236,26 +239,26 @@ struct LectureListView: View {
             }
 
             Section {
-                pickButton("Dosyası olmayanlar", isOn: filter.missingFilesOnly) {
+                pickButton(L.missingFiles, isOn: filter.missingFilesOnly) {
                     filter.missingFilesOnly.toggle()
                 }
             }
 
             if filter.isActive {
                 Divider()
-                Button("Filtreleri temizle") {
+                Button(L.clearFilters) {
                     filter = LectureFilter()
                 }
             }
         } label: {
             Label(
-                "Filtre",
+                L.pick("Filtre", "Filter"),
                 systemImage: filter.isActive
                     ? "line.3.horizontal.decrease.circle.fill"
                     : "line.3.horizontal.decrease.circle"
             )
         }
-        .help(filter.isActive ? "Filtre açık" : "Filtrele")
+        .help(filter.isActive ? L.pick("Filtre açık", "Filter on") : L.pick("Filtrele", "Filter"))
     }
 
     /// A menu row that shows a tick when it is the current choice — the same
@@ -310,7 +313,7 @@ struct LectureListView: View {
                     }
 
                     if filter.missingFilesOnly {
-                        Chip(text: "Dosyası olmayanlar") {
+                        Chip(text: L.missingFiles) {
                             filter.missingFilesOnly = false
                         }
                     }

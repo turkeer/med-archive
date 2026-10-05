@@ -28,8 +28,11 @@ struct LectureDetailView: View {
             .toolbar {
                 ToolbarItem {
                     DeleteRecordButton(
-                        question: "Bu oturum silinsin mi?",
-                        explanation: "Bağlı dosya kayıtları da silinir. Diskteki dosyalara dokunulmaz."
+                        question: L.pick("Bu oturum silinsin mi?", "Delete this session?"),
+                        explanation: L.pick(
+                            "Bağlı dosya kayıtları da silinir. Diskteki dosyalara dokunulmaz.",
+                            "Its file records go too. The files on disk are untouched."
+                        )
                     ) {
                         context.delete(lecture)
                     }

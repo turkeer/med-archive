@@ -12,11 +12,11 @@ struct DeleteRecordButton: View {
         Button(role: .destructive) {
             isConfirming = true
         } label: {
-            Label("Sil", systemImage: "trash")
+            Label(L.delete, systemImage: "trash")
         }
         .confirmationDialog(question, isPresented: $isConfirming) {
-            Button("Sil", role: .destructive, action: perform)
-            Button("Vazgeç", role: .cancel) {}
+            Button(L.delete, role: .destructive, action: perform)
+            Button(L.cancel, role: .cancel) {}
         } message: {
             Text(explanation)
         }

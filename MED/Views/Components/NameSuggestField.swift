@@ -48,7 +48,7 @@ struct NameSuggestField: View {
                 } label: {
                     Image(systemName: "return")
                 }
-                .help("Yazdığını ekle")
+                .help(L.pick("Yazdığını ekle", "Add what you typed"))
                 .disabled(query.isEmpty)
             }
 

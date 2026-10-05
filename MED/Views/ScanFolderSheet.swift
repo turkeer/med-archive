@@ -72,7 +72,7 @@ struct ScanFolderSheet: View {
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(folder == nil ? "Klasör seçilmedi" : folderName)
+                Text(folder == nil ? L.pick("Klasör seçilmedi", "No folder chosen") : folderName)
                     .font(.headline)
 
                 if let folder {
@@ -86,11 +86,11 @@ struct ScanFolderSheet: View {
 
             Spacer()
 
-            Button("Klasör seç…") {
+            Button(L.chooseFolder) {
                 isChoosingFolder = true
             }
 
-            Button("Tara") {
+            Button(L.pick("Tara", "Scan")) {
                 scan()
             }
             .keyboardShortcut(.return, modifiers: .command)
@@ -113,7 +113,7 @@ struct ScanFolderSheet: View {
 
             Spacer()
 
-            Button("Kapat") {
+            Button(L.close) {
                 dismiss()
             }
             .keyboardShortcut(.cancelAction)
@@ -128,41 +128,53 @@ struct ScanFolderSheet: View {
     }
 
     private var applyTitle: String {
-        ticked.isEmpty ? "Uygula" : "Uygula (\(ticked.count))"
+        ticked.isEmpty ? L.apply : L.apply + " (\(ticked.count))"
     }
 
     @ViewBuilder
     private var content: some View {
         if !hasScanned {
             ContentUnavailableView {
-                Label("Klasörü tara", systemImage: "doc.text.magnifyingglass")
+                Label(L.pick("Klasörü tara", "Scan folder"), systemImage: "doc.text.magnifyingglass")
             } description: {
-                Text("Dosya adındaki tarihe, bulunduğu klasöre ve konu benzerliğine bakarak hangi oturuma ait olduğunu bulur. Hiçbir dosya kopyalanmaz veya taşınmaz, yalnızca yeri kaydedilir.")
+                Text(L.pick(
+                    "Dosya adındaki tarihe, bulunduğu klasöre ve konu benzerliğine bakarak hangi oturuma ait olduğunu bulur. Hiçbir dosya kopyalanmaz veya taşınmaz, yalnızca yeri kaydedilir.",
+                    "Works out which session a file belongs to from the date in its name, the folder it sits in, and how close its topic is. No file is copied or moved — only its location is recorded."
+                ))
             }
         } else if findings.isEmpty {
             ContentUnavailableView {
-                Label("Bağlanacak dosya yok", systemImage: "checkmark.circle")
+                Label(L.pick("Bağlanacak dosya yok", "Nothing left to link"), systemImage: "checkmark.circle")
             } description: {
-                Text("Bu klasördeki dosyaların hepsi zaten kayıtlı.")
+                Text(L.pick("Bu klasördeki dosyaların hepsi zaten kayıtlı.", "Every file in this folder is already recorded."))
             }
         } else {
             List {
                 group(
                     .certain,
-                    title: "Kesin eşleşme",
-                    note: "Tarih, klasör ve konu birbirini doğruluyor."
+                    title: L.pick("Kesin eşleşme", "Certain match"),
+                    note: L.pick(
+                        "Tarih, klasör ve konu birbirini doğruluyor.",
+                        "The date, the folder and the topic all agree."
+                    )
                 )
 
                 group(
                     .weak,
-                    title: "Zayıf eşleşme",
-                    note: "Gün doğru görünüyor ama konu kesin değil. Önerilen oturumu değiştirebilirsin."
+                    title: L.pick("Zayıf eşleşme", "Weak match"),
+                    note: L.pick(
+                        "Gün doğru görünüyor ama konu kesin değil. Önerilen oturumu değiştirebilirsin.",
+                        "The day looks right but the topic is not certain. You can change the proposed session."
+                    )
                 )
 
                 group(
                     .unmatched,
-                    title: "Eşleşmedi",
-                    note: "O güne ait oturum bulunamadı. İşaretlenirse dosya adından yeni bir oturum oluşturulur."
+                    title: L.pick("Eşleşmedi", "No match"),
+                    note: L.pick(
+                        "O güne ait oturum bulunamadı. İşaretlenirse dosya adından yeni bir oturum oluşturulur.",
+                        "No session found for that day. Ticking one creates a new session from the file name."
+                    )
                 )
             }
         }
@@ -187,7 +199,7 @@ struct ScanFolderSheet: View {
 
                     Spacer()
 
-                    Button(allTicked(rows(confidence)) ? "Hiçbirini seçme" : "Hepsini seç") {
+                    Button(allTicked(rows(confidence)) ? L.pick("Hiçbirini seçme", "Select none") : L.pick("Hepsini seç", "Select all")) {
                         toggleAll(rows(confidence))
                     }
                     .buttonStyle(.plain)
@@ -221,7 +233,7 @@ struct ScanFolderSheet: View {
                             Image(systemName: "calendar")
                         }
                     } else {
-                        Label("Dosya adında tarih yok", systemImage: "calendar.badge.exclamationmark")
+                        Label(L.pick("Dosya adında tarih yok", "No date in the file name"), systemImage: "calendar.badge.exclamationmark")
                     }
 
                     if !finding.folderName.isEmpty {
@@ -246,15 +258,15 @@ struct ScanFolderSheet: View {
         if finding.confidence == .unmatched {
             if finding.canCreateLecture {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Yeni oturum: \(finding.name.topic.isEmpty ? "(başlıksız)" : finding.name.topic)")
+                    Text(L.pick("Yeni oturum: ", "New session: ") + (finding.name.topic.isEmpty ? L.untitled : finding.name.topic))
                         .lineLimit(1)
 
-                    Text("saati Konular'dan verilir")
+                    Text(L.pick("saati Konular'dan verilir", "its time is set from Topics"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Text("Uygulanamaz")
+                Text(L.pick("Uygulanamaz", "Cannot apply"))
                     .foregroundStyle(.secondary)
             }
         } else if let lecture = target(for: finding) {
@@ -405,9 +417,11 @@ struct ScanFolderSheet: View {
         ticked.subtract(done)
 
         var parts: [String] = []
-        if attached > 0 { parts.append("\(attached) dosya bağlandı") }
-        if created > 0 { parts.append("\(created) oturum oluşturuldu") }
-        outcome = parts.isEmpty ? "Değişen bir şey olmadı" : parts.joined(separator: ", ")
+        if attached > 0 { parts.append(L.pick("\(attached) dosya bağlandı", "\(attached) files linked")) }
+        if created > 0 { parts.append(L.pick("\(created) oturum oluşturuldu", "\(created) sessions created")) }
+        outcome = parts.isEmpty
+            ? L.pick("Değişen bir şey olmadı", "Nothing changed")
+            : parts.joined(separator: ", ")
     }
 
     private func attach(_ finding: ScanFinding, to lecture: Lecture) {

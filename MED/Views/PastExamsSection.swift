@@ -38,7 +38,7 @@ struct PastExamsSection: View {
     var body: some View {
         Section {
             if exams.isEmpty {
-                Text("Bu komite için çıkmış sınav eklenmemiş.")
+                Text(L.pick("Bu komite için çıkmış sınav eklenmemiş.", "No past papers added for this committee."))
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(exams) { exam in
@@ -47,12 +47,15 @@ struct PastExamsSection: View {
             }
 
             Button(action: addExam) {
-                Label("Çıkmış sınav ekle", systemImage: "plus")
+                Label(L.pick("Çıkmış sınav ekle", "Add a past paper"), systemImage: "plus")
             }
         } header: {
-            Text("Çıkmışlar")
+            Text(L.pick("Çıkmışlar", "Past papers"))
         } footer: {
-            Text("Her çıkmış için yıl ve dil tutuluyor. Dosyalar kopyalanmaz, yalnızca yerleri saklanır.")
+            Text(L.pick(
+                "Her çıkmış için yıl ve dil tutuluyor. Dosyalar kopyalanmaz, yalnızca yerleri saklanır.",
+                "Each paper keeps a year and a language. Files are not copied, only their locations are remembered."
+            ))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -82,13 +85,13 @@ struct PastExamsSection: View {
             // Not a segmented control: inside a DisclosureGroup in a grouped
             // Form it is taller than the row and gets clipped by the one
             // above. A dropdown also matches the year picker below it.
-            Picker("Dil", selection: languageBinding(exam)) {
+            Picker(L.pick("Dil", "Language"), selection: languageBinding(exam)) {
                 ForEach(ExamLanguage.allCases) { language in
                     Text(language.title).tag(language)
                 }
             }
 
-            Picker("Yıl", selection: yearBinding(exam)) {
+            Picker(L.pick("Yıl", "Year"), selection: yearBinding(exam)) {
                 ForEach(AcademicYear.choices(including: exam.startYear), id: \.self) { year in
                     Text(AcademicYear.label(startYear: year)).tag(year)
                 }
@@ -99,12 +102,12 @@ struct PastExamsSection: View {
                     importTarget = exam.persistentModelID
                     isImporting = true
                 } label: {
-                    Label("Dosya ekle", systemImage: "paperclip")
+                    Label(L.addFile, systemImage: "paperclip")
                 }
 
                 Spacer()
 
-                Button("Bu çıkmışı sil", role: .destructive) {
+                Button(L.pick("Bu çıkmışı sil", "Delete this paper"), role: .destructive) {
                     context.delete(exam)
                 }
                 .font(.caption)
@@ -123,7 +126,7 @@ struct PastExamsSection: View {
                 Spacer()
 
                 if exam.files.isEmpty {
-                    Text("dosya yok")
+                    Text(L.pick("dosya yok", "no files"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {

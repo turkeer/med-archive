@@ -39,7 +39,7 @@ struct MEDApp: App {
                     .environment(library)
                     .modelContainer(modelContainer)
             } else {
-                StoreFailureView(message: storeError ?? "Bilinmeyen hata")
+                StoreFailureView(message: storeError ?? L.pick("Bilinmeyen hata", "Unknown error"))
             }
         }
         .defaultSize(width: 980, height: 660)
@@ -48,7 +48,7 @@ struct MEDApp: App {
             // yazma işi `ArchiveExport`'ta: burada tutulacak bir durum yok,
             // o yüzden görünüm katmanına da ihtiyaç yok.
             CommandGroup(replacing: .importExport) {
-                Button("JSON olarak dışa aktar…") {
+                Button(L.pick("JSON olarak dışa aktar…", "Export as JSON…")) {
                     if let modelContainer {
                         ArchiveExport.save(from: modelContainer.mainContext)
                     }

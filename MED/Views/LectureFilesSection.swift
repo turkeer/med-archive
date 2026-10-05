@@ -56,23 +56,32 @@ struct LectureFilesSection: View {
             Button {
                 isImporting = true
             } label: {
-                Label("Dosya ekle", systemImage: "paperclip")
+                Label(L.addFile, systemImage: "paperclip")
             }
 
             if library.url == nil {
-                Text("Kök klasör seçilmedi. Ayarlar'dan (⌘,) seçersen dosyalar klasöre göre kaydedilir ve klasörü taşısan da bağlar kopmaz.")
+                Text(L.pick(
+                        "Kök klasör seçilmedi. Ayarlar'dan (⌘,) seçersen dosyalar klasöre göre kaydedilir ve klasörü taşısan da bağlar kopmaz.",
+                        "No root folder chosen. Pick one in Settings (⌘,) and files are stored relative to it, so moving the folder does not break the links."
+                    ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Dosyalar")
+            Text(L.files)
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 if parts.count > 1 {
-                    Text("Bu konu \(parts.count) ders olarak işleniyor. Dosyalar tek bir derse değil, konunun tamamına ait sayılıyor — her parçadan aynı liste görünür.")
+                    Text(L.pick(
+                        "Bu konu \(parts.count) ders olarak işleniyor. Dosyalar tek bir derse değil, konunun tamamına ait sayılıyor — her parçadan aynı liste görünür.",
+                        "This topic runs across \(parts.count) lessons. Files belong to the whole topic rather than one lesson — every part shows the same list."
+                    ))
                 }
 
-                Text("Dosyalar uygulamaya kopyalanmaz, yalnızca yerleri saklanır. Listeden kaldırmak diskteki dosyayı silmez.")
+                Text(L.pick(
+                    "Dosyalar uygulamaya kopyalanmaz, yalnızca yerleri saklanır. Listeden kaldırmak diskteki dosyayı silmez.",
+                    "Files are never copied into the app, only their locations are remembered. Removing one from the list does not delete it from disk."
+                ))
             }
             .font(.caption)
             .foregroundStyle(.secondary)

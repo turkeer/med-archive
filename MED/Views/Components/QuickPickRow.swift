@@ -59,6 +59,6 @@ private struct QuickPickChip: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .help(isSelected ? "Seçimi kaldır" : item.label)
+        .help(isSelected ? L.pick("Seçimi kaldır", "Clear selection") : item.label)
     }
 }

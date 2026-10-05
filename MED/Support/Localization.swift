@@ -109,6 +109,8 @@ enum L {
     static var chooseFolder: String { pick("Klasör seç…", "Choose folder…") }
     static var addFile: String { pick("Dosya ekle", "Add file") }
     static var showInFinder: String { pick("Finder'da göster", "Show in Finder") }
+    static var clearFilters: String { pick("Filtreleri temizle", "Clear filters") }
+    static var missingFiles: String { pick("Dosyası olmayanlar", "Missing files") }
 
     // MARK: The things the archive is made of
 

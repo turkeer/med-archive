@@ -14,15 +14,15 @@ struct CourseListColumn: View {
 
     var body: some View {
         NameListColumn(
-            title: "Dersler",
+            title: L.courses,
             items: courses,
             selection: $selection,
             name: { $0.name },
-            subtitle: { "\($0.lectures.count) oturum" },
+            subtitle: { L.sessionCount($0.lectures.count) },
             accent: { Color(hex: $0.colorHex) },
             make: { Course(colorHex: Palette.suggested(for: courses.count)) },
-            emptyMessage: "Henüz ders yok.",
-            addLabel: "Yeni ders"
+            emptyMessage: L.pick("Henüz ders yok.", "No courses yet."),
+            addLabel: L.newCourse
         )
     }
 }
@@ -35,7 +35,7 @@ struct CourseDetailColumn: View {
         if let course = courses.first(where: { $0.persistentModelID == courseID }) {
             CourseDetailView(course: course)
         } else {
-            SelectionPlaceholder(text: "Ortadaki listeden bir ders seç.")
+            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir ders seç.", "Pick a course from the middle list."))
         }
     }
 }
@@ -48,19 +48,19 @@ struct InstructorListColumn: View {
 
     var body: some View {
         NameListColumn(
-            title: "Akademisyenler",
+            title: L.instructors,
             items: instructors,
             selection: $selection,
             name: { $0.displayName },
             subtitle: {
                 $0.department.isEmpty
-                    ? "\($0.lectures.count) oturum"
-                    : "\($0.department) · \($0.lectures.count) oturum"
+                    ? L.sessionCount($0.lectures.count)
+                    : "\($0.department) · " + L.sessionCount($0.lectures.count)
             },
             accent: { _ in nil },
             make: { Instructor() },
-            emptyMessage: "Henüz akademisyen yok.",
-            addLabel: "Yeni akademisyen"
+            emptyMessage: L.pick("Henüz akademisyen yok.", "No instructors yet."),
+            addLabel: L.newInstructor
         )
     }
 }
@@ -73,7 +73,7 @@ struct InstructorDetailColumn: View {
         if let instructor = instructors.first(where: { $0.persistentModelID == instructorID }) {
             InstructorDetailView(instructor: instructor)
         } else {
-            SelectionPlaceholder(text: "Ortadaki listeden bir akademisyen seç.")
+            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir akademisyen seç.", "Pick an instructor from the middle list."))
         }
     }
 }
@@ -86,15 +86,15 @@ struct CommitteeListColumn: View {
 
     var body: some View {
         NameListColumn(
-            title: "Komiteler",
+            title: L.committees,
             items: committees,
             selection: $selection,
             name: { $0.fullLabel },
             subtitle: { $0.dateRangeText },
             accent: { Color(hex: $0.colorHex) },
             make: { Committee(colorHex: Palette.suggested(for: committees.count)) },
-            emptyMessage: "Henüz komite yok.",
-            addLabel: "Yeni komite"
+            emptyMessage: L.pick("Henüz komite yok.", "No committees yet."),
+            addLabel: L.newCommittee
         )
     }
 }
@@ -107,7 +107,7 @@ struct CommitteeDetailColumn: View {
         if let committee = committees.first(where: { $0.persistentModelID == committeeID }) {
             CommitteeDetailView(committee: committee)
         } else {
-            SelectionPlaceholder(text: "Ortadaki listeden bir komite seç.")
+            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir komite seç.", "Pick a committee from the middle list."))
         }
     }
 }
@@ -120,15 +120,15 @@ struct TagListColumn: View {
 
     var body: some View {
         NameListColumn(
-            title: "Etiketler",
+            title: L.tags,
             items: tags,
             selection: $selection,
             name: { $0.name },
-            subtitle: { "\($0.lectures.count) oturum" },
+            subtitle: { L.sessionCount($0.lectures.count) },
             accent: { Color(hex: $0.colorHex) },
             make: { Tag(colorHex: Palette.suggested(for: tags.count)) },
-            emptyMessage: "Henüz etiket yok.",
-            addLabel: "Yeni etiket"
+            emptyMessage: L.pick("Henüz etiket yok.", "No tags yet."),
+            addLabel: L.newTag
         )
     }
 }
@@ -141,7 +141,7 @@ struct TagDetailColumn: View {
         if let tag = tags.first(where: { $0.persistentModelID == tagID }) {
             TagDetailView(tag: tag)
         } else {
-            SelectionPlaceholder(text: "Ortadaki listeden bir etiket seç.")
+            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir etiket seç.", "Pick a tag from the middle list."))
         }
     }
 }
@@ -153,7 +153,7 @@ struct SelectionPlaceholder: View {
 
     var body: some View {
         ContentUnavailableView(
-            "Seçim yok",
+            L.pick("Seçim yok", "Nothing selected"),
             systemImage: "sidebar.left",
             description: Text(text)
         )

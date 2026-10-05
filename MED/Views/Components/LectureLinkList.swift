@@ -16,7 +16,7 @@ struct LectureLinkList: View {
     let lectures: [Lecture]
 
     /// Heading used when the list is not grouped by course.
-    var title = "Oturumlar"
+    var title = L.sessions
 
     /// Committees hold lectures from several courses, so their list reads
     /// better grouped. The design calls for exactly that.
@@ -51,7 +51,7 @@ struct LectureLinkList: View {
     var body: some View {
         if lectures.isEmpty {
             Section(title) {
-                Text("Bağlı oturum yok.")
+                Text(L.pick("Bağlı oturum yok.", "No sessions linked."))
                     .foregroundStyle(.secondary)
             }
         } else {
@@ -59,7 +59,7 @@ struct LectureLinkList: View {
 
             if visibleGroups.isEmpty {
                 Section {
-                    Text("“\(query)” ile eşleşen oturum yok.")
+                    Text(L.pick("“\(query)” ile eşleşen oturum yok.", "No session matches “\(query)”."))
                         .foregroundStyle(.secondary)
                 }
             } else if groupByCourse {
@@ -84,7 +84,8 @@ struct LectureLinkList: View {
 
     private var heading: String {
         let count = visibleGroups.count
-        return query.isEmpty ? "\(title) (\(count))" : "\(title) — \(count) sonuç"
+        if query.isEmpty { return "\(title) (\(count))" }
+        return "\(title) — " + L.pick("\(count) sonuç", "\(count) results")
     }
 
     // MARK: Search and sort
@@ -100,11 +101,14 @@ struct LectureLinkList: View {
                     // Just "Ara": a placeholder listing every searched field
                     // wrapped onto three lines and made the row tall and ugly.
                     // The detail belongs in the tooltip.
-                    TextField("Ara", text: $query, prompt: Text("Ara"))
+                    TextField(L.search, text: $query, prompt: Text(L.search))
                         .textFieldStyle(.plain)
                         .borderlessFormTextField()
                         .lineLimit(1)
-                        .help("Konu, ders, akademisyen, komite, etiket, not ve dosya adında arar")
+                        .help(L.pick(
+                            "Konu, ders, akademisyen, komite, etiket, not ve dosya adında arar",
+                            "Searches topic, course, instructor, committee, tag, notes and file names"
+                        ))
 
                     if !query.isEmpty {
                         Button {
@@ -114,7 +118,7 @@ struct LectureLinkList: View {
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
-                        .help("Aramayı temizle")
+                        .help(L.pick("Aramayı temizle", "Clear search"))
                     }
 
                     Divider()
@@ -148,7 +152,7 @@ struct LectureLinkList: View {
         }
         .menuIndicator(.hidden)
         .fixedSize()
-        .help("Sıralama")
+        .help(L.sort)
     }
 
     // MARK: Data
@@ -165,7 +169,7 @@ struct LectureLinkList: View {
     }
 
     private var courseRuns: [CourseRun] {
-        Dictionary(grouping: visibleGroups) { $0.first.course?.name ?? "Dersi belirtilmemiş" }
+        Dictionary(grouping: visibleGroups) { $0.first.course?.name ?? L.pick("Dersi belirtilmemiş", "No course set") }
             .map { CourseRun(name: $0.key, groups: $0.value) }
             .sorted { $0.name < $1.name }
     }
@@ -236,7 +240,7 @@ struct LectureLinkList: View {
                 FormatBadge(format: group.first.format)
 
                 if group.count > 1 {
-                    Text("\(group.count) ders")
+                    Text(L.lessonCount(group.count))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 5)
@@ -261,12 +265,12 @@ struct LectureLinkList: View {
         var parts = [group.first.displayTitle]
 
         if group.count > 1 {
-            parts.append("\(group.count) ders, \(LectureGrouping.slotLabel(for: group.lectures))")
+            parts.append(L.lessonCount(group.count) + ", \(LectureGrouping.slotLabel(for: group.lectures))")
         }
 
         let fileCount = group.lectures.reduce(0) { $0 + $1.files.count }
         if fileCount > 0 {
-            parts.append("\(fileCount) dosya")
+            parts.append(L.fileCount(fileCount))
         }
 
         return parts.joined(separator: " — ")

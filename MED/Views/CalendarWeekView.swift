@@ -61,7 +61,7 @@ struct CalendarWeekView: View {
                 .padding(12)
             }
         }
-        .navigationTitle("Hafta")
+        .navigationTitle(L.pick("Hafta", "Week"))
         .navigationSubtitle(grid.title)
         .sheet(item: $newLectureRequest) { request in
             NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
@@ -78,7 +78,7 @@ struct CalendarWeekView: View {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.borderless)
-            .help("Önceki hafta")
+            .help(L.pick("Önceki hafta", "Previous week"))
 
             Button {
                 select(day: grid.adding(weeks: 1))
@@ -86,14 +86,14 @@ struct CalendarWeekView: View {
                 Image(systemName: "chevron.right")
             }
             .buttonStyle(.borderless)
-            .help("Sonraki hafta")
+            .help(L.pick("Sonraki hafta", "Next week"))
 
             Text(grid.title)
                 .font(.headline)
 
             Spacer()
 
-            Button("Bu hafta") {
+            Button(L.pick("Bu hafta", "This week")) {
                 select(day: Date())
             }
             .buttonStyle(.borderless)
@@ -188,7 +188,7 @@ struct CalendarWeekView: View {
                     }
             }
             .buttonStyle(.plain)
-            .help("\(segment.slot.longLabel) — oturum ekle")
+            .help("\(segment.slot.longLabel) — " + L.pick("oturum ekle", "add a session"))
         } else {
             VStack(spacing: 2) {
                 ForEach(segment.lectures) { lecture in
@@ -218,7 +218,7 @@ struct CalendarWeekView: View {
     private var offTimetableRow: some View {
         if visibleDays.contains(where: { !offTimetable(on: $0).isEmpty }) {
             HStack(alignment: .top, spacing: 3) {
-                Text("program\ndışı")
+                Text(L.pick("program\ndışı", "outside\nhours"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
@@ -399,7 +399,7 @@ private struct LectureBlock: View {
                             .background(Circle().fill(.background))
                     }
                     .buttonStyle(.plain)
-                    .help("Aynısını bir sonraki derse ekle")
+                    .help(L.pick("Aynısını bir sonraki derse ekle", "Add the same to the next lesson"))
                     .padding(2)
                 }
             }
@@ -421,7 +421,7 @@ private struct LectureBlock: View {
     private var helpText: String {
         [
             lecture.course?.name,
-            part.map { "\($0.index)/\($0.total). ders" },
+            part.map { L.pick("\($0.index)/\($0.total). ders", "lesson \($0.index) of \($0.total)") },
             lecture.hasTopic ? lecture.title : nil,
             lecture.format.title,
             lecture.scheduleText.isEmpty ? nil : lecture.scheduleText,

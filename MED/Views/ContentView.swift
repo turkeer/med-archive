@@ -63,7 +63,7 @@ struct ContentView: View {
         case .tags:
             TagListColumn(selection: $nav.tagID)
         case nil:
-            SelectionPlaceholder(text: "Soldaki kenar çubuğundan bir bölüm seç.")
+            SelectionPlaceholder(text: L.pick("Soldaki kenar çubuğundan bir bölüm seç.", "Pick a section from the sidebar."))
         }
     }
 
@@ -99,7 +99,7 @@ struct ContentView: View {
         case .tags:
             TagDetailColumn(tagID: nav.tagID)
         case nil:
-            SelectionPlaceholder(text: "Bir bölüm seç.")
+            SelectionPlaceholder(text: L.pick("Bir bölüm seç.", "Pick a section."))
         }
     }
 }
@@ -115,7 +115,7 @@ struct LectureDetailColumn: View {
         if let lecture = lectures.first(where: { $0.persistentModelID == lectureID }) {
             LectureDetailView(lecture: lecture)
         } else {
-            SelectionPlaceholder(text: "Ortadaki listeden bir oturum seç.")
+            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir oturum seç.", "Pick a session from the middle list."))
         }
     }
 }

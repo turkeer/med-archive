@@ -32,9 +32,12 @@ struct LectureEditor: View {
 
     var body: some View {
         Form {
-            Section("Ders ve konu") {
+            Section(L.pick("Ders ve konu", "Course and topic")) {
                 if courses.isEmpty {
-                    Text("Henüz ders yok. Kenar çubuğundaki Dersler bölümünden ekle.")
+                    Text(L.pick(
+                        "Henüz ders yok. Kenar çubuğundaki Dersler bölümünden ekle.",
+                        "No courses yet. Add one in the Courses section of the sidebar."
+                    ))
                         .foregroundStyle(.secondary)
                 } else {
                     QuickPickRow(
@@ -44,10 +47,10 @@ struct LectureEditor: View {
                     )
                 }
 
-                TextField("Konu", text: $lecture.title, prompt: Text("O günün konusu"))
+                TextField(L.topic, text: $lecture.title, prompt: Text(L.pick("O günün konusu", "That day's topic")))
                     .formTextField()
 
-                Picker("Tür", selection: $lecture.format) {
+                Picker(L.format, selection: $lecture.format) {
                     ForEach(LectureFormat.allCases) { format in
                         Text(format.title).tag(format)
                     }
@@ -55,8 +58,8 @@ struct LectureEditor: View {
                 .pickerStyle(.segmented)
             }
 
-            Section("Zaman") {
-                DatePicker("Tarih", selection: dayBinding, displayedComponents: .date)
+            Section(L.pick("Zaman", "Time")) {
+                DatePicker(L.pick("Tarih", "Date"), selection: dayBinding, displayedComponents: .date)
 
                 SlotPicker(
                     startMinutes: $lecture.startMinutes,
@@ -66,26 +69,26 @@ struct LectureEditor: View {
                 // The timetable covers almost everything, so the two clocks
                 // are folded away for the exceptions: a seminar, an exam,
                 // anything that does not sit on a period.
-                DisclosureGroup("Saati elle ayarla") {
+                DisclosureGroup(L.pick("Saati elle ayarla", "Set the time by hand")) {
                     Toggle(
-                        "Başlangıç saati",
+                        L.pick("Başlangıç saati", "Start time"),
                         isOn: hasTimeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart)
                     )
                     if lecture.startMinutes != nil {
                         DatePicker(
-                            "Başlangıç",
+                            L.pick("Başlangıç", "Starts"),
                             selection: timeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart),
                             displayedComponents: .hourAndMinute
                         )
                     }
 
                     Toggle(
-                        "Bitiş saati",
+                        L.pick("Bitiş saati", "End time"),
                         isOn: hasTimeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd)
                     )
                     if lecture.endMinutes != nil {
                         DatePicker(
-                            "Bitiş",
+                            L.pick("Bitiş", "Ends"),
                             selection: timeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd),
                             displayedComponents: .hourAndMinute
                         )
@@ -93,10 +96,10 @@ struct LectureEditor: View {
                 }
             }
 
-            Section("Akademisyen") {
+            Section(L.instructor) {
                 HStack {
-                    Picker("Akademisyen", selection: instructorBinding) {
-                        Text("Yok").tag(Instructor?.none)
+                    Picker(L.instructor, selection: instructorBinding) {
+                        Text(L.none).tag(Instructor?.none)
                         ForEach(instructors) { instructor in
                             Text(instructor.displayName).tag(Instructor?.some(instructor))
                         }
@@ -108,13 +111,16 @@ struct LectureEditor: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .help("Yeni akademisyen")
+                    .help(L.newInstructor)
                 }
             }
 
-            Section("Komite") {
+            Section(L.committee) {
                 if committees.isEmpty {
-                    Text("Henüz komite yok. Kenar çubuğundaki Komiteler bölümünden ekle.")
+                    Text(L.pick(
+                        "Henüz komite yok. Kenar çubuğundaki Komiteler bölümünden ekle.",
+                        "No committees yet. Add one in the Committees section of the sidebar."
+                    ))
                         .foregroundStyle(.secondary)
                 } else {
                     QuickPickRow(
@@ -131,12 +137,15 @@ struct LectureEditor: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
 
-                        Text("Bu tarih \(suggestion.shortLabel) aralığında")
+                        Text(L.pick(
+                            "Bu tarih \(suggestion.shortLabel) aralığında",
+                            "This date falls inside \(suggestion.shortLabel)"
+                        ))
                             .font(.caption)
 
                         Spacer()
 
-                        Button("Uygula") {
+                        Button(L.apply) {
                             lecture.committee = suggestion
                         }
                         .buttonStyle(.borderless)
@@ -147,7 +156,7 @@ struct LectureEditor: View {
 
             Section {
                 if lecture.tags.isEmpty {
-                    Text("Yok")
+                    Text(L.none)
                         .foregroundStyle(.secondary)
                 } else {
                     FlowLayout(spacing: 6, lineSpacing: 6) {
@@ -163,20 +172,23 @@ struct LectureEditor: View {
                 // Tags are the one thing genuinely created as you go, so this
                 // field stays.
                 NameSuggestField(
-                    placeholder: "Etiket ara veya yeni ekle",
+                    placeholder: L.pick("Etiket ara veya yeni ekle", "Search tags or add a new one"),
                     suggestions: allTags.map(\.name)
                 ) { name in
                     add(tagNamed: name)
                 }
             } header: {
-                Text("Etiketler")
+                Text(L.tags)
             } footer: {
-                Text("Oturumları enine kesen serbest konular: membran, sınavda çıktı, klinik korelasyon…")
+                Text(L.pick(
+                    "Oturumları enine kesen serbest konular: membran, sınavda çıktı, klinik korelasyon…",
+                    "Free-form themes that cut across sessions: membrane, came up in the exam, clinical correlation…"
+                ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Notlar") {
+            Section(L.notes) {
                 TextEditor(text: $lecture.notes)
                     .font(.body)
                     .frame(minHeight: 100)
@@ -187,12 +199,12 @@ struct LectureEditor: View {
             }
         }
         .formStyle(.grouped)
-        .alert("Yeni akademisyen", isPresented: $isAddingInstructor) {
-            TextField("Ad", text: $newInstructorName)
+        .alert(L.newInstructor, isPresented: $isAddingInstructor) {
+            TextField(L.name, text: $newInstructorName)
                 .formTextField()
 
-            Button("Ekle", action: addInstructor)
-            Button("Vazgeç", role: .cancel) {
+            Button(L.add, action: addInstructor)
+            Button(L.cancel, role: .cancel) {
                 newInstructorName = ""
             }
         }
@@ -207,7 +219,7 @@ struct LectureEditor: View {
     private func courseItem(_ course: Course) -> QuickPickRow.Item {
         QuickPickRow.Item(
             id: course.persistentModelID,
-            label: course.name.isEmpty ? "(adsız)" : course.name,
+            label: course.name.isEmpty ? L.unnamed : course.name,
             colorHex: course.colorHex
         )
     }
@@ -215,7 +227,7 @@ struct LectureEditor: View {
     private func committeeItem(_ committee: Committee) -> QuickPickRow.Item {
         QuickPickRow.Item(
             id: committee.persistentModelID,
-            label: committee.shortLabel.isEmpty ? "(adsız)" : committee.shortLabel,
+            label: committee.shortLabel.isEmpty ? L.unnamed : committee.shortLabel,
             colorHex: committee.colorHex
         )
     }

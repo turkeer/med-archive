@@ -24,7 +24,7 @@ struct CalendarDayColumn: View {
         if let day {
             content(for: day)
         } else {
-            SelectionPlaceholder(text: "Takvimden bir gün seç.")
+            SelectionPlaceholder(text: L.pick("Takvimden bir gün seç.", "Pick a day from the calendar."))
         }
     }
 
@@ -36,7 +36,7 @@ struct CalendarDayColumn: View {
             if calendar.isDateInWeekend(day) {
                 LectureLinkList(lectures: dayLectures(on: day), dayMode: true)
             } else {
-                Section("Ders saatleri") {
+                Section(L.pick("Ders saatleri", "Lesson times")) {
                     ForEach(DayTimetable.segments(for: timetabled(on: day))) { segment in
                         SegmentRow(segment: segment, parts: parts) {
                             newLectureRequest = NewLectureRequest(day: day, slot: segment.slot)
@@ -48,7 +48,7 @@ struct CalendarDayColumn: View {
                 if !offTimetable(on: day).isEmpty {
                     LectureLinkList(
                         lectures: offTimetable(on: day),
-                        title: "Program dışı",
+                        title: L.pick("Program dışı", "Outside hours"),
                         dayMode: true
                     )
                 }
@@ -62,7 +62,7 @@ struct CalendarDayColumn: View {
                 Button {
                     newLectureRequest = NewLectureRequest(day: day, slot: nil)
                 } label: {
-                    Label("Bu güne oturum ekle", systemImage: "plus")
+                    Label(L.pick("Bu güne oturum ekle", "Add a session to this day"), systemImage: "plus")
                 }
             }
         }
@@ -114,7 +114,7 @@ private struct SegmentRow: View {
 
             if segment.isFree {
                 Button(action: add) {
-                    Label("Ekle", systemImage: "plus")
+                    Label(L.add, systemImage: "plus")
                         .font(.caption)
                 }
                 .buttonStyle(.borderless)

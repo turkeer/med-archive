@@ -18,8 +18,8 @@ struct NameListColumn<Item: PersistentModel>: View where Item.ID == PersistentId
     let accent: (Item) -> Color?
     let make: () -> Item
 
-    var emptyMessage = "Henüz kayıt yok."
-    var addLabel = "Yeni"
+    var emptyMessage = L.pick("Henüz kayıt yok.", "Nothing here yet.")
+    var addLabel = L.pick("Yeni", "New")
 
     @Environment(\.modelContext) private var context
 
@@ -54,7 +54,7 @@ struct NameListColumn<Item: PersistentModel>: View where Item.ID == PersistentId
                 ContentUnavailableView(
                     emptyMessage,
                     systemImage: "tray",
-                    description: Text("Sağ üstteki + ile ekle.")
+                    description: Text(L.pick("Sağ üstteki + ile ekle.", "Add one with the + at the top right."))
                 )
             }
         }
@@ -69,7 +69,7 @@ struct NameListColumn<Item: PersistentModel>: View where Item.ID == PersistentId
 
     private func displayName(for item: Item) -> String {
         let text = name(item).trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? "(adsız)" : text
+        return text.isEmpty ? L.unnamed : text
     }
 
     private func add() {

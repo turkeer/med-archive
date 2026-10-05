@@ -9,11 +9,11 @@ struct CourseDetailView: View {
 
     var body: some View {
         Form {
-            Section("Ders") {
-                TextField("Ad", text: $course.name, prompt: Text("Anatomi"))
+            Section(L.course) {
+                TextField(L.name, text: $course.name, prompt: Text(L.pick("Anatomi", "Anatomy")))
                     .formTextField()
 
-                LabeledContent("Renk") {
+                LabeledContent(L.color) {
                     ColorSwatchPicker(hex: $course.colorHex)
                 }
             }
@@ -21,13 +21,16 @@ struct CourseDetailView: View {
             LectureLinkList(lectures: course.lectures)
         }
         .formStyle(.grouped)
-        .navigationTitle(course.name.isEmpty ? "(adsız ders)" : course.name)
-        .navigationSubtitle("\(course.lectures.count) oturum")
+        .navigationTitle(course.name.isEmpty ? L.pick("(adsız ders)", "(unnamed course)") : course.name)
+        .navigationSubtitle(L.sessionCount(course.lectures.count))
         .toolbar {
             ToolbarItem {
                 DeleteRecordButton(
-                    question: "Bu ders silinsin mi?",
-                    explanation: "Oturumlar silinmez — yalnızca ders alanları boşalır."
+                    question: L.pick("Bu ders silinsin mi?", "Delete this course?"),
+                    explanation: L.pick(
+                        "Oturumlar silinmez — yalnızca ders alanları boşalır.",
+                        "The sessions stay; only their course field is cleared."
+                    )
                 ) {
                     context.delete(course)
                 }

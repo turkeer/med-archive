@@ -9,27 +9,30 @@ struct InstructorDetailView: View {
 
     var body: some View {
         Form {
-            Section("Akademisyen") {
-                TextField("Ad", text: $instructor.name, prompt: Text("Ayşe Yılmaz"))
+            Section(L.instructor) {
+                TextField(L.name, text: $instructor.name, prompt: Text("Ayşe Yılmaz"))
                     .formTextField()
-                TextField("Unvan", text: $instructor.titleText, prompt: Text("Prof. Dr."))
+                TextField(L.pick("Unvan", "Title"), text: $instructor.titleText, prompt: Text("Prof. Dr."))
                     .formTextField()
-                TextField("Bölüm", text: $instructor.department, prompt: Text("Anatomi"))
+                TextField(L.pick("Bölüm", "Department"), text: $instructor.department, prompt: Text(L.pick("Anatomi", "Anatomy")))
                     .formTextField()
-                TextField("E-posta", text: $instructor.email)
+                TextField(L.pick("E-posta", "Email"), text: $instructor.email)
                     .formTextField()
             }
 
             LectureLinkList(lectures: instructor.lectures)
         }
         .formStyle(.grouped)
-        .navigationTitle(instructor.name.isEmpty ? "(adsız akademisyen)" : instructor.displayName)
+        .navigationTitle(instructor.name.isEmpty ? L.pick("(adsız akademisyen)", "(unnamed instructor)") : instructor.displayName)
         .navigationSubtitle(subtitle)
         .toolbar {
             ToolbarItem {
                 DeleteRecordButton(
-                    question: "Bu akademisyen silinsin mi?",
-                    explanation: "Oturumlar silinmez — yalnızca akademisyen alanları boşalır."
+                    question: L.pick("Bu akademisyen silinsin mi?", "Delete this instructor?"),
+                    explanation: L.pick(
+                        "Oturumlar silinmez — yalnızca akademisyen alanları boşalır.",
+                        "The sessions stay; only their instructor field is cleared."
+                    )
                 ) {
                     context.delete(instructor)
                 }
@@ -40,7 +43,7 @@ struct InstructorDetailView: View {
     private var subtitle: String {
         [
             instructor.department.isEmpty ? nil : instructor.department,
-            "\(instructor.lectures.count) oturum",
+            L.sessionCount(instructor.lectures.count),
         ]
         .compactMap { $0 }
         .joined(separator: " · ")

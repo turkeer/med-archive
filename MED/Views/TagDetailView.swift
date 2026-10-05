@@ -22,11 +22,11 @@ struct TagDetailView: View {
 
     var body: some View {
         Form {
-            Section("Etiket") {
-                TextField("Ad", text: $tag.name, prompt: Text("membran"))
+            Section(L.tag) {
+                TextField(L.name, text: $tag.name, prompt: Text(L.pick("membran", "membrane")))
                     .formTextField()
 
-                LabeledContent("Renk") {
+                LabeledContent(L.color) {
                     ColorSwatchPicker(hex: $tag.colorHex)
                 }
             }
@@ -35,33 +35,39 @@ struct TagDetailView: View {
 
             if !mergeCandidates.isEmpty {
                 Section {
-                    Picker("Şununla birleştir", selection: $mergeTargetID) {
-                        Text("Seç").tag(PersistentIdentifier?.none)
+                    Picker(L.pick("Şununla birleştir", "Merge into"), selection: $mergeTargetID) {
+                        Text(L.pick("Seç", "Choose")).tag(PersistentIdentifier?.none)
                         ForEach(mergeCandidates) { candidate in
-                            Text(candidate.name.isEmpty ? "(adsız)" : candidate.name)
+                            Text(candidate.name.isEmpty ? L.unnamed : candidate.name)
                                 .tag(PersistentIdentifier?.some(candidate.persistentModelID))
                         }
                     }
 
-                    Button("Birleştir", action: merge)
+                    Button(L.pick("Birleştir", "Merge"), action: merge)
                         .disabled(mergeTarget == nil)
                 } header: {
-                    Text("Birleştir")
+                    Text(L.pick("Birleştir", "Merge"))
                 } footer: {
-                    Text("Bu etiketin bütün oturumları seçilen etikete taşınır, sonra bu etiket silinir.")
+                    Text(L.pick(
+                        "Bu etiketin bütün oturumları seçilen etikete taşınır, sonra bu etiket silinir.",
+                        "Every session on this tag moves to the chosen one, then this tag is deleted."
+                    ))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(tag.name.isEmpty ? "(adsız etiket)" : tag.name)
-        .navigationSubtitle("\(tag.lectures.count) oturum")
+        .navigationTitle(tag.name.isEmpty ? L.pick("(adsız etiket)", "(unnamed tag)") : tag.name)
+        .navigationSubtitle(L.sessionCount(tag.lectures.count))
         .toolbar {
             ToolbarItem {
                 DeleteRecordButton(
-                    question: "Bu etiket silinsin mi?",
-                    explanation: "Oturumlar silinmez — yalnızca bu etiket onlardan kalkar."
+                    question: L.pick("Bu etiket silinsin mi?", "Delete this tag?"),
+                    explanation: L.pick(
+                        "Oturumlar silinmez — yalnızca bu etiket onlardan kalkar.",
+                        "The sessions stay; only this tag comes off them."
+                    )
                 ) {
                     context.delete(tag)
                 }

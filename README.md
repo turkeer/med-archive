@@ -179,6 +179,53 @@ her şey için pencerenin yöneticisidir.
 `MEDApp` içinde değil `ContentView` içinde kuruluyor: `modelContext` ancak
 `.modelContainer(_:)`'ın altında var, ve o değiştirici bu görünüme uygulanıyor.
 
+## İki dil
+
+Arayüz Türkçe ve İngilizce. Ayarlar'dan (⌘,) seçiliyor ve **hemen** değişiyor.
+macOS'un alışıldık yolu — `AppleLanguages`'i defaults'a yazmak — yeniden
+başlatma istiyor, ki menüden dil seçmiş birinden istenecek tuhaf bir şey.
+
+### Dizgeler kullanıldıkları yerde
+
+`L.pick("Konular", "Topics")`. Birkaç yerde geçen sözcükler `L` içinde
+adlandırılmış (`L.cancel`, `L.sessionCount(_:)`), gerisi yerinde duruyor.
+Alışıldık anahtar-tablo düzeninin tersi, üç gerekçeyle:
+
+- **Çevirisiz kalmak imkânsız.** İki dil aynı çağrının argümanı, yani eksik
+  olan derleme hatası veriyor — çalışma zamanında kendi adına düşen bir
+  anahtar değil. Derleyicisiz çalışılan bir projede bu, tablodan daha
+  değerli.
+- **İki sürüm yan yana ve bağlamın içinde.** Tablo, bir dili bir dosyada
+  diğerini başka dosyada okutur; `scanWeakFooter` gibi bir ad da cümleyi
+  cümlenin anlattığı kadar anlatmaz.
+- Anahtar yanlış yazılamıyor, öksüz kalamıyor, Türkçede denk düşen iki ayrı
+  cümle için sessizce kullanılamıyor.
+
+### Dil neden ortak bir nesnede
+
+`AppLanguage.shared`, `@Observable`. Dizgeler yalnızca görünümlerde değil: bir
+oturumun `displayTitle`'ı, `LessonSlot`'un "3. ders"i, `LectureSort`'un adları
+da dile ihtiyaç duyuyor ve hiçbiri environment'a uzanamıyor. Görünümler için
+gözlem yine çalışıyor — dili `body` içinde okumak bağımlılığı kaydediyor, o
+yüzden dil değişince sözcük gösteren her şey yeniden çiziliyor.
+
+Tarihler ve ay adları da seçilen dile uyuyor: `ContentView` pencereye
+`\.locale` veriyor, görünüm dışında üretilen tarihlere (`WeekGrid.title`,
+`Committee.dateRangeText`, ayın adı, gün kısaltmaları) dil `L.format` ile
+ayrıca söyleniyor — `Date.formatted` süreç yerelini okur, pencerenin değil.
+
+### Çevrilmeyenler
+
+- **Senin yazdığın her şey.** Ders adları, konular, akademisyen adları,
+  notlar, etiketler. Veri çeviri konusu değil.
+- **macOS'un kendi menüleri** — Dosya, Düzen, Pencere, Yardım — Mac'in
+  dilinde kalıyor; onları değiştirmenin yolu yeniden başlatma gerektiren
+  `AppleLanguages`'ten geçiyor. Uygulamanın kendi menü maddesi
+  ("JSON olarak dışa aktar…") dili takip ediyor.
+- **Arama katlaması** (`SearchText`) her iki dilde de Türkçe harfleri
+  düzleştiriyor. Veri Türkçe; arayüzün dili aramanın nasıl eşleşeceğini
+  değiştirmemeli.
+
 ## Elle doldurulmayan alanlar
 
 Yüzlerce oturum girilecek, aynı cevabı tekrar tekrar yazmamak için üç yerde

@@ -37,10 +37,10 @@ struct SlotPicker: View {
 
             HStack(spacing: 10) {
                 if !selected.isEmpty {
-                    Picker("Süre", selection: lengthBinding) {
-                        Text("1 ders").tag(1)
-                        Text("2 ders").tag(2)
-                        Text("3 ders").tag(3)
+                    Picker(L.pick("Süre", "Length"), selection: lengthBinding) {
+                        Text(L.lessonCount(1)).tag(1)
+                        Text(L.lessonCount(2)).tag(2)
+                        Text(L.lessonCount(3)).tag(3)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -55,7 +55,7 @@ struct SlotPicker: View {
                 Spacer(minLength: 0)
 
                 if hasTime {
-                    Button("Temizle") {
+                    Button(L.clear) {
                         startMinutes = nil
                         endMinutes = nil
                     }
@@ -120,8 +120,8 @@ struct SlotPicker: View {
             return "\(label) · \(TimeOfDay.rangeText(start: startMinutes, end: endMinutes))"
         }
         if !hasTime {
-            return "Saat seçilmedi"
+            return L.pick("Saat seçilmedi", "No time set")
         }
-        return "Özel saat · \(TimeOfDay.rangeText(start: startMinutes, end: endMinutes))"
+        return L.pick("Özel saat", "Custom time") + " · \(TimeOfDay.rangeText(start: startMinutes, end: endMinutes))"
     }
 }

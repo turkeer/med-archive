@@ -18,13 +18,16 @@ struct StoreFailureView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Label("Veritabanı açılamadı", systemImage: "exclamationmark.triangle.fill")
+            Label(L.pick("Veritabanı açılamadı", "The database could not be opened"), systemImage: "exclamationmark.triangle.fill")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.orange)
 
-            Text("En olası sebep bir şema değişikliği: modele yeni bir alan eklendiğinde SwiftData eldeki veritabanını kendiliğinden göçürmeye çalışır ve bunu her zaman yapamaz.")
+            Text(L.pick(
+                "En olası sebep bir şema değişikliği: modele yeni bir alan eklendiğinde SwiftData eldeki veritabanını kendiliğinden göçürmeye çalışır ve bunu her zaman yapamaz.",
+                "The likeliest cause is a schema change: when a new field is added to the model, SwiftData tries to migrate the existing database on its own, and it cannot always do it."
+            ))
 
-            GroupBox("Hata") {
+            GroupBox(L.pick("Hata", "Error")) {
                 ScrollView {
                     Text(message)
                         .font(.caption.monospaced())
@@ -34,7 +37,7 @@ struct StoreFailureView: View {
                 .frame(height: 110)
             }
 
-            GroupBox("Veritabanının yeri") {
+            GroupBox(L.pick("Veritabanının yeri", "Where the database is")) {
                 HStack {
                     Text(supportDirectory.path(percentEncoded: false))
                         .font(.caption.monospaced())
@@ -44,7 +47,7 @@ struct StoreFailureView: View {
 
                     Spacer()
 
-                    Button("Finder'da aç") {
+                    Button(L.pick("Finder'da aç", "Open in Finder")) {
                         NSWorkspace.shared.activateFileViewerSelecting([supportDirectory])
                     }
                 }
@@ -62,13 +65,13 @@ struct StoreFailureView: View {
             Spacer()
 
             HStack {
-                Text("Veritabanı silinmez, yedek klasöre taşınır.")
+                Text(L.pick("Veritabanı silinmez, yedek klasöre taşınır.", "The database is not deleted, it is moved to a backup folder."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 Spacer()
 
-                Button("Veritabanını yedeğe taşı") {
+                Button(L.pick("Veritabanını yedeğe taşı", "Move the database aside")) {
                     isConfirmingReset = true
                 }
                 .keyboardShortcut(.defaultAction)
@@ -77,13 +80,16 @@ struct StoreFailureView: View {
         .padding(20)
         .frame(minWidth: 520, minHeight: 440)
         .confirmationDialog(
-            "Veritabanı yedeğe taşınsın mı?",
+            L.pick("Veritabanı yedeğe taşınsın mı?", "Move the database aside?"),
             isPresented: $isConfirmingReset
         ) {
-            Button("Taşı", role: .destructive, action: moveStoreAside)
-            Button("Vazgeç", role: .cancel) {}
+            Button(L.pick("Taşı", "Move"), role: .destructive, action: moveStoreAside)
+            Button(L.cancel, role: .cancel) {}
         } message: {
-            Text("Uygulama boş bir veritabanıyla açılır. Eski veri silinmez, tarihli bir yedek klasörüne taşınır. Diskteki PDF'lere dokunulmaz.")
+            Text(L.pick(
+                "Uygulama boş bir veritabanıyla açılır. Eski veri silinmez, tarihli bir yedek klasörüne taşınır. Diskteki PDF'lere dokunulmaz.",
+                "The app opens with an empty database. The old data is not deleted, it is moved into a dated backup folder. The PDFs on disk are untouched."
+            ))
         }
     }
 
@@ -95,7 +101,7 @@ struct StoreFailureView: View {
         let stamp = ISO8601DateFormatter().string(from: Date())
             .replacingOccurrences(of: ":", with: "-")
         let backup = supportDirectory
-            .appending(path: "MED-yedek-\(stamp)", directoryHint: .isDirectory)
+            .appending(path: L.pick("MED-yedek-", "MED-backup-") + stamp, directoryHint: .isDirectory)
 
         do {
             let items = try manager.contentsOfDirectory(
@@ -105,7 +111,10 @@ struct StoreFailureView: View {
             let storeFiles = items.filter { $0.lastPathComponent.hasPrefix("default.store") }
 
             guard !storeFiles.isEmpty else {
-                status = "Burada taşınacak bir veritabanı bulunamadı. Sorun şema göçü olmayabilir — Xcode konsolundaki hatayı paylaş."
+                status = L.pick(
+                    "Burada taşınacak bir veritabanı bulunamadı. Sorun şema göçü olmayabilir — Xcode konsolundaki hatayı paylaş.",
+                    "No database was found here to move. The problem may not be a schema migration — share the error from the Xcode console."
+                )
                 return
             }
 
@@ -114,9 +123,17 @@ struct StoreFailureView: View {
                 try manager.moveItem(at: file, to: backup.appending(path: file.lastPathComponent))
             }
 
-            status = "\(storeFiles.count) dosya taşındı:\n\(backup.path(percentEncoded: false))\n\nUygulamayı kapat ve yeniden çalıştır."
+            let moved = L.pick(
+                "\(storeFiles.count) dosya taşındı:",
+                "\(storeFiles.count) files moved:"
+            )
+            let next = L.pick(
+                "Uygulamayı kapat ve yeniden çalıştır.",
+                "Quit the app and run it again."
+            )
+            status = moved + "\n\(backup.path(percentEncoded: false))\n\n" + next
         } catch {
-            status = "Taşıma başarısız oldu: \(error)"
+            status = L.pick("Taşıma başarısız oldu: ", "The move failed: ") + "\(error)"
         }
     }
 }
