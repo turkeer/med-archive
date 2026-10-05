@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Xcode — kullanıcıya özel durum, derleme çıktıları
+xcuserdata/
+*.xcuserstate
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
