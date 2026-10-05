@@ -16,6 +16,10 @@ struct LectureLinkList: View {
     /// better grouped. The design calls for exactly that.
     var groupByCourse = false
 
+    /// Everything in the list falls on one day: order by time instead of date,
+    /// and show the time in the leading column, where the date would be noise.
+    var dayMode = false
+
     @Environment(AppNavigation.self) private var nav
 
     /// Swift demet elemanlarına key path yazmaya izin vermiyor, bu yüzden
@@ -44,15 +48,17 @@ struct LectureLinkList: View {
             }
         } else {
             Section("\(title) (\(lectures.count))") {
-                ForEach(byDate) { lecture in
+                ForEach(ordered) { lecture in
                     row(for: lecture, showCourse: true)
                 }
             }
         }
     }
 
-    private var byDate: [Lecture] {
-        lectures.sorted { $0.date > $1.date }
+    private var ordered: [Lecture] {
+        dayMode
+            ? lectures.sorted { ($0.startMinutes ?? 0, $0.title) < ($1.startMinutes ?? 0, $1.title) }
+            : lectures.sorted { $0.date > $1.date }
     }
 
     private var groups: [CourseGroup] {
@@ -61,12 +67,20 @@ struct LectureLinkList: View {
             .sorted { $0.name < $1.name }
     }
 
+    private func leadingText(for lecture: Lecture) -> String {
+        if dayMode {
+            let time = lecture.timeRangeText
+            return time.isEmpty ? "saat yok" : time
+        }
+        return lecture.date.formatted(.dateTime.day().month(.abbreviated).year())
+    }
+
     private func row(for lecture: Lecture, showCourse: Bool) -> some View {
         Button {
             nav.show(lecture)
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(lecture.date, format: .dateTime.day().month(.abbreviated).year())
+                Text(leadingText(for: lecture))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 92, alignment: .leading)

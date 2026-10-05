@@ -26,6 +26,8 @@ struct ContentView: View {
     @ViewBuilder
     private var contentColumn: some View {
         switch nav.section {
+        case .calendar:
+            CalendarMonthView(visibleMonth: $nav.visibleMonth, selectedDay: $nav.selectedDay)
         case .lectures:
             LectureListView(selection: $nav.lectureID)
         case .courses:
@@ -44,6 +46,8 @@ struct ContentView: View {
     @ViewBuilder
     private var detailColumn: some View {
         switch nav.section {
+        case .calendar:
+            CalendarDayColumn(day: nav.selectedDay)
         case .lectures:
             LectureDetailColumn(lectureID: nav.lectureID)
         case .courses:

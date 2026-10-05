@@ -53,18 +53,29 @@ Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kay
 
 | Bölüm | Liste | Detay |
 | --- | --- | --- |
+| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | O günün oturumları, saate göre sıralı; o güne oturum ekleme |
 | Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
 | Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
 | Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
 | Komiteler | Tarih aralığına göre sıralı | Ad, tarih aralığı, renk, oturumlar **derse göre gruplu** |
 | Etiketler | Ad, oturum sayısı | Ad, renk, oturumlar, **başka etiketle birleştirme** |
 
-Takvim 4. aşamada kenar çubuğuna eklenecek.
-
 Her bölüm kendi seçimini `AppNavigation` içinde tutuyor, yani
 Akademisyenler'den çıkıp dönünce aynı kişide kalıyorsun. Aynı ortak nesne
 sayesinde bir akademisyenin altındaki oturum satırına tıklamak seni
 Konular bölümüne, o oturuma götürüyor.
+
+## Takvim ızgarası
+
+`MonthGrid` her ay için sabit 6 satır (42 hücre) üretiyor; ay değiştirince
+ızgara satır kazanıp kaybetmediği için yükseklik oynamıyor. 6 satır her zaman
+yetiyor: en geniş durum, ilk günü haftanın sonuna düşen 31 günlük bir ay ve
+37 hücre istiyor. Haftanın ilk günü kullanıcının takvim ayarından geliyor
+(Türkçe'de Pazartesi), sabitlenmiş değil.
+
+Bu mantık Swift'te denenemediği için aynı hesap Python'da kurulup 2024-2030
+arası 168 ay ve iki hafta başlangıcı için doğrulandı: ızgaranın doğru günle
+başladığı, ayın tamamını kapsadığı ve 42 günün kesintisiz olduğu.
 
 ## Kavram sırası
 
@@ -91,7 +102,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 - [x] **1. Veri modeli ve ders listesi** — beş `@Model`, `ModelContainer`, liste + ekleme formu
 - [x] **2. Ders detayı ve düzenleme** — iki kolonlu düzen, canlı düzenleme, tamamlamalı alanlar
 - [x] **3. Kenar çubuğu ve ilişkili ekranlar** — Ders, Akademisyen, Komite, Etiket
-- [ ] 4. Aylık takvim
+- [x] **4. Aylık takvim** — ızgara, gün seçimi, günden oturum ekleme
 - [ ] 5. Dosya bağlama ve QuickLook
 - [ ] 6. Otomatik klasör tarama ve eşleştirme
 - [ ] 7. Arama ve JSON dışa aktarma
@@ -105,6 +116,8 @@ MED/
   Views/
     ContentView         üç kolonlu kabuk, bölüm anahtarları
     SidebarView         kalıcı kenar çubuğu
+    CalendarMonthView   aylık ızgara
+    CalendarDayColumn   seçili günün oturumları
     LectureListView     Konular listesi
     LectureEditor       oturum alanları — detay ve yeni kayıt aynı kodu kullanıyor
     LectureDetailView   oturum detayı
@@ -119,6 +132,7 @@ MED/
   Support/
     AppNavigation       bölüm ve seçim durumu
     TimeOfDay           dakika ↔ Date köprüsü
+    MonthGrid           aylık ızgaranın 42 hücresi
     SearchText          Türkçe duyarlı metin katlama
     Palette             ders/komite/etiket renkleri
     ModelContext+FindOrCreate

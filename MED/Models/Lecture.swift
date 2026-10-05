@@ -77,6 +77,12 @@ extension Lecture {
         TimeOfDay.rangeText(start: startMinutes, end: endMinutes)
     }
 
+    /// The colour this lecture is marked with on the calendar: its committee's,
+    /// falling back to its course's. `nil` when it has neither.
+    var markerColorHex: String? {
+        committee?.colorHex ?? course?.colorHex
+    }
+
     /// True when a topic of its own was written down.
     var hasTopic: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

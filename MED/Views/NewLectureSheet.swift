@@ -7,7 +7,13 @@ struct NewLectureSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    @State private var lecture = Lecture()
+    @State private var lecture: Lecture
+
+    /// The day the sheet opens on. The calendar passes the selected day so that
+    /// adding from a day does not land on today.
+    init(initialDate: Date = Date()) {
+        _lecture = State(initialValue: Lecture(date: initialDate))
+    }
 
     /// Either a course or a topic is enough. Demanding both would force empty
     /// fields for entries like "Anatomi — pratik" or a one-off seminar.

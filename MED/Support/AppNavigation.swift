@@ -4,7 +4,7 @@ import SwiftData
 
 /// The sections of the permanent sidebar.
 enum SidebarSection: String, CaseIterable, Identifiable {
-    // Takvim 4. aşamada buraya eklenecek.
+    case calendar
     case lectures
     case courses
     case instructors
@@ -15,6 +15,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .calendar:    return "Takvim"
         case .lectures:    return "Konular"
         case .courses:     return "Dersler"
         case .instructors: return "Akademisyenler"
@@ -25,6 +26,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     var symbolName: String {
         switch self {
+        case .calendar:    return "calendar"
         case .lectures:    return "list.bullet.rectangle"
         case .courses:     return "books.vertical"
         case .instructors: return "person.2"
@@ -40,6 +42,10 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 @Observable
 final class AppNavigation {
     var section: SidebarSection? = .lectures
+
+    /// The month the calendar is showing, and the day picked inside it.
+    var visibleMonth = Date()
+    var selectedDay: Date? = Calendar.current.startOfDay(for: Date())
 
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?

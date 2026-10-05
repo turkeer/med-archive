@@ -37,6 +37,9 @@
         ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011C /* ColorSwatchPicker.swift */; };
         ED000000000000000000021D /* LectureLinkList.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011D /* LectureLinkList.swift */; };
         ED000000000000000000021E /* DeleteRecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011E /* DeleteRecordButton.swift */; };
+        ED000000000000000000021F /* MonthGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011F /* MonthGrid.swift */; };
+        ED0000000000000000000220 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000120 /* CalendarMonthView.swift */; };
+        ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000121 /* CalendarDayColumn.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +74,9 @@
         ED000000000000000000011C /* ColorSwatchPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSwatchPicker.swift; sourceTree = "<group>"; };
         ED000000000000000000011D /* LectureLinkList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureLinkList.swift; sourceTree = "<group>"; };
         ED000000000000000000011E /* DeleteRecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRecordButton.swift; sourceTree = "<group>"; };
+        ED000000000000000000011F /* MonthGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthGrid.swift; sourceTree = "<group>"; };
+        ED0000000000000000000120 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000121 /* CalendarDayColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayColumn.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +133,8 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000121 /* CalendarDayColumn.swift */,
+                ED0000000000000000000120 /* CalendarMonthView.swift */,
                 ED000000000000000000011A /* TagDetailView.swift */,
                 ED0000000000000000000119 /* CommitteeDetailView.swift */,
                 ED0000000000000000000118 /* InstructorDetailView.swift */,
@@ -146,6 +154,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000011F /* MonthGrid.swift */,
                 ED0000000000000000000114 /* Palette.swift */,
                 ED000000000000000000010B /* AppNavigation.swift */,
                 ED000000000000000000010C /* SearchText.swift */,
@@ -237,6 +246,9 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */,
+                ED0000000000000000000220 /* CalendarMonthView.swift in Sources */,
+                ED000000000000000000021F /* MonthGrid.swift in Sources */,
                 ED000000000000000000021E /* DeleteRecordButton.swift in Sources */,
                 ED000000000000000000021D /* LectureLinkList.swift in Sources */,
                 ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */,
