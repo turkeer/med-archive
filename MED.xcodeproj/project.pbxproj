@@ -69,6 +69,9 @@
         ED000000000000000000023C /* ScanFolderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013C /* ScanFolderSheet.swift */; };
         ED000000000000000000023D /* ArchiveExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013D /* ArchiveExport.swift */; };
         ED000000000000000000023E /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013E /* Localization.swift */; };
+        ED000000000000000000023F /* FileHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013F /* FileHealth.swift */; };
+        ED0000000000000000000240 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000140 /* HomeView.swift */; };
+        ED0000000000000000000241 /* BrokenLinksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000141 /* BrokenLinksSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -135,6 +138,9 @@
         ED000000000000000000013C /* ScanFolderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFolderSheet.swift; sourceTree = "<group>"; };
         ED000000000000000000013D /* ArchiveExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveExport.swift; sourceTree = "<group>"; };
         ED000000000000000000013E /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+        ED000000000000000000013F /* FileHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHealth.swift; sourceTree = "<group>"; };
+        ED0000000000000000000140 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000141 /* BrokenLinksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokenLinksSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,6 +199,8 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000141 /* BrokenLinksSheet.swift */,
+                ED0000000000000000000140 /* HomeView.swift */,
                 ED000000000000000000013C /* ScanFolderSheet.swift */,
                 ED0000000000000000000138 /* PastExamsSection.swift */,
                 ED000000000000000000012D /* StoreFailureView.swift */,
@@ -220,6 +228,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000013F /* FileHealth.swift */,
                 ED000000000000000000013E /* Localization.swift */,
                 ED000000000000000000013D /* ArchiveExport.swift */,
                 ED000000000000000000013B /* FolderScan.swift */,
@@ -333,6 +342,9 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000241 /* BrokenLinksSheet.swift in Sources */,
+                ED0000000000000000000240 /* HomeView.swift in Sources */,
+                ED000000000000000000023F /* FileHealth.swift in Sources */,
                 ED000000000000000000023E /* Localization.swift in Sources */,
                 ED000000000000000000023D /* ArchiveExport.swift in Sources */,
                 ED000000000000000000023C /* ScanFolderSheet.swift in Sources */,

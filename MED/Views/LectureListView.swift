@@ -30,8 +30,25 @@ struct LectureListView: View {
     /// an order you chose once is not something to choose again per screen.
     @AppStorage("lectureListSort") private var sort: LectureSort = .newestFirst
 
-    @State private var query = ""
-    @State private var filter = LectureFilter()
+    @Environment(AppNavigation.self) private var nav
+
+    /// Reads and writes straight through to `AppNavigation`. A computed pair
+    /// rather than renaming thirty call sites — and `nonmutating set` is
+    /// honest about what happens: the view is not storing anything, it is
+    /// setting a property on a shared object.
+    private var query: String {
+        get { nav.lectureQuery }
+        nonmutating set { nav.lectureQuery = newValue }
+    }
+
+    private var filter: LectureFilter {
+        get { nav.lectureFilter }
+        nonmutating set { nav.lectureFilter = newValue }
+    }
+
+    private var queryBinding: Binding<String> {
+        Binding(get: { nav.lectureQuery }, set: { nav.lectureQuery = $0 })
+    }
     @State private var newLectureRequest: NewLectureRequest?
     @State private var isShowingScan = false
 
@@ -43,7 +60,7 @@ struct LectureListView: View {
             .onDelete(perform: deleteLectures)
         }
         .navigationTitle(L.topics)
-        .searchable(text: $query, prompt: L.search)
+        .searchable(text: queryBinding, prompt: L.search)
         .safeAreaInset(edge: .top, spacing: 0) {
             activeFilterBar
         }
