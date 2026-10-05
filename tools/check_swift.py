@@ -37,6 +37,8 @@ KNOWN = {
     'ContentUnavailableView', 'NavigationStack', 'NavigationSplitView',
     # SwiftData / Foundation üyeleri — uzantı içinden sade adla çağrılıyor
     'fetch', 'insert', 'delete', 'save', 'rollback', 'model',
+    # SwiftUI View üyeleri — View uzantısı içinden self üzerinde çağrılıyor
+    'labelsHidden', 'multilineTextAlignment', 'modifier',
 }
 
 KEYWORDS = {'return', 'if', 'else', 'guard', 'while', 'for', 'switch', 'case',

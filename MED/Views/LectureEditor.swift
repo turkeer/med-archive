@@ -45,6 +45,7 @@ struct LectureEditor: View {
                 }
 
                 TextField("Konu", text: $lecture.title, prompt: Text("O günün konusu"))
+                    .formTextField()
 
                 Picker("Tür", selection: $lecture.format) {
                     ForEach(LectureFormat.allCases) { format in
@@ -191,6 +192,7 @@ struct LectureEditor: View {
         .formStyle(.grouped)
         .alert("Yeni akademisyen", isPresented: $isAddingInstructor) {
             TextField("Ad", text: $newInstructorName)
+                .formTextField()
 
             Button("Ekle", action: addInstructor)
             Button("Vazgeç", role: .cancel) {

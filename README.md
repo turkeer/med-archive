@@ -373,6 +373,19 @@ tools/
   add_to_xcodeproj.py   proje dosyasına Swift dosyası ekler
 ```
 
+## Form içindeki metin alanları
+
+macOS'ta gruplu bir `Form` içindeki `TextField` iki şeyi birden ters
+yapıyor, ikisinin de sebebi aynı: form etiketi başa, kontrolü sona koyuyor
+ve kontrolün içeriğini de sona hizalıyor. Sonuç: düzenlenebilir alan satırın
+sağ ucunda kalıyor (yazmak için sağ tarafa tıklamak gerekiyor) ve yazı sabit
+bir imleçten sola doğru büyüyor.
+
+Bu yüzden her metin alanı `.formTextField()` taşıyor. Etiketi yalnızca yer
+tutucu olsun diye verilen alanlar (arama çubuğu, tamamlamalı isim alanı)
+`.borderlessFormTextField()` kullanıyor: o da etiketi satır düzeninden
+çıkarıyor, böylece alan tam genişlikte ve her yerinden tıklanabilir oluyor.
+
 ## Derleme öncesi tarama
 
 Bu projede Swift derleyicisi yok — kod kör yazılıp Xcode'da derleniyor. Bu

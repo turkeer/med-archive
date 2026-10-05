@@ -14,7 +14,9 @@ struct CommitteeDetailView: View {
         Form {
             Section("Komite") {
                 TextField("Ad", text: $committee.name, prompt: Text("Introduction to Medicine"))
+                    .formTextField()
                 TextField("Kısa ad", text: $committee.code, prompt: Text("Komite I"))
+                    .formTextField()
 
                 DatePicker(
                     "Başlangıç",

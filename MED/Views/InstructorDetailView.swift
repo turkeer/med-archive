@@ -11,9 +11,13 @@ struct InstructorDetailView: View {
         Form {
             Section("Akademisyen") {
                 TextField("Ad", text: $instructor.name, prompt: Text("Ayşe Yılmaz"))
+                    .formTextField()
                 TextField("Unvan", text: $instructor.titleText, prompt: Text("Prof. Dr."))
+                    .formTextField()
                 TextField("Bölüm", text: $instructor.department, prompt: Text("Anatomi"))
+                    .formTextField()
                 TextField("E-posta", text: $instructor.email)
+                    .formTextField()
             }
 
             LectureLinkList(lectures: instructor.lectures)

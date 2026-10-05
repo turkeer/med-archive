@@ -56,6 +56,7 @@
         ED000000000000000000022F /* QuickPickRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012F /* QuickPickRow.swift */; };
         ED0000000000000000000230 /* LectureGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000130 /* LectureGrouping.swift */; };
         ED0000000000000000000231 /* LectureSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000131 /* LectureSearch.swift */; };
+        ED0000000000000000000232 /* FormTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000132 /* FormTextField.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -109,6 +110,7 @@
         ED000000000000000000012F /* QuickPickRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPickRow.swift; sourceTree = "<group>"; };
         ED0000000000000000000130 /* LectureGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureGrouping.swift; sourceTree = "<group>"; };
         ED0000000000000000000131 /* LectureSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureSearch.swift; sourceTree = "<group>"; };
+        ED0000000000000000000132 /* FormTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormTextField.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +215,7 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000132 /* FormTextField.swift */,
                 ED000000000000000000012F /* QuickPickRow.swift */,
                 ED000000000000000000012C /* FormatBadge.swift */,
                 ED0000000000000000000123 /* SlotPicker.swift */,
@@ -294,6 +297,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000232 /* FormTextField.swift in Sources */,
                 ED0000000000000000000231 /* LectureSearch.swift in Sources */,
                 ED0000000000000000000230 /* LectureGrouping.swift in Sources */,
                 ED000000000000000000022F /* QuickPickRow.swift in Sources */,

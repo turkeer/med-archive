@@ -11,6 +11,7 @@ struct CourseDetailView: View {
         Form {
             Section("Ders") {
                 TextField("Ad", text: $course.name, prompt: Text("Anatomi"))
+                    .formTextField()
 
                 LabeledContent("Renk") {
                     ColorSwatchPicker(hex: $course.colorHex)

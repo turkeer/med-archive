@@ -24,6 +24,7 @@ struct TagDetailView: View {
         Form {
             Section("Etiket") {
                 TextField("Ad", text: $tag.name, prompt: Text("membran"))
+                    .formTextField()
 
                 LabeledContent("Renk") {
                     ColorSwatchPicker(hex: $tag.colorHex)

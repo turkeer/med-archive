@@ -100,8 +100,9 @@ struct LectureLinkList: View {
                     // Just "Ara": a placeholder listing every searched field
                     // wrapped onto three lines and made the row tall and ugly.
                     // The detail belongs in the tooltip.
-                    TextField("Ara", text: $query)
+                    TextField("Ara", text: $query, prompt: Text("Ara"))
                         .textFieldStyle(.plain)
+                        .borderlessFormTextField()
                         .lineLimit(1)
                         .help("Konu, ders, akademisyen, komite, etiket, not ve dosya adında arar")
 
