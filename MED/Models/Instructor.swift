@@ -34,4 +34,27 @@ extension Instructor {
     var lecturesByDate: [Lecture] {
         lectures.sorted { $0.date > $1.date }
     }
+
+    /// The course this academic almost always teaches.
+    ///
+    /// Only this direction can be guessed. An academic teaches one course as a
+    /// rule, so instructor -> course is many-to-one; a course is taught by
+    /// several academics, so course -> instructor is one-to-many and guessing
+    /// it would be wrong as often as right.
+    ///
+    /// Requires a clear majority rather than merely the most frequent, so one
+    /// stray entry cannot decide it.
+    var dominantCourse: Course? {
+        let courses = lectures.compactMap(\.course)
+        guard !courses.isEmpty else { return nil }
+
+        var tally: [PersistentIdentifier: (course: Course, count: Int)] = [:]
+        for course in courses {
+            let id = course.persistentModelID
+            tally[id] = (course, (tally[id]?.count ?? 0) + 1)
+        }
+
+        guard let best = tally.values.max(by: { $0.count < $1.count }) else { return nil }
+        return Double(best.count) / Double(courses.count) >= 0.67 ? best.course : nil
+    }
 }

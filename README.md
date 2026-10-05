@@ -38,7 +38,7 @@ Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.
 | --- | --- | --- |
 | `Lecture` | Bir oturum | `title` o günün **konusu**. Saatler `startMinutes` / `endMinutes` olarak gece yarısından itibaren dakika cinsinden; `date` yalnızca günü taşır. |
 | `Course` | Tekrar eden ders — Anatomi, Biyofizik | Diskteki ders klasörünün karşılığı. Bilerek komiteye bağlı **değil**: aynı ders birden çok komitede geçiyor. |
-| `Committee` | Komite I, II… | `colorHex` takvimde günleri işaretlemek için. |
+| `Committee` | Komite I, II… | `name` gerçek başlık ("Introduction to Medicine"), `code` kısa hali ("Komite I") — uzun ad çipe sığmıyor. Tarih aralığı oturumun komitesini belirliyor. |
 | `Instructor` | Akademisyen | Akademik unvan alanının adı `titleText` — `Lecture.title` ile karışmasın. |
 | `Tag` | Serbest etiket | Oturumları **enine kesen** konular: membran, sınavda çıktı. Yapısal seviye `Course`, serbest etiket `Tag`. `name` tekil (`@Attribute(.unique)`). |
 | `LectureFile` | Diskteki bir dosyaya işaretçi | Yol `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. |
@@ -68,6 +68,32 @@ Her bölüm kendi seçimini `AppNavigation` içinde tutuyor, yani
 Akademisyenler'den çıkıp dönünce aynı kişide kalıyorsun. Aynı ortak nesne
 sayesinde bir akademisyenin altındaki oturum satırına tıklamak seni
 Konular bölümüne, o oturuma götürüyor.
+
+## Elle doldurulmayan alanlar
+
+Yüzlerce oturum girilecek, aynı cevabı tekrar tekrar yazmamak için üç yerde
+veri kendini dolduruyor. Üçünün de kuralı aynı: **yalnızca alan boşken yazar,**
+seçtiğin hiçbir şeyi ezmez.
+
+| Alan | Neden çıkarılabiliyor | Ne zaman |
+| --- | --- | --- |
+| **Komite** | Komitenin tarih aralığı var, oturumun tarihi var | Yeni oturumda ve tarih değişince |
+| **Ders** | Akademisyen → ders çoğa-bir | Akademisyen seçilince, o hocanın derslerinin en az 2/3'ü tek derse düşüyorsa |
+| **Tür** (slayt/not) | Dosya adı | Dosya bağlanınca |
+
+Tersi yapılmıyor: ders → akademisyen bire-çok (bir derse birden çok hoca
+giriyor), o yüzden tahmin edilmiyor.
+
+Komite tarihle çelişirse **sessizce değiştirilmiyor** — editörde "Bu tarih
+Komite II aralığında · Uygula" satırı çıkıyor. Çünkü istisna bilerek yapılmış
+olabilir: telafi dersi, komite dışı seminer. İki komitenin aralığı aynı günü
+kapsıyorsa tahmin yok, alan boş kalıyor.
+
+Komiteyi sonradan açtığında geriye dönük atama var: komite detayında
+"Bu aralıkta komitesi boş 14 oturum var · ata".
+
+Ders seçimi arama alanı değil, **bütün dersler düğme** — yıl içinde sekiz on
+ders oluyor, görebildiğin bir şeyi aramak gereksiz iş.
 
 ## Ders saatleri
 

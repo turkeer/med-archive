@@ -46,6 +46,13 @@ struct NewLectureSheet: View {
             .padding(12)
         }
         .frame(width: 540, height: 660)
+        .onAppear {
+            // A brand new record has no committee to overwrite, so the date
+            // can simply decide.
+            if lecture.committee == nil {
+                lecture.committee = context.committee(covering: lecture.date)
+            }
+        }
     }
 
     private func save() {

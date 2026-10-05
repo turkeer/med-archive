@@ -46,6 +46,7 @@
         ED0000000000000000000225 /* LibraryRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000125 /* LibraryRoot.swift */; };
         ED0000000000000000000226 /* LectureFilesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000126 /* LectureFilesSection.swift */; };
         ED0000000000000000000227 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000127 /* SettingsView.swift */; };
+        ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000128 /* ModelContext+Inference.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +90,7 @@
         ED0000000000000000000125 /* LibraryRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoot.swift; sourceTree = "<group>"; };
         ED0000000000000000000126 /* LectureFilesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilesSection.swift; sourceTree = "<group>"; };
         ED0000000000000000000127 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000128 /* ModelContext+Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+Inference.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,6 +170,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000128 /* ModelContext+Inference.swift */,
                 ED0000000000000000000125 /* LibraryRoot.swift */,
                 ED0000000000000000000124 /* FileNaming.swift */,
                 ED0000000000000000000122 /* LessonSlot.swift */,
@@ -264,6 +267,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */,
                 ED0000000000000000000227 /* SettingsView.swift in Sources */,
                 ED0000000000000000000226 /* LectureFilesSection.swift in Sources */,
                 ED0000000000000000000225 /* LibraryRoot.swift in Sources */,

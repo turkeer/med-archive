@@ -89,7 +89,7 @@ struct CommitteeListColumn: View {
             title: "Komiteler",
             items: committees,
             selection: $selection,
-            name: { $0.name },
+            name: { $0.fullLabel },
             subtitle: { $0.dateRangeText },
             accent: { Color(hex: $0.colorHex) },
             make: { Committee(colorHex: Palette.suggested(for: committees.count)) },

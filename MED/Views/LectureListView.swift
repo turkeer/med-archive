@@ -100,7 +100,7 @@ private struct LectureRow: View {
 
                 if let committee = lecture.committee {
                     Label {
-                        Text(committee.name)
+                        Text(committee.shortLabel)
                     } icon: {
                         Circle()
                             .fill(Color(hex: committee.colorHex))
