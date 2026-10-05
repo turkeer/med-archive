@@ -95,6 +95,17 @@ Akademisyenler'den çıkıp dönünce aynı kişide kalıyorsun. Aynı ortak nes
 sayesinde bir akademisyenin altındaki oturum satırına tıklamak seni
 Konular bölümüne, o oturuma götürüyor.
 
+## Oturum editöründe ne oluşturulabilir
+
+Ders, komite ve akademisyen editörde **seçilir, oluşturulmaz.** Yıl içinde
+sekiz on ders ve yedi komite oluyor; bunlar kendi bölümlerinde bir kez
+kurulur. Yüzlerce kez kullanılan bir formda duran "ara veya ekle" alanının
+bedeli her seferinde ödeniyor, karşılığı ise yılda birkaç kez.
+
+Tek istisna akademisyen: yıl içinde yeni bir hoca çıkıyor, o yüzden seçim
+listesinin yanında bir `+` düğmesi var. Etiketler de akış içinde
+oluşturuluyor, onların alanı duruyor.
+
 ## Elle doldurulmayan alanlar
 
 Yüzlerce oturum girilecek, aynı cevabı tekrar tekrar yazmamak için üç yerde
@@ -124,8 +135,25 @@ ders oluyor, görebildiğin bir şeyi aramak gereksiz iş.
 ## Haftalık ızgara
 
 Günler yanda, dokuz ders saati altta; her oturum dersinin rengiyle dolu bir
-kutu. Çift ders tek blok gibi okunuyor, boş hücre `+` ile o güne ve o saate
-oturum açıyor — bir haftanın programını girmenin en hızlı yolu bu.
+kutu. Boş hücre `+` ile o güne ve o saate oturum açıyor — bir haftanın
+programını girmenin en hızlı yolu bu.
+
+Izgara **satır satır değil, gün gün** diziliyor. Sebebi çift ders: iki
+ders saatlik bir oturum, iki ayrı hücre değil **tek uzun bir kutu** olmalı,
+yoksa farklı dersler gibi görünüyor. `DayTimetable.segments` bir günü
+"N derslik blok" ve "boş hücre" dizisine çeviriyor; blok yüksekliği
+`N × satır + (N-1) × boşluk` oluyor. Kritik değişmez şu: span'lerin toplamı
+her durumda dokuz, yani her sütun aynı yükseklikte kalıyor ve satırlar
+soldaki saat kolonuyla hizalı duruyor. On iki yerleşim üzerinde doğrulandı —
+gün sonunda kırpılan blok, aynı saati isteyen iki oturum, ve içinde başka
+bir dersin başladığı çift ders dahil.
+
+**Aşağı doldurma:** bir bloğun sağ alt köşesindeki ok, aynı oturumu bir
+sonraki ders saatine **ayrı bir kayıt olarak** kopyalıyor. Okulda tek bir
+konu iki ders saati boyunca işlenebiliyor ama bunlar ayrı dersler olarak
+sayılıyor; o yüzden uzatmıyor, çoğaltıyor. Ders, akademisyen, komite, tür ve
+etiketler kopyalanıyor; notlar ve dosyalar kopyalanmıyor — onlar oturuma ait,
+konuya değil. Ok yalnızca gereken saatlerin tamamı boşsa görünüyor.
 
 Yerleşim kararı: haftalık ızgara **geniş olan sağ kolonda**, aylık ızgara
 solda kalıyor. Beş sütun ders bloğu liste genişliğindeki bir kolona sığmıyor.

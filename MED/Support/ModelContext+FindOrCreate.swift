@@ -4,17 +4,13 @@ import SwiftData
 /// Turning a typed name into a record, without letting the same thing pile up
 /// under two spellings. A name that folds to an existing one reuses that
 /// record; anything else becomes a new one.
+///
+/// Only academics and tags are created this way. Courses and committees are
+/// set up in their own sections and merely chosen in the lecture editor, so
+/// there is nothing to type and nothing to fold.
 extension ModelContext {
-    func findOrCreateCourse(named rawName: String) -> Course? {
-        findOrCreate(rawName, name: \Course.name) { Course(name: $0) }
-    }
-
     func findOrCreateInstructor(named rawName: String) -> Instructor? {
         findOrCreate(rawName, name: \Instructor.name) { Instructor(name: $0) }
-    }
-
-    func findOrCreateCommittee(named rawName: String) -> Committee? {
-        findOrCreate(rawName, name: \Committee.name) { Committee(name: $0) }
     }
 
     func findOrCreateTag(named rawName: String) -> Tag? {

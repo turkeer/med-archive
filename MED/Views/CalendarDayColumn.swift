@@ -11,9 +11,7 @@ struct CalendarDayColumn: View {
 
     @Query private var lectures: [Lecture]
 
-    @State private var isAddingLecture = false
-    @State private var newLectureSeed = UUID()
-    @State private var pendingSlot: LessonSlot?
+    @State private var newLectureRequest: NewLectureRequest?
 
     private let calendar = Calendar.current
 
@@ -33,7 +31,7 @@ struct CalendarDayColumn: View {
                 Section("Ders saatleri") {
                     ForEach(LessonSlot.all) { slot in
                         SlotRow(slot: slot, lectures: timetabled(on: day)) {
-                            add(in: slot)
+                            add(on: day, in: slot)
                         }
                     }
                 }
@@ -60,16 +58,13 @@ struct CalendarDayColumn: View {
                 }
             }
         }
-        .sheet(isPresented: $isAddingLecture) {
-            NewLectureSheet(initialDate: day, initialSlot: pendingSlot)
-                .id(newLectureSeed)
+        .sheet(item: $newLectureRequest) { request in
+            NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
         }
     }
 
-    private func add(in slot: LessonSlot?) {
-        pendingSlot = slot
-        newLectureSeed = UUID()
-        isAddingLecture = true
+    private func add(on day: Date, in slot: LessonSlot?) {
+        newLectureRequest = NewLectureRequest(day: day, slot: slot)
     }
 
     private func dayLectures(on day: Date) -> [Lecture] {

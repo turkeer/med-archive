@@ -1,78 +1,104 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
-/// Creating a lecture. The lecture object exists but is not inserted until
-/// you save, so closing the sheet leaves nothing behind.
+/// A pending "add a lecture" press, carried as the sheet's item.
+///
+/// The day and period travel with the request rather than sitting in separate
+/// state. With `sheet(isPresented:)` the content could be built from values
+/// set a moment earlier, which is how adding to a past day ended up creating
+/// the lecture on today.
+struct NewLectureRequest: Identifiable {
+    let id = UUID()
+    var day: Date = Date()
+    var slot: LessonSlot?
+}
+
+/// Creating a lecture.
 struct NewLectureSheet: View {
+    let initialDate: Date
+    let initialSlot: LessonSlot?
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    @State private var lecture: Lecture
+    /// The lecture is inserted as the sheet opens and deleted again on cancel.
+    ///
+    /// Working on a detached object looked tidier and was wrong: choosing a
+    /// course, or letting the date fill in the committee, attaches the lecture
+    /// to records that *are* in the store, and SwiftData saves it along with
+    /// them. Cancelling then left an untitled ghost behind. Inserting up front
+    /// makes the lifetime explicit instead.
+    @State private var lecture: Lecture?
 
-    /// The day and period the sheet opens on. The calendar passes the selected
-    /// day, and the slot you pressed + on, so the form arrives filled in.
     init(initialDate: Date = Date(), initialSlot: LessonSlot? = nil) {
-        _lecture = State(initialValue: Lecture(
-            date: initialDate,
-            startMinutes: initialSlot?.start,
-            endMinutes: initialSlot?.end
-        ))
+        self.initialDate = initialDate
+        self.initialSlot = initialSlot
     }
 
     /// Either a course or a topic is enough. Demanding both would force empty
     /// fields for entries like "Anatomi — pratik" or a one-off seminar.
     private var canSave: Bool {
-        lecture.course != nil || lecture.hasTopic
+        guard let lecture else { return false }
+        return lecture.course != nil || lecture.hasTopic
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Yeni ders")
+            Text("Yeni oturum")
                 .font(.headline)
                 .padding(.top, 14)
 
-            LectureEditor(lecture: lecture)
+            if let lecture {
+                LectureEditor(lecture: lecture)
+            } else {
+                Spacer()
+            }
 
             Divider()
 
             HStack {
                 Spacer()
-                Button("Vazgeç", role: .cancel) { dismiss() }
+
+                Button("Vazgeç", role: .cancel, action: cancel)
                     .keyboardShortcut(.cancelAction)
+
                 Button("Kaydet", action: save)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
             }
             .padding(12)
         }
-        .frame(width: 540, height: 660)
-        .onAppear {
-            // A brand new record has no committee to overwrite, so the date
-            // can simply decide.
-            if lecture.committee == nil {
-                lecture.committee = context.committee(covering: lecture.date)
-            }
+        .frame(width: 540, height: 680)
+        .onAppear(perform: create)
+    }
+
+    private func create() {
+        guard lecture == nil else { return }
+
+        let new = Lecture(
+            date: initialDate,
+            startMinutes: initialSlot?.start,
+            endMinutes: initialSlot?.end
+        )
+        context.insert(new)
+
+        // A brand new record has no committee to overwrite, so the date decides.
+        new.committee = context.committee(covering: new.date)
+
+        lecture = new
+    }
+
+    private func cancel() {
+        if let lecture {
+            context.delete(lecture)
         }
+        dismiss()
     }
 
     private func save() {
-        lecture.title = lecture.title.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Hold the relationships, insert, then set them again. Assigning them
-        // once more from an inserted object makes sure the graph is wired no
-        // matter how the picks were made while the lecture was still detached.
-        let course = lecture.course
-        let instructor = lecture.instructor
-        let committee = lecture.committee
-        let tags = lecture.tags
-
-        context.insert(lecture)
-
-        lecture.course = course
-        lecture.instructor = instructor
-        lecture.committee = committee
-        lecture.tags = tags
-
+        if let lecture {
+            lecture.title = lecture.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         dismiss()
     }
 }

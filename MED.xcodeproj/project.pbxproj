@@ -52,6 +52,8 @@
         ED000000000000000000022B /* CalendarWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012B /* CalendarWeekView.swift */; };
         ED000000000000000000022C /* FormatBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012C /* FormatBadge.swift */; };
         ED000000000000000000022D /* StoreFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012D /* StoreFailureView.swift */; };
+        ED000000000000000000022E /* DayTimetable.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012E /* DayTimetable.swift */; };
+        ED000000000000000000022F /* QuickPickRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012F /* QuickPickRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -101,6 +103,8 @@
         ED000000000000000000012B /* CalendarWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarWeekView.swift; sourceTree = "<group>"; };
         ED000000000000000000012C /* FormatBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBadge.swift; sourceTree = "<group>"; };
         ED000000000000000000012D /* StoreFailureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFailureView.swift; sourceTree = "<group>"; };
+        ED000000000000000000012E /* DayTimetable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTimetable.swift; sourceTree = "<group>"; };
+        ED000000000000000000012F /* QuickPickRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPickRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,6 +187,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012E /* DayTimetable.swift */,
                 ED000000000000000000012A /* WeekGrid.swift */,
                 ED0000000000000000000128 /* ModelContext+Inference.swift */,
                 ED0000000000000000000125 /* LibraryRoot.swift */,
@@ -202,6 +207,7 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012F /* QuickPickRow.swift */,
                 ED000000000000000000012C /* FormatBadge.swift */,
                 ED0000000000000000000123 /* SlotPicker.swift */,
                 ED000000000000000000011E /* DeleteRecordButton.swift */,
@@ -282,6 +288,8 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000022F /* QuickPickRow.swift in Sources */,
+                ED000000000000000000022E /* DayTimetable.swift in Sources */,
                 ED000000000000000000022D /* StoreFailureView.swift in Sources */,
                 ED000000000000000000022C /* FormatBadge.swift in Sources */,
                 ED000000000000000000022B /* CalendarWeekView.swift in Sources */,

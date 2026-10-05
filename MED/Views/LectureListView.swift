@@ -15,11 +15,7 @@ struct LectureListView: View {
     )
     private var lectures: [Lecture]
 
-    @State private var isAddingLecture = false
-
-    /// Changed on every press of +, so the sheet always opens on a fresh form
-    /// rather than reusing the previous one's state.
-    @State private var newLectureSeed = UUID()
+    @State private var newLectureRequest: NewLectureRequest?
 
     var body: some View {
         List(selection: $selection) {
@@ -41,17 +37,15 @@ struct LectureListView: View {
         .toolbar {
             ToolbarItem {
                 Button {
-                    newLectureSeed = UUID()
-                    isAddingLecture = true
+                    newLectureRequest = NewLectureRequest()
                 } label: {
                     Label("Yeni ders", systemImage: "plus")
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
         }
-        .sheet(isPresented: $isAddingLecture) {
-            NewLectureSheet()
-                .id(newLectureSeed)
+        .sheet(item: $newLectureRequest) { request in
+            NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
         }
     }
 

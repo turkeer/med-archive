@@ -1,49 +1,47 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// The field set for a lecture, bound straight to the model object.
 ///
 /// One editor serves both jobs: the detail screen hands it a stored lecture
 /// and every keystroke is a live edit, while the new-lecture sheet hands it a
-/// not-yet-inserted lecture and saves at the end. That keeps a single
-/// implementation of the fields rather than two that drift apart.
+/// freshly inserted one. That keeps a single implementation of the fields
+/// rather than two that drift apart.
+///
+/// Courses, committees and academics are **chosen** here, never created.
+/// Over a year there are eight or so courses and seven committees, and they
+/// are set up once in their own sections — an "add" field in a form used
+/// hundreds of times is clutter paid for every single time. The exception is
+/// a new academic, which does come up mid-year, so that one gets a button.
 struct LectureEditor: View {
     @Bindable var lecture: Lecture
 
-    /// Files belong to a stored lecture. The new-lecture sheet works on a
-    /// lecture that is not inserted yet, so it leaves this off and you attach
-    /// files once the record exists.
+    /// Files belong to a stored lecture, so the new-lecture sheet leaves this
+    /// off and you attach them once the record exists.
     var showsFiles = false
 
     @Environment(\.modelContext) private var context
 
     @Query(sort: \Course.name) private var courses: [Course]
     @Query(sort: \Instructor.name) private var instructors: [Instructor]
-    @Query(sort: \Committee.name) private var committees: [Committee]
+    @Query(sort: \Committee.startDate) private var committees: [Committee]
     @Query(sort: \Tag.name) private var allTags: [Tag]
+
+    @State private var isAddingInstructor = false
+    @State private var newInstructorName = ""
 
     var body: some View {
         Form {
             Section("Ders ve konu") {
-                // The course list is small and stable — eight or so for a
-                // year — so every one of them is a button. Searching for
-                // something you can see is wasted work.
                 if courses.isEmpty {
-                    Text("Henüz ders yok. Aşağıdan ekle.")
+                    Text("Henüz ders yok. Kenar çubuğundaki Dersler bölümünden ekle.")
                         .foregroundStyle(.secondary)
                 } else {
-                    CourseQuickPick(
-                        courses: courses,
+                    QuickPickRow(
+                        items: courses.map(courseItem),
                         selectedID: lecture.course?.persistentModelID,
-                        pick: { pick(course: $0) }
+                        pick: chooseCourse
                     )
-                }
-
-                NameSuggestField(
-                    placeholder: "Yeni ders ekle — Anatomi, Biyofizik…",
-                    suggestions: courses.map(\.name)
-                ) { name in
-                    lecture.course = context.findOrCreateCourse(named: name)
                 }
 
                 TextField("Konu", text: $lecture.title, prompt: Text("O günün konusu"))
@@ -95,32 +93,34 @@ struct LectureEditor: View {
             }
 
             Section("Akademisyen") {
-                currentValue(lecture.instructor?.displayName, color: .accentColor) {
-                    lecture.instructor = nil
-                }
-
-                NameSuggestField(
-                    placeholder: "Akademisyen ara veya yeni ekle",
-                    suggestions: instructors.map(\.name)
-                ) { name in
-                    let instructor = context.findOrCreateInstructor(named: name)
-                    lecture.instructor = instructor
-
-                    // Instructor -> course is many-to-one, so it can be filled
-                    // in from who is teaching. Only when the course is still
-                    // empty: a choice already made is never overwritten.
-                    if lecture.course == nil {
-                        lecture.course = instructor?.dominantCourse
+                HStack {
+                    Picker("Akademisyen", selection: instructorBinding) {
+                        Text("Yok").tag(Instructor?.none)
+                        ForEach(instructors) { instructor in
+                            Text(instructor.displayName).tag(Instructor?.some(instructor))
+                        }
                     }
+                    .labelsHidden()
+
+                    Button {
+                        isAddingInstructor = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .help("Yeni akademisyen")
                 }
             }
 
             Section("Komite") {
-                currentValue(
-                    lecture.committee?.shortLabel,
-                    color: Color(hex: lecture.committee?.colorHex ?? "")
-                ) {
-                    lecture.committee = nil
+                if committees.isEmpty {
+                    Text("Henüz komite yok. Kenar çubuğundaki Komiteler bölümünden ekle.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    QuickPickRow(
+                        items: committees.map(committeeItem),
+                        selectedID: lecture.committee?.persistentModelID,
+                        pick: chooseCommittee
+                    )
                 }
 
                 // Says so rather than changing it: an exception may well be
@@ -142,13 +142,6 @@ struct LectureEditor: View {
                         .font(.caption)
                     }
                 }
-
-                NameSuggestField(
-                    placeholder: "Komite ara veya yeni ekle",
-                    suggestions: committees.map(\.name)
-                ) { name in
-                    lecture.committee = context.findOrCreateCommittee(named: name)
-                }
             }
 
             Section {
@@ -169,6 +162,8 @@ struct LectureEditor: View {
                     }
                 }
 
+                // Tags are the one thing genuinely created as you go, so this
+                // field stays.
                 NameSuggestField(
                     placeholder: "Etiket ara veya yeni ekle",
                     suggestions: allTags.map(\.name)
@@ -178,7 +173,7 @@ struct LectureEditor: View {
             } header: {
                 Text("Etiketler")
             } footer: {
-                Text("Dersleri enine kesen serbest konular: membran, sınavda çıktı, klinik korelasyon…")
+                Text("Oturumları enine kesen serbest konular: membran, sınavda çıktı, klinik korelasyon…")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -194,33 +189,79 @@ struct LectureEditor: View {
             }
         }
         .formStyle(.grouped)
+        .alert("Yeni akademisyen", isPresented: $isAddingInstructor) {
+            TextField("Ad", text: $newInstructorName)
+
+            Button("Ekle", action: addInstructor)
+            Button("Vazgeç", role: .cancel) {
+                newInstructorName = ""
+            }
+        }
     }
 
     private var sortedTags: [Tag] {
         lecture.tags.sorted { $0.name < $1.name }
     }
 
-    /// The single value a section currently holds, with a way to clear it.
-    @ViewBuilder
-    private func currentValue(
-        _ text: String?,
-        color: Color,
-        clear: @escaping () -> Void
-    ) -> some View {
-        if let text, !text.isEmpty {
-            HStack {
-                Chip(text: text, color: color, onRemove: clear)
-                Spacer()
+    // MARK: Choosing
+
+    private func courseItem(_ course: Course) -> QuickPickRow.Item {
+        QuickPickRow.Item(
+            id: course.persistentModelID,
+            label: course.name.isEmpty ? "(adsız)" : course.name,
+            colorHex: course.colorHex
+        )
+    }
+
+    private func committeeItem(_ committee: Committee) -> QuickPickRow.Item {
+        QuickPickRow.Item(
+            id: committee.persistentModelID,
+            label: committee.shortLabel.isEmpty ? "(adsız)" : committee.shortLabel,
+            colorHex: committee.colorHex
+        )
+    }
+
+    private func chooseCourse(_ id: PersistentIdentifier?) {
+        lecture.course = id.flatMap { target in
+            courses.first { $0.persistentModelID == target }
+        }
+    }
+
+    private func chooseCommittee(_ id: PersistentIdentifier?) {
+        lecture.committee = id.flatMap { target in
+            committees.first { $0.persistentModelID == target }
+        }
+    }
+
+    /// Choosing an academic fills in the course when it is still empty.
+    /// Instructor -> course is many-to-one, so it can be guessed; a choice
+    /// already made is never overwritten.
+    private var instructorBinding: Binding<Instructor?> {
+        Binding(
+            get: { lecture.instructor },
+            set: { chosen in
+                lecture.instructor = chosen
+                if lecture.course == nil {
+                    lecture.course = chosen?.dominantCourse
+                }
             }
-        } else {
-            Text("Yok")
-                .foregroundStyle(.secondary)
+        )
+    }
+
+    private func addInstructor() {
+        let instructor = context.findOrCreateInstructor(named: newInstructorName)
+        newInstructorName = ""
+
+        guard let instructor else { return }
+        lecture.instructor = instructor
+
+        if lecture.course == nil {
+            lecture.course = instructor.dominantCourse
         }
     }
 
     // MARK: Bindings
 
-    /// Keeps `date` holding the day only; times live in their own fields.
     private var dayBinding: Binding<Date> {
         Binding(
             get: { lecture.date },
@@ -240,15 +281,6 @@ struct LectureEditor: View {
     private var committeeSuggestion: Committee? {
         guard let covering = context.committee(covering: lecture.date) else { return nil }
         return covering.persistentModelID == lecture.committee?.persistentModelID ? nil : covering
-    }
-
-    /// Tapping the selected course again clears it.
-    private func pick(course: Course) -> Void {
-        if lecture.course?.persistentModelID == course.persistentModelID {
-            lecture.course = nil
-        } else {
-            lecture.course = course
-        }
     }
 
     /// Turns "has a time at all" into a toggle over the optional minutes field.
@@ -288,60 +320,5 @@ struct LectureEditor: View {
 
     private func remove(_ tag: Tag) {
         lecture.tags.removeAll { $0.persistentModelID == tag.persistentModelID }
-    }
-}
-
-/// Every course as a button. Small, fixed set — one tap beats typing.
-private struct CourseQuickPick: View {
-    let courses: [Course]
-    let selectedID: PersistentIdentifier?
-    let pick: (Course) -> Void
-
-    var body: some View {
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 104), spacing: 6, alignment: .leading)],
-            alignment: .leading,
-            spacing: 6
-        ) {
-            ForEach(courses) { course in
-                CourseChip(
-                    course: course,
-                    isSelected: course.persistentModelID == selectedID,
-                    pick: { pick(course) }
-                )
-            }
-        }
-        .padding(.vertical, 2)
-    }
-}
-
-private struct CourseChip: View {
-    let course: Course
-    let isSelected: Bool
-    let pick: () -> Void
-
-    var body: some View {
-        Button(action: pick) {
-            HStack(spacing: 5) {
-                Circle()
-                    .fill(Color(hex: course.colorHex))
-                    .frame(width: 7, height: 7)
-
-                Text(course.name.isEmpty ? "(adsız)" : course.name)
-                    .lineLimit(1)
-            }
-            .font(.callout)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                isSelected
-                    ? Color(hex: course.colorHex).opacity(0.38)
-                    : Color.secondary.opacity(0.12),
-                in: Capsule()
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .help(isSelected ? "Seçimi kaldır" : course.name)
     }
 }
