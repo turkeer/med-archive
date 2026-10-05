@@ -52,7 +52,7 @@ struct CalendarDayColumn: View {
         .toolbar {
             ToolbarItem {
                 Button {
-                    add(in: nil)
+                    add(on: day, in: nil)
                 } label: {
                     Label("Bu güne oturum ekle", systemImage: "plus")
                 }

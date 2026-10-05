@@ -306,6 +306,25 @@ tools/
   add_to_xcodeproj.py   proje dosyasına Swift dosyası ekler
 ```
 
+## Derleme öncesi tarama
+
+Bu projede Swift derleyicisi yok — kod kör yazılıp Xcode'da derleniyor. Bu
+yüzden yaşanan her derleme hatası için bir kontrol eklendi:
+
+```
+python3 tools/check_swift.py
+```
+
+| Kontrol | Yakaladığı gerçek hata |
+| --- | --- |
+| Tanımsız üye çağrısı | Dosya yeniden yazılırken düşen `headerBackground` |
+| Eksik argüman etiketi | İmzası değişen `add(in:)` → `add(on:in:)` çağrısı |
+| Demet üzerinde key path | `ForEach(..., id: \.offset)` — Swift izin vermiyor, iki kez yazıldı |
+| Zincirli baştan-nokta | `.quaternary.opacity(...)` — jenerik `ShapeStyle` konumunda tip çıkarımı kırılgan |
+| `ForEach` closure'ında yerel let | — |
+
+Her kontrol, yakalaması gereken hata geri konularak sınandı.
+
 ## Proje dosyası
 
 `MED.xcodeproj` elle yazıldı (klasik biçim, `objectVersion 56`). Yeni bir
