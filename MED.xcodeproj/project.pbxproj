@@ -17,7 +17,13 @@
         ED0000000000000000000208 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000108 /* Color+Hex.swift */; };
         ED0000000000000000000209 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000109 /* ContentView.swift */; };
         ED000000000000000000020A /* LectureListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010A /* LectureListView.swift */; };
-        ED000000000000000000020B /* LectureFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010B /* LectureFormView.swift */; };
+        ED000000000000000000020C /* SearchText.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010C /* SearchText.swift */; };
+        ED000000000000000000020D /* ModelContext+FindOrCreate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010D /* ModelContext+FindOrCreate.swift */; };
+        ED000000000000000000020E /* NameSuggestField.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010E /* NameSuggestField.swift */; };
+        ED000000000000000000020F /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010F /* Chip.swift */; };
+        ED0000000000000000000210 /* LectureEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000110 /* LectureEditor.swift */; };
+        ED0000000000000000000211 /* LectureDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000111 /* LectureDetailView.swift */; };
+        ED0000000000000000000212 /* NewLectureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000112 /* NewLectureSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,7 +38,13 @@
         ED0000000000000000000108 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
         ED0000000000000000000109 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
         ED000000000000000000010A /* LectureListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureListView.swift; sourceTree = "<group>"; };
-        ED000000000000000000010B /* LectureFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFormView.swift; sourceTree = "<group>"; };
+        ED000000000000000000010C /* SearchText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchText.swift; sourceTree = "<group>"; };
+        ED000000000000000000010D /* ModelContext+FindOrCreate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+FindOrCreate.swift"; sourceTree = "<group>"; };
+        ED000000000000000000010E /* NameSuggestField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameSuggestField.swift; sourceTree = "<group>"; };
+        ED000000000000000000010F /* Chip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip.swift; sourceTree = "<group>"; };
+        ED0000000000000000000110 /* LectureEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureEditor.swift; sourceTree = "<group>"; };
+        ED0000000000000000000111 /* LectureDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureDetailView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000112 /* NewLectureSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewLectureSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,9 +100,12 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000014 /* Components */,
+                ED0000000000000000000110 /* LectureEditor.swift */,
+                ED0000000000000000000111 /* LectureDetailView.swift */,
+                ED0000000000000000000112 /* NewLectureSheet.swift */,
                 ED0000000000000000000109 /* ContentView.swift */,
                 ED000000000000000000010A /* LectureListView.swift */,
-                ED000000000000000000010B /* LectureFormView.swift */,
             );
             path = Views;
             sourceTree = "<group>";
@@ -98,10 +113,21 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000010C /* SearchText.swift */,
+                ED000000000000000000010D /* ModelContext+FindOrCreate.swift */,
                 ED0000000000000000000107 /* TimeOfDay.swift */,
                 ED0000000000000000000108 /* Color+Hex.swift */,
             );
             path = Support;
+            sourceTree = "<group>";
+        };
+        ED0000000000000000000014 /* Components */ = {
+            isa = PBXGroup;
+            children = (
+                ED000000000000000000010E /* NameSuggestField.swift */,
+                ED000000000000000000010F /* Chip.swift */,
+            );
+            path = Components;
             sourceTree = "<group>";
         };
 /* End PBXGroup section */
@@ -182,7 +208,13 @@
                 ED0000000000000000000201 /* MEDApp.swift in Sources */,
                 ED0000000000000000000209 /* ContentView.swift in Sources */,
                 ED000000000000000000020A /* LectureListView.swift in Sources */,
-                ED000000000000000000020B /* LectureFormView.swift in Sources */,
+                ED000000000000000000020C /* SearchText.swift in Sources */,
+                ED000000000000000000020D /* ModelContext+FindOrCreate.swift in Sources */,
+                ED000000000000000000020E /* NameSuggestField.swift in Sources */,
+                ED000000000000000000020F /* Chip.swift in Sources */,
+                ED0000000000000000000210 /* LectureEditor.swift in Sources */,
+                ED0000000000000000000211 /* LectureDetailView.swift in Sources */,
+                ED0000000000000000000212 /* NewLectureSheet.swift in Sources */,
             );
             runOnlyForDeploymentPostprocessing = 0;
         };

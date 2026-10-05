@@ -57,7 +57,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 ## Aşamalar
 
 - [x] **1. Veri modeli ve ders listesi** — beş `@Model`, `ModelContainer`, liste + ekleme formu
-- [ ] 2. Ders detayı ve düzenleme, tamamlamalı açılır listeler
+- [x] **2. Ders detayı ve düzenleme** — iki kolonlu düzen, canlı düzenleme, tamamlamalı alanlar
 - [ ] 3. Akademisyen / komite / etiket detay ekranları
 - [ ] 4. Aylık takvim
 - [ ] 5. Dosya bağlama ve QuickLook
@@ -70,6 +70,28 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 MED/
   MEDApp.swift          @main, ModelContainer kurulumu
   Models/               Lecture, Instructor, Committee, Tag, LectureFile
-  Views/                ContentView, LectureListView, LectureFormView
-  Support/              TimeOfDay (dakika↔Date), Color+Hex
+  Views/
+    ContentView         NavigationSplitView kabuğu, seçim durumu
+    LectureListView     liste kolonu
+    LectureDetailView   detay kolonu, silme
+    LectureEditor       alanlar — detay ve yeni ders sayfası aynı kodu kullanıyor
+    NewLectureSheet     yeni ders
+    Components/         NameSuggestField (tamamlama), Chip
+  Support/
+    TimeOfDay           dakika ↔ Date köprüsü
+    SearchText          Türkçe duyarlı metin katlama
+    ModelContext+FindOrCreate
+    Color+Hex
 ```
+
+## İsim eşleştirme
+
+Aynı konunun iki yazımla birikmemesi `SearchText.fold` ile sağlanıyor: Türkçe
+harfler düzleştirilip büyük/küçük harf ve aksan yok sayılıyor, sonra
+`findOrCreate…` yazdığın ismi mevcut kayıtla karşılaştırıyor. Yani "BİYOFİZİK"
+yazsan da var olan "Biyofizik" kaydına bağlanır.
+
+Burada Unicode'un standart aksan katlaması yetmiyor: `ğ ş ç ö ü` kendiliğinden
+düz harflere dönüyor ama `ı` (U+0131) üzerinde silinecek bir işaret olmayan ayrı
+bir harf, yani asla `i` olmuyor. `SearchText` içindeki harf haritası bu boşluğu
+kapatıyor.

@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
 
-/// All lectures, newest first.
+/// All lectures, newest first. Selection drives the detail column.
 struct LectureListView: View {
+    @Binding var selection: PersistentIdentifier?
+
     @Environment(\.modelContext) private var context
 
     @Query(
@@ -15,8 +17,12 @@ struct LectureListView: View {
 
     @State private var isAddingLecture = false
 
+    /// Changed on every press of +, so the sheet always opens on a fresh form
+    /// rather than reusing the previous one's state.
+    @State private var newLectureSeed = UUID()
+
     var body: some View {
-        List {
+        List(selection: $selection) {
             ForEach(lectures) { lecture in
                 LectureRow(lecture: lecture)
             }
@@ -35,6 +41,7 @@ struct LectureListView: View {
         .toolbar {
             ToolbarItem {
                 Button {
+                    newLectureSeed = UUID()
                     isAddingLecture = true
                 } label: {
                     Label("Yeni ders", systemImage: "plus")
@@ -43,7 +50,8 @@ struct LectureListView: View {
             }
         }
         .sheet(isPresented: $isAddingLecture) {
-            LectureFormView()
+            NewLectureSheet()
+                .id(newLectureSeed)
         }
     }
 
@@ -54,7 +62,7 @@ struct LectureListView: View {
     }
 }
 
-/// One line in the list. Deliberately plain for now.
+/// One line in the list.
 private struct LectureRow: View {
     let lecture: Lecture
 
