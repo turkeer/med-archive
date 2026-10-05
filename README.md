@@ -134,7 +134,7 @@ satırı aramak yardım değil gürültü.
 
 ## Konular ekranı: arama ve filtre
 
-Arşımın tamamını gören tek ekran Konular, o yüzden arama ve filtre ayrı bir
+Arşivin tamamını gören tek ekran Konular, o yüzden arama ve filtre ayrı bir
 "Arama" bölümü olarak değil burada duruyor. İkinci bir arama yeri, bir isabetin
 ne olduğu konusunda bununla çelişebilecek ikinci bir yer demek olurdu ve
 karşılığı yok: kenar çubuğunun kendi bölümleri "hangi derslerim var"ı
@@ -162,6 +162,17 @@ zaten cevaplıyor.
 
 Satırlarda **ataç ikonu** dosyası olanları gösteriyor. Asıl faydası tersi:
 hangi konuların slaytı eksik, listeye bakınca görünüyor.
+
+## Geri alma (⌘Z)
+
+`ContentView` pencerenin `UndoManager`'ını `modelContext`'e veriyor. Kendi
+`UndoManager`'ını yaratmak işe yaramaz: her değişikliği düzgünce kaydeder ama
+⌘Z hiçbir şey yapmaz, çünkü Düzen menüsü onu tanımaz — menü, sorumluluk
+zincirinin kendisine verdiği yöneticiyi kullanır, bu da metin alanı dışındaki
+her şey için pencerenin yöneticisidir.
+
+`MEDApp` içinde değil `ContentView` içinde kuruluyor: `modelContext` ancak
+`.modelContainer(_:)`'ın altında var, ve o değiştirici bu görünüme uygulanıyor.
 
 ## Elle doldurulmayan alanlar
 

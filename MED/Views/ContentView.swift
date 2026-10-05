@@ -11,6 +11,11 @@ import SwiftData
 struct ContentView: View {
     @State private var nav = AppNavigation()
 
+    @Environment(\.modelContext) private var context
+
+    /// The window's undo manager — the one the Edit menu's ⌘Z drives.
+    @Environment(\.undoManager) private var undoManager
+
     var body: some View {
         NavigationSplitView {
             SidebarView(section: $nav.section)
@@ -21,6 +26,16 @@ struct ContentView: View {
             detailColumn
         }
         .environment(nav)
+        // Hands the store the window's undo manager rather than one of its
+        // own. A private `UndoManager` would record every change faithfully
+        // and ⌘Z would still do nothing, because the Edit menu does not know
+        // about it: it drives whatever the responder chain hands it, which
+        // for everything outside a text field is the window's.
+        //
+        // Set here rather than in `MEDApp`, because `modelContext` only
+        // exists below `.modelContainer(_:)` — and this view is what that
+        // modifier is applied to.
+        .onAppear { context.undoManager = undoManager }
     }
 
     @ViewBuilder
