@@ -132,29 +132,11 @@ ilişkili ekranların "en yeni" konusunda anlaşmazlığa düşmesini engelliyor
 komite, etiket, not, dosya adı). Beşten az satırda görünmüyor — bir tutam
 satırı aramak yardım değil gürültü.
 
-## Özet ekranı
-
-Kenar çubuğunun en üstü, yeni kurulumda açılış ekranı. Son baktığın bölüm
-hatırlanıyor — Özet'i sevmezsen Konular'da açılır, alışkanlık tartışılacak bir
-şey değil.
-
-**Her satır bir giriş kapısı, bir istatistik değil.** Sayılardan oluşan bir
-özet bir hafta sonra okunmaz olur; "7 konunun slaytı eksik" deyip tıklayınca o
-yediyi gösteren bir özet yerini korur. Devrettiği filtre Konular'ın baştan
-beri sahip olduğu filtre, yani burada aynı soruyu sormanın ikinci bir yolu
-yok — bu yüzden `LectureFilter` ve arama metni `AppNavigation`'a taşındı,
-görünümün `@State`'inden çıktı.
-
-- **Orta kolon: bugün.** Bugün boşsa (hafta sonu) ders olan ilk gün. Boş bir
-  pazarı göstermek, en çok "yarın ne var" diye bakacağın sabah işe yaramaz.
-- **Sağ kolon: şu anki komite** — tarihler, kalan gün, işlenen ders, slaytı
-  eksik konu. Komite bugünü kapsamıyorsa başlayacak olan ilk komite.
-- **Ders ders eksikler.** "Altı eksik" bir endişe; "dördü Anatomi" bir plan.
-  Konu başına sayılıyor, kayıt başına değil: iki derse yayılan bir konunun
-  slaytı ortak, aranacak tek bir şey var.
-- **Yeri değişmiş dosyalar** → tamir penceresi.
-
 ## Yeri değişmiş dosyalar
+
+Konular'ın araç çubuğundaki **Dosya işlemleri** menüsünde, klasör taramasının
+yanında: ikisi de seyrek, ikisi de aynı soruyu soruyor — diskteki dosyalarla
+kayıtlar hâlâ örtüşüyor mu?
 
 Uygulama dosyaların yerini saklıyor, kopyasını tutmuyor. Finder'da taşıdığın
 bir dosyanın kaydı boşa düşüyor ve bunu ancak o derse girince görüyorsun —

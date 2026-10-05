@@ -30,27 +30,11 @@ struct LectureListView: View {
     /// an order you chose once is not something to choose again per screen.
     @AppStorage("lectureListSort") private var sort: LectureSort = .newestFirst
 
-    @Environment(AppNavigation.self) private var nav
-
-    /// Reads and writes straight through to `AppNavigation`. A computed pair
-    /// rather than renaming thirty call sites — and `nonmutating set` is
-    /// honest about what happens: the view is not storing anything, it is
-    /// setting a property on a shared object.
-    private var query: String {
-        get { nav.lectureQuery }
-        nonmutating set { nav.lectureQuery = newValue }
-    }
-
-    private var filter: LectureFilter {
-        get { nav.lectureFilter }
-        nonmutating set { nav.lectureFilter = newValue }
-    }
-
-    private var queryBinding: Binding<String> {
-        Binding(get: { nav.lectureQuery }, set: { nav.lectureQuery = $0 })
-    }
+    @State private var query = ""
+    @State private var filter = LectureFilter()
     @State private var newLectureRequest: NewLectureRequest?
     @State private var isShowingScan = false
+    @State private var isShowingBrokenLinks = false
 
     var body: some View {
         List(selection: $selection) {
@@ -60,7 +44,7 @@ struct LectureListView: View {
             .onDelete(perform: deleteLectures)
         }
         .navigationTitle(L.topics)
-        .searchable(text: queryBinding, prompt: L.search)
+        .searchable(text: $query, prompt: L.search)
         .safeAreaInset(edge: .top, spacing: 0) {
             activeFilterBar
         }
@@ -77,13 +61,35 @@ struct LectureListView: View {
             }
 
             ToolbarItem {
-                Button {
-                    isShowingScan = true
+                // Arşivin tamamına dokunan iki dosya işi tek araç çubuğu
+                // yuvasında: ikisi de seyrek, ikisi de aynı soruyu soruyor —
+                // diskteki dosyalarla kayıtlar hâlâ örtüşüyor mu?
+                Menu {
+                    Button {
+                        isShowingScan = true
+                    } label: {
+                        Label(
+                            L.pick("Klasörü tara…", "Scan folder…"),
+                            systemImage: "doc.text.magnifyingglass"
+                        )
+                    }
+                    .keyboardShortcut("t", modifiers: [.command, .shift])
+
+                    Button {
+                        isShowingBrokenLinks = true
+                    } label: {
+                        Label(
+                            L.pick("Yeri değişmiş dosyalar…", "Files that have moved…"),
+                            systemImage: "exclamationmark.triangle"
+                        )
+                    }
                 } label: {
-                    Label(L.pick("Klasörü tara", "Scan folder"), systemImage: "doc.text.magnifyingglass")
+                    Label(
+                        L.pick("Dosya işlemleri", "File tools"),
+                        systemImage: "wrench.and.screwdriver"
+                    )
                 }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
-                .help(L.pick("Bir klasördeki dosyaları oturumlarla eşleştir", "Match the files in a folder to sessions"))
+                .help(L.pick("Klasör tarama ve bozuk bağlar", "Folder scan and broken links"))
             }
 
             ToolbarItem {
@@ -100,6 +106,9 @@ struct LectureListView: View {
         }
         .sheet(isPresented: $isShowingScan) {
             ScanFolderSheet()
+        }
+        .sheet(isPresented: $isShowingBrokenLinks) {
+            BrokenLinksSheet()
         }
     }
 
