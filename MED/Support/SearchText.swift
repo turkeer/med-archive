@@ -31,6 +31,19 @@ enum SearchText {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// The folded words in `text`, split on anything that is neither letter
+    /// nor digit, duplicates kept and order preserved.
+    ///
+    /// Lives here rather than in `FileNaming` because lecture titles need it
+    /// too, and `FileNaming` would first strip a path extension that a title
+    /// does not have: `NSString.deletingPathExtension` turns "Vit. D
+    /// metabolizması" into "Vit".
+    static func tokens(in text: String) -> [String] {
+        fold(text)
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            .map(String.init)
+    }
+
     /// True when the two names should be treated as the same name.
     static func sameName(_ one: String, _ other: String) -> Bool {
         fold(one) == fold(other)

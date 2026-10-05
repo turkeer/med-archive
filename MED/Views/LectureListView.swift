@@ -33,6 +33,7 @@ struct LectureListView: View {
     @State private var query = ""
     @State private var filter = LectureFilter()
     @State private var newLectureRequest: NewLectureRequest?
+    @State private var isShowingScan = false
 
     var body: some View {
         List(selection: $selection) {
@@ -60,6 +61,16 @@ struct LectureListView: View {
 
             ToolbarItem {
                 Button {
+                    isShowingScan = true
+                } label: {
+                    Label("Klasörü tara", systemImage: "doc.text.magnifyingglass")
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+                .help("Bir klasördeki dosyaları oturumlarla eşleştir")
+            }
+
+            ToolbarItem {
+                Button {
                     newLectureRequest = NewLectureRequest()
                 } label: {
                     Label("Yeni ders", systemImage: "plus")
@@ -69,6 +80,9 @@ struct LectureListView: View {
         }
         .sheet(item: $newLectureRequest) { request in
             NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
+        }
+        .sheet(isPresented: $isShowingScan) {
+            ScanFolderSheet()
         }
     }
 

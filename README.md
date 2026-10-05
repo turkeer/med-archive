@@ -392,6 +392,63 @@ sınıflandırıyordu.
 Hiçbir işlem dosyayı kopyalamıyor, taşımıyor, yeniden adlandırmıyor,
 silmiyor. Listeden kaldırmak yalnızca yerini unutuyor.
 
+## Klasör tarama
+
+Konular araç çubuğundaki **Klasörü tara** (⌘⇧T) bir klasörü gezip her dosyanın
+hangi oturuma ait olduğunu öneriyor.
+
+**Asla kendiliğinden çalışmıyor.** Açılışta tarayan ya da klasörü izleyen bir
+sürüm, sen bakmıyorken dosya bağlardı — ve slaytları elle bağlamaktan daha kötü
+tek şey, onları yanlış derse bağlanmış bulup ne zaman olduğunu bilmemek. O
+yüzden: bir buton, bir öneri listesi, ve işaretlenmeyen hiçbir şeyin
+uygulanmaması.
+
+Hiçbir dosya kopyalanmıyor, taşınmıyor, yeniden adlandırılmıyor. Eşleşme tek
+bir `LectureFile` yazıyor, dosyanın hâlihazırda bulunduğu yeri gösteren.
+
+### Nasıl eşleştiriyor
+
+1. **Tarih — sert filtre, ipucu değil.** Dosya hakkında her şey yanlış
+   olabilir (klasör, konu, yazım) ama başka bir gün işlenen ders bu dosyanın
+   dersi değildir. Okuduğu biçimler: `2025-10-03`, `2025.10.03`, `2025_10_3`,
+   `20251003`, `03-10-2025`, `03.10.2025`. Ayırıcılar `-`, `_`, `.` — **boşluk
+   değil**: boşluğa izin vermek "Ders 1 2 2025.pdf"i tarihe çevirir. Belirsiz
+   `03-10-2025` Türkçe teamüle göre 3 Ekim okunuyor. Takvimler esnek olduğu
+   için (31 Şubat'ı Mart'a yuvarlarlar) tarih geri okunup karşılaştırılıyor.
+2. **Klasör adı → ders.** İki yönlü içerme, en az üç harften itibaren: "Komite
+   1 - Anatomi" de "Anatomi (teorik)" de Anatomi'yi buluyor. Klasör tanıdığın
+   bir dersi adlandırıyor ama o gün o dersten ders yoksa **kanıt kendisiyle
+   çelişiyor** — bu durumda sonuç en iyi "zayıf" olabiliyor.
+3. **Konu benzerliği.** Kelime kelime, ve biri diğerinin öneki ise (kısa olan
+   ≥ 4 harf) aynı kelime sayılıyor. Türkçe eklerini yapıştırdığı için
+   "Enzimler" ile "Enzim kinetiği" tek ortak kelime taşımadan aynı şeyden
+   bahsediyor; bütün dizge üzerinden bir düzenleme uzaklığı da, küme kesişimi
+   de bunu kaçırır. Tam eşitlik 1, biri diğerinin alt dizgesi 0.85.
+
+Puanlama **kayıt başına değil konu başına**: bir konunun parçaları dosyalarını
+paylaştığı için verilecek tek bir karar var ve onu ilk parça taşıyor.
+
+### Üç grup
+
+| Grup | Ne demek | Varsayılan |
+|---|---|---|
+| **Kesin** | Tarih, klasör ve konu birbirini doğruluyor (≥ 0.6) ve ikinciyle arasında en az 0.15 fark var | **işaretli** |
+| **Zayıf** | Gün doğru görünüyor ama konu kesin değil. Önerilen oturum menüden değiştirilebiliyor | işaretsiz |
+| **Eşleşmedi** | O güne ait oturum yok. İşaretlenirse **dosya adından yeni oturum** oluşturuluyor | işaretsiz |
+
+Kesinler işaretli başlıyor, gerisi başlamıyor — grupların arasındaki fark tam
+olarak bu: biri bir bakış, diğerleri bir karar, ve bir tahmini varsayılan
+olarak "evet" yapmak yanlış dosyanın yanlış derse gitme yoludur.
+
+Adında hiç tarih olmayan dosya "eşleşmedi" içinde ama **işaretlenemiyor**:
+oluşturulacak oturumun gününü söyleyen bir şey yok. Oluşturulan oturumun
+**saati boş** kalıyor — ders programı dosya adında yazmıyor ve uydurulmuş bir
+saat boş olandan kötüdür.
+
+Uygulanan satırlar listeden düşüyor, klasör yeniden gezilmiyor: yeni tarama
+`fileRecords` sorgusunu okur ve bir an önce eklenen kayıtlar o sorgunun
+sonucunda henüz yok — bağlanan her dosya tekrar bulgu olarak geri gelirdi.
+
 ## Önerilen klasör düzeni
 
 PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
@@ -410,7 +467,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 - [x] **3. Kenar çubuğu ve ilişkili ekranlar** — Ders, Akademisyen, Komite, Etiket
 - [x] **4. Aylık takvim** — ızgara, gün seçimi, günden oturum ekleme
 - [x] **5. Dosya bağlama ve QuickLook** — elle ekleme, önizleme, Finder'da gösterme
-- [ ] 6. Otomatik klasör tarama ve eşleştirme
+- [x] **6. Klasör tarama ve eşleştirme** — elle tetiklenen tarama, üç güvenlik seviyesi, onay kutuları
 - [ ] 7. ~~Arama~~ ve JSON dışa aktarma — arama ve filtre Konular ekranında bitti
 
 ## Dosya düzeni

@@ -20,13 +20,10 @@ enum FileNaming {
         (fileName as NSString).deletingPathExtension
     }
 
-    /// Folded words in the name, split on anything that is neither letter nor
-    /// digit. Turkish letters are flattened first, so "NOTLARIM" and
-    /// "notlarım" come out the same.
+    /// Folded words in the name, the extension dropped first. Turkish letters
+    /// are flattened, so "NOTLARIM" and "notlarım" come out the same.
     static func tokens(in fileName: String) -> [String] {
-        SearchText.fold(baseName(of: fileName))
-            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
-            .map(String.init)
+        SearchText.tokens(in: baseName(of: fileName))
     }
 
     /// A guess at what a file is, from its name alone.

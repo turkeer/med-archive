@@ -64,6 +64,9 @@
         ED0000000000000000000237 /* FileAttaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000137 /* FileAttaching.swift */; };
         ED0000000000000000000238 /* PastExamsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000138 /* PastExamsSection.swift */; };
         ED0000000000000000000239 /* LectureFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000139 /* LectureFilter.swift */; };
+        ED000000000000000000023A /* ScanNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013A /* ScanNaming.swift */; };
+        ED000000000000000000023B /* FolderScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013B /* FolderScan.swift */; };
+        ED000000000000000000023C /* ScanFolderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013C /* ScanFolderSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -125,6 +128,9 @@
         ED0000000000000000000137 /* FileAttaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileAttaching.swift; sourceTree = "<group>"; };
         ED0000000000000000000138 /* PastExamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExamsSection.swift; sourceTree = "<group>"; };
         ED0000000000000000000139 /* LectureFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilter.swift; sourceTree = "<group>"; };
+        ED000000000000000000013A /* ScanNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanNaming.swift; sourceTree = "<group>"; };
+        ED000000000000000000013B /* FolderScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScan.swift; sourceTree = "<group>"; };
+        ED000000000000000000013C /* ScanFolderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFolderSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,6 +189,7 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000013C /* ScanFolderSheet.swift */,
                 ED0000000000000000000138 /* PastExamsSection.swift */,
                 ED000000000000000000012D /* StoreFailureView.swift */,
                 ED000000000000000000012B /* CalendarWeekView.swift */,
@@ -209,6 +216,8 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000013B /* FolderScan.swift */,
+                ED000000000000000000013A /* ScanNaming.swift */,
                 ED0000000000000000000139 /* LectureFilter.swift */,
                 ED0000000000000000000137 /* FileAttaching.swift */,
                 ED0000000000000000000134 /* AcademicYear.swift */,
@@ -318,6 +327,9 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000023C /* ScanFolderSheet.swift in Sources */,
+                ED000000000000000000023B /* FolderScan.swift in Sources */,
+                ED000000000000000000023A /* ScanNaming.swift in Sources */,
                 ED0000000000000000000239 /* LectureFilter.swift in Sources */,
                 ED0000000000000000000238 /* PastExamsSection.swift in Sources */,
                 ED0000000000000000000237 /* FileAttaching.swift in Sources */,
