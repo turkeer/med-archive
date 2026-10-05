@@ -133,6 +133,13 @@ struct CalendarWeekView: View {
         }
     }
 
+    private func headerBackground(for day: Date) -> Color {
+        guard let selectedDay, calendar.isDate(day, inSameDayAs: selectedDay) else {
+            return Color.secondary.opacity(0.08)
+        }
+        return Color.accentColor.opacity(0.22)
+    }
+
     private var timeColumn: some View {
         VStack(spacing: rowSpacing) {
             ForEach(LessonSlot.all) { slot in
