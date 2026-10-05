@@ -3,8 +3,10 @@ import Foundation
 /// Converts between "minutes since midnight" (how lecture times are stored)
 /// and the `Date` values SwiftUI's pickers want.
 enum TimeOfDay {
-    static let defaultStart = 9 * 60   // 09:00
-    static let defaultEnd = 10 * 60    // 10:00
+    /// Falls back to the first period, so switching a time on by hand lands
+    /// somewhere the timetable recognises rather than on an arbitrary 09:00.
+    static var defaultStart: Int { LessonSlot.all[0].start }
+    static var defaultEnd: Int { LessonSlot.all[0].end }
 
     /// Minutes since midnight for the time part of `date`.
     static func minutes(from date: Date, calendar: Calendar = .current) -> Int {

@@ -90,8 +90,8 @@ private struct LectureRow: View {
             }
 
             HStack(spacing: 10) {
-                if !lecture.timeRangeText.isEmpty {
-                    Label(lecture.timeRangeText, systemImage: "clock")
+                if !lecture.scheduleText.isEmpty {
+                    Label(lecture.scheduleText, systemImage: "clock")
                 }
 
                 if let instructor = lecture.instructor {

@@ -9,10 +9,14 @@ struct NewLectureSheet: View {
 
     @State private var lecture: Lecture
 
-    /// The day the sheet opens on. The calendar passes the selected day so that
-    /// adding from a day does not land on today.
-    init(initialDate: Date = Date()) {
-        _lecture = State(initialValue: Lecture(date: initialDate))
+    /// The day and period the sheet opens on. The calendar passes the selected
+    /// day, and the slot you pressed + on, so the form arrives filled in.
+    init(initialDate: Date = Date(), initialSlot: LessonSlot? = nil) {
+        _lecture = State(initialValue: Lecture(
+            date: initialDate,
+            startMinutes: initialSlot?.start,
+            endMinutes: initialSlot?.end
+        ))
     }
 
     /// Either a course or a topic is enough. Demanding both would force empty

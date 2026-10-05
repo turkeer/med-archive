@@ -12,7 +12,7 @@ struct LectureDetailView: View {
     private var subtitle: String {
         [
             lecture.hasTopic ? lecture.course?.name : nil,
-            lecture.timeRangeText.isEmpty ? nil : lecture.timeRangeText,
+            lecture.scheduleText.isEmpty ? nil : lecture.scheduleText,
         ]
         .compactMap { $0 }
         .joined(separator: " · ")

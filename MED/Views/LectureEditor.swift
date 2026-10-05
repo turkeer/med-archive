@@ -40,22 +40,38 @@ struct LectureEditor: View {
             Section("Zaman") {
                 DatePicker("Tarih", selection: dayBinding, displayedComponents: .date)
 
-                Toggle("Başlangıç saati", isOn: hasTimeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart))
-                if lecture.startMinutes != nil {
-                    DatePicker(
-                        "Başlangıç",
-                        selection: timeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart),
-                        displayedComponents: .hourAndMinute
-                    )
-                }
+                SlotPicker(
+                    startMinutes: $lecture.startMinutes,
+                    endMinutes: $lecture.endMinutes
+                )
 
-                Toggle("Bitiş saati", isOn: hasTimeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd))
-                if lecture.endMinutes != nil {
-                    DatePicker(
-                        "Bitiş",
-                        selection: timeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd),
-                        displayedComponents: .hourAndMinute
+                // The timetable covers almost everything, so the two clocks
+                // are folded away for the exceptions: a seminar, an exam,
+                // anything that does not sit on a period.
+                DisclosureGroup("Saati elle ayarla") {
+                    Toggle(
+                        "Başlangıç saati",
+                        isOn: hasTimeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart)
                     )
+                    if lecture.startMinutes != nil {
+                        DatePicker(
+                            "Başlangıç",
+                            selection: timeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart),
+                            displayedComponents: .hourAndMinute
+                        )
+                    }
+
+                    Toggle(
+                        "Bitiş saati",
+                        isOn: hasTimeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd)
+                    )
+                    if lecture.endMinutes != nil {
+                        DatePicker(
+                            "Bitiş",
+                            selection: timeBinding(for: \.endMinutes, default: TimeOfDay.defaultEnd),
+                            displayedComponents: .hourAndMinute
+                        )
+                    }
                 }
             }
 

@@ -77,6 +77,15 @@ extension Lecture {
         TimeOfDay.rangeText(start: startMinutes, end: endMinutes)
     }
 
+    /// "3. ders · 10:30–11:10" when the times line up with the school's
+    /// timetable, otherwise just the times.
+    var scheduleText: String {
+        guard let label = LessonSlot.spanLabel(start: startMinutes, end: endMinutes) else {
+            return timeRangeText
+        }
+        return "\(label) · \(timeRangeText)"
+    }
+
     /// The colour this lecture is marked with on the calendar: its committee's,
     /// falling back to its course's. `nil` when it has neither.
     var markerColorHex: String? {

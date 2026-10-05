@@ -53,7 +53,7 @@ Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kay
 
 | Bölüm | Liste | Detay |
 | --- | --- | --- |
-| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | O günün oturumları, saate göre sıralı; o güne oturum ekleme |
+| Takvim | Aylık ızgara; oturum olan günler komite rengiyle noktalı | Hafta içi: dokuz ders saati, boş olanlar doldurulmaya hazır. Hafta sonu: düz liste |
 | Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
 | Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
 | Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
@@ -64,6 +64,30 @@ Her bölüm kendi seçimini `AppNavigation` içinde tutuyor, yani
 Akademisyenler'den çıkıp dönünce aynı kişide kalıyorsun. Aynı ortak nesne
 sayesinde bir akademisyenin altındaki oturum satırına tıklamak seni
 Konular bölümüne, o oturuma götürüyor.
+
+## Ders saatleri
+
+Okulun hafta içi programı sabit: dokuz ders, her biri 40 dakika, aralar 10
+dakika, 5. ile 6. ders arasında 60 dakika öğle arası.
+
+| | | | | | | | | |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+| 08:50 | 09:40 | 10:30 | 11:20 | 12:10 | 13:50 | 14:40 | 15:30 | 16:20 |
+
+Bu tablo `LessonSlot` içinde **kod**, veri değil. Oturumda saklanan şey yine
+gerçek saatler (`startMinutes` / `endMinutes`); ders numarası bunlardan
+*türetiliyor*. Sonucu şu:
+
+- Program değişirse `LessonSlot.all` içinde bir satır düzeltilir, göç gerekmez.
+- Eski kayıtlar gerçek saatlerini korur; programa oturmayanlar "özel saat"
+  olarak görünür ve gün görünümünde "Program dışı" başlığına düşer.
+- Senkronu bozulacak bir kip yok: slot düğmeleri yalnızca saatleri yazıyor,
+  seçili görünen şey de aynı saatlerden geri okunuyor.
+
+Çift ders (08:50–10:20 gibi) destekli: süre seçicisi 1-3 ders arası uzatıyor,
+gün görünümünde ilk dersin satırında "2 ders" etiketiyle çıkıyor, kapsadığı
+sonraki ders satırı "devam ediyor" diyor.
 
 ## Takvim ızgarası
 
@@ -126,6 +150,7 @@ MED/
     CourseDetailView  InstructorDetailView  CommitteeDetailView  TagDetailView
     Components/
       NameSuggestField  tamamlamalı isim alanı
+      SlotPicker        ders saati seçici
       NameListColumn    dört bölümün paylaştığı liste kolonu
       LectureLinkList   "ait olduğu oturumlar" listesi, oturuma atlar
       ColorSwatchPicker  Chip  DeleteRecordButton
@@ -133,6 +158,7 @@ MED/
     AppNavigation       bölüm ve seçim durumu
     TimeOfDay           dakika ↔ Date köprüsü
     MonthGrid           aylık ızgaranın 42 hücresi
+    LessonSlot          okulun dokuz ders saati
     SearchText          Türkçe duyarlı metin katlama
     Palette             ders/komite/etiket renkleri
     ModelContext+FindOrCreate

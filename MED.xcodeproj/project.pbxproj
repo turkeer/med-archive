@@ -40,6 +40,8 @@
         ED000000000000000000021F /* MonthGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011F /* MonthGrid.swift */; };
         ED0000000000000000000220 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000120 /* CalendarMonthView.swift */; };
         ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000121 /* CalendarDayColumn.swift */; };
+        ED0000000000000000000222 /* LessonSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000122 /* LessonSlot.swift */; };
+        ED0000000000000000000223 /* SlotPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000123 /* SlotPicker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,6 +79,8 @@
         ED000000000000000000011F /* MonthGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthGrid.swift; sourceTree = "<group>"; };
         ED0000000000000000000120 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
         ED0000000000000000000121 /* CalendarDayColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayColumn.swift; sourceTree = "<group>"; };
+        ED0000000000000000000122 /* LessonSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonSlot.swift; sourceTree = "<group>"; };
+        ED0000000000000000000123 /* SlotPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotPicker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +158,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000122 /* LessonSlot.swift */,
                 ED000000000000000000011F /* MonthGrid.swift */,
                 ED0000000000000000000114 /* Palette.swift */,
                 ED000000000000000000010B /* AppNavigation.swift */,
@@ -168,6 +173,7 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000123 /* SlotPicker.swift */,
                 ED000000000000000000011E /* DeleteRecordButton.swift */,
                 ED000000000000000000011D /* LectureLinkList.swift */,
                 ED000000000000000000011C /* ColorSwatchPicker.swift */,
@@ -246,6 +252,8 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000223 /* SlotPicker.swift in Sources */,
+                ED0000000000000000000222 /* LessonSlot.swift in Sources */,
                 ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */,
                 ED0000000000000000000220 /* CalendarMonthView.swift in Sources */,
                 ED000000000000000000021F /* MonthGrid.swift in Sources */,
