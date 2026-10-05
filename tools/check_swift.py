@@ -98,7 +98,12 @@ def signatures(code):
 
 
 def call_labels(code, name):
-    """Bu dosyadaki `name(...)` çağrılarının etiket listeleri."""
+    """Bu dosyadaki `name(...)` çağrılarının (etiketler, sondaki kapanış var mı) listesi.
+
+    Son argüman kapanışsa Swift onu parantezin dışına alabilir ve etiketi
+    düşer — `pickButton("x", isOn: y) { ... }` geçerli koddur. Bunu bilmeyen
+    bir denetim, doğru yazılmış her trailing closure çağrısını hata sanar.
+    """
     results = []
     for match in re.finditer(r'(?<![\w.])' + re.escape(name) + r'\s*\(', code):
         # Tanımın kendisi çağrı değil.
@@ -117,6 +122,11 @@ def call_labels(code, name):
                     break
             body += char
             index += 1
+
+        # Kapanış parantezinden sonra `{` geliyorsa son argüman dışarıda.
+        rest = code[index + 1:].lstrip()
+        trailing = rest.startswith('{')
+
         labels, depth = [], 0
         current = ''
         for char in body:
@@ -137,7 +147,7 @@ def call_labels(code, name):
                 continue
             head = re.match(r'^(\w+)\s*:(?!:)', piece)
             parsed.append(head.group(1) if head else None)
-        results.append(parsed)
+        results.append((parsed, trailing))
     return results
 
 
@@ -168,10 +178,12 @@ def main():
             for name, variants in signatures(code).items():
                 if name == 'init':
                     continue
-                for labels in call_labels(code, name):
-                    if any(set(v) - {None} <= set(labels) | {None} for v in variants):
+                for labels, trailing in call_labels(code, name):
+                    # Trailing closure, imzanın son parametresini karşılar.
+                    seen = [v[:-1] if trailing and v else v for v in variants]
+                    if any(set(v) - {None} <= set(labels) | {None} for v in seen):
                         continue
-                    needed = variants[0]
+                    needed = seen[0]
                     missing = [l for l in needed if l and l not in labels]
                     if missing:
                         problems.append(

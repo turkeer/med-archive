@@ -28,6 +28,38 @@ enum LectureSort: String, CaseIterable, Identifiable {
     }
 }
 
+extension LectureSort {
+    /// Whether `left` comes before `right` in this order.
+    ///
+    /// Ordering lives here, not in a `SortDescriptor`, because two of the four
+    /// orders sort by `displayTitle` — a computed title that falls back to the
+    /// course name — which no stored-property descriptor can express. Having
+    /// one definition also keeps the ungrouped Konular list and the grouped
+    /// lists on the related screens from disagreeing about what "newest" is.
+    func precedes(_ left: Lecture, _ right: Lecture) -> Bool {
+        switch self {
+        case .newestFirst:
+            if left.date != right.date { return left.date > right.date }
+            return (left.startMinutes ?? 0) > (right.startMinutes ?? 0)
+
+        case .oldestFirst:
+            if left.date != right.date { return left.date < right.date }
+            return (left.startMinutes ?? 0) < (right.startMinutes ?? 0)
+
+        case .titleAscending, .titleDescending:
+            // Collation, not folding: Turkish orders ı before i, and the
+            // locale knows that where a flattened comparison would not.
+            let comparison = left.displayTitle.localizedStandardCompare(right.displayTitle)
+            if comparison != .orderedSame {
+                let ascending = comparison == .orderedAscending
+                return self == .titleAscending ? ascending : !ascending
+            }
+            // Same topic on different days: keep it stable and readable.
+            return left.date > right.date
+        }
+    }
+}
+
 /// Several lectures that are parts of one topic.
 struct LectureGroup: Identifiable {
     /// At least one lecture, in period order.
@@ -90,31 +122,7 @@ enum LectureGrouping {
                 )
             }
 
-        return buckets.sorted { one, other in
-            let left = one.first
-            let right = other.first
-
-            switch sort {
-            case .newestFirst:
-                if left.date != right.date { return left.date > right.date }
-                return (left.startMinutes ?? 0) > (right.startMinutes ?? 0)
-
-            case .oldestFirst:
-                if left.date != right.date { return left.date < right.date }
-                return (left.startMinutes ?? 0) < (right.startMinutes ?? 0)
-
-            case .titleAscending, .titleDescending:
-                // Collation, not folding: Turkish orders ı before i, and the
-                // locale knows that where a flattened comparison would not.
-                let comparison = left.displayTitle.localizedStandardCompare(right.displayTitle)
-                if comparison != .orderedSame {
-                    let ascending = comparison == .orderedAscending
-                    return sort == .titleAscending ? ascending : !ascending
-                }
-                // Same topic on different days: keep it stable and readable.
-                return left.date > right.date
-            }
-        }
+        return buckets.sorted { sort.precedes($0.first, $1.first) }
     }
 
     /// The lectures that are parts of the same topic as this one, itself
@@ -124,6 +132,24 @@ enum LectureGrouping {
         return lectures
             .filter { key(for: $0) == target }
             .sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }
+    }
+
+    /// The lectures whose topic has no file attached to any of its parts.
+    ///
+    /// Topic-wide, not per record, because the parts of one topic share their
+    /// files: part (2) is not missing its slides when part (1) is carrying
+    /// them. Built in one pass, as a set, so filtering a list does not group
+    /// the archive again for every row.
+    static func lacksFiles(among lectures: [Lecture]) -> Set<PersistentIdentifier> {
+        var result: Set<PersistentIdentifier> = []
+
+        for group in groups(of: lectures) where group.lectures.allSatisfy({ $0.files.isEmpty }) {
+            for lecture in group.lectures {
+                result.insert(lecture.persistentModelID)
+            }
+        }
+
+        return result
     }
 
     /// Which part each lecture is, for the ones that have siblings. Built in

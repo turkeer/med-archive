@@ -63,6 +63,7 @@
         ED0000000000000000000236 /* FileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000136 /* FileRow.swift */; };
         ED0000000000000000000237 /* FileAttaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000137 /* FileAttaching.swift */; };
         ED0000000000000000000238 /* PastExamsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000138 /* PastExamsSection.swift */; };
+        ED0000000000000000000239 /* LectureFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000139 /* LectureFilter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -123,6 +124,7 @@
         ED0000000000000000000136 /* FileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileRow.swift; sourceTree = "<group>"; };
         ED0000000000000000000137 /* FileAttaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileAttaching.swift; sourceTree = "<group>"; };
         ED0000000000000000000138 /* PastExamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExamsSection.swift; sourceTree = "<group>"; };
+        ED0000000000000000000139 /* LectureFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,6 +209,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000139 /* LectureFilter.swift */,
                 ED0000000000000000000137 /* FileAttaching.swift */,
                 ED0000000000000000000134 /* AcademicYear.swift */,
                 ED0000000000000000000131 /* LectureSearch.swift */,
@@ -315,6 +318,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000239 /* LectureFilter.swift in Sources */,
                 ED0000000000000000000238 /* PastExamsSection.swift in Sources */,
                 ED0000000000000000000237 /* FileAttaching.swift in Sources */,
                 ED0000000000000000000236 /* FileRow.swift in Sources */,

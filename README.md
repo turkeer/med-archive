@@ -123,9 +123,42 @@ seçtiğin sırayı her derste yeniden seçmek istemezsin.
   yeniye diziliyor: orada liste tek bir güne ait, uyulacak bir tarih ekseni
   yok, program gibi okunması gerekiyor.
 
+Dört sıralamanın tanımı `LectureSort.precedes` içinde, tek yerde:
+ikisi `displayTitle`'a (hesaplanan başlık) göre sıraladığı için hiçbir
+`SortDescriptor` bunları ifade edemiyor, ve tek tanım Konular listesiyle
+ilişkili ekranların "en yeni" konusunda anlaşmazlığa düşmesini engelliyor.
+
 İlişkili ekranlardaki listede **arama çubuğu** var (konu, ders, akademisyen,
 komite, etiket, not, dosya adı). Beşten az satırda görünmüyor — bir tutam
 satırı aramak yardım değil gürültü.
+
+## Konular ekranı: arama ve filtre
+
+Arşımın tamamını gören tek ekran Konular, o yüzden arama ve filtre ayrı bir
+"Arama" bölümü olarak değil burada duruyor. İkinci bir arama yeri, bir isabetin
+ne olduğu konusunda bununla çelişebilecek ikinci bir yer demek olurdu ve
+karşılığı yok: kenar çubuğunun kendi bölümleri "hangi derslerim var"ı
+zaten cevaplıyor.
+
+- **Arama** `.searchable` ile araç çubuğunda, `LectureSearch` ile aynı
+  eşleştirme (konu, ders, akademisyen, komite, etiket, not, dosya adı).
+- **Filtre** `LectureFilter`: ders, akademisyen, komite, tür ve "dosyası
+  olmayanlar". Alanlar birbiriyle birleşiyor, her alanda tek seçim var —
+  "Anatomi ya da Biyokimya" sorduğun soru değil.
+- **Filtre hatırlanmıyor**, sıralama hatırlanıyor. Sıralama bir kez verdiğin
+  tercih; filtre şu an sorduğun soru. Uygulamayı açtığında arşivin yarısının
+  eksik olduğu bir listeyle karşılaşmak veri kaybı gibi okunur.
+- **Açık filtreler listenin üstünde çip olarak yazılı.** Araç çubuğundaki dolu
+  ikon bir şeyin filtrelendiğini söyleyebilir, *neyin* filtrelendiğini
+  söyleyemez; bir filtrenin asla sessizce yapmaması gereken tek şey o. Her çip
+  kendi koşulunu kaldırıyor.
+- **Parça numaraları ve dosya boşlukları arşivin tamamından okunuyor**,
+  görünen listeden değil: filtre kardeşini saklarken 2 parçalı konunun birinci
+  parçası "(1/2)" kalıyor, ve dosyayı taşıyan parça filtrelendiği için bir
+  konu "slaytı eksik" olmuyor.
+- **Silme satırın gösterdiği kaydı siliyor.** Filtrelenmemiş sorguya indeksle
+  erişmek, bir filtre/arama ya da varsayılan dışı bir sıralama açık olduğu
+  anda silinen satırdan başka bir oturumu silerdi.
 
 Satırlarda **ataç ikonu** dosyası olanları gösteriyor. Asıl faydası tersi:
 hangi konuların slaytı eksik, listeye bakınca görünüyor.
@@ -242,14 +275,21 @@ On altı vaka Python'da doğrulandı: aynı gün sıralaması, iki parça, üç 
 aralıklı parçalar, uzun tek oturum, ve ayrışması gereken altı durum
 (farklı konu/ders/gün/tür, iki başlıksız, büyük-küçük harf).
 
-## Teorik ve pratik
+## Teorik, pratik, sınav
 
-`Lecture.format` iki değerli: teorik ya da pratik. Editörde ikili seçim,
+`Lecture.format` üç değerli: teorik, pratik, sınav. Editörde üçlü seçim,
 varsayılan teorik — eldeki kayıtlar da teorik olarak geliyor.
 
-Listelerde ve ızgarada **yalnızca pratik** işaretleniyor. Teorik oturumlar
-ezici çoğunluk olduğu için onları da etiketlemek neredeyse her satıra bir
-işaret koyar ve hiçbir şey anlatmaz.
+**Sınav neden etiket değil de `format`?** Çünkü etiketle aynı türden bir şey
+değil: her oturumda bir tek cevabı var, her zaman var, ve listeyi ona göre
+filtrelediğin şey o. Etiket olsaydı opsiyonel olurdu, yanlış yazılabilirdi ve
+tür filtresinde görünmezdi.
+
+Listelerde ve ızgarada **yalnızca pratik ve sınav** işaretleniyor. Teorik
+oturumlar ezici çoğunluk olduğu için onları da etiketlemek neredeyse her
+satıra bir işaret koyar ve hiçbir şey anlatmaz. Sınav rozeti satırın rengini
+ödünç almıyor, kendi turuncusunu kullanıyor: sınav dersin bir çeşidi değil,
+derslerin hazırlandığı şey.
 
 ## Ders saatleri
 
@@ -360,7 +400,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 - [x] **4. Aylık takvim** — ızgara, gün seçimi, günden oturum ekleme
 - [x] **5. Dosya bağlama ve QuickLook** — elle ekleme, önizleme, Finder'da gösterme
 - [ ] 6. Otomatik klasör tarama ve eşleştirme
-- [ ] 7. Arama ve JSON dışa aktarma
+- [ ] 7. ~~Arama~~ ve JSON dışa aktarma — arama ve filtre Konular ekranında bitti
 
 ## Dosya düzeni
 
