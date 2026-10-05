@@ -14,8 +14,18 @@ struct PastExamsSection: View {
     @Environment(LibraryRoot.self) private var library
 
     @State private var previewURL: URL?
-    @State private var importingInto: PersistentIdentifier?
     @State private var expanded: Set<PersistentIdentifier> = []
+
+    /// Presentation and target are kept apart on purpose.
+    ///
+    /// A synthesised `isPresented` binding that cleared the target in its
+    /// setter lost it: dismissing the picker runs the setter, and by the time
+    /// the completion handler asked which paper to attach to, the answer was
+    /// already gone — so files silently went nowhere. `isImporting` is the
+    /// only thing dismissal touches; `importTarget` survives until the
+    /// handler has used it.
+    @State private var isImporting = false
+    @State private var importTarget: PersistentIdentifier?
 
     /// Newest paper first, Turkish before English within a year.
     private var exams: [PastExam] {
@@ -47,10 +57,7 @@ struct PastExamsSection: View {
                 .foregroundStyle(.secondary)
         }
         .fileImporter(
-            isPresented: Binding(
-                get: { importingInto != nil },
-                set: { if !$0 { importingInto = nil } }
-            ),
+            isPresented: $isImporting,
             allowedContentTypes: FileAttaching.allowedTypes,
             allowsMultipleSelection: true
         ) { result in
@@ -89,7 +96,8 @@ struct PastExamsSection: View {
 
             HStack {
                 Button {
-                    importingInto = exam.persistentModelID
+                    importTarget = exam.persistentModelID
+                    isImporting = true
                 } label: {
                     Label("Dosya ekle", systemImage: "paperclip")
                 }
@@ -161,8 +169,12 @@ struct PastExamsSection: View {
     }
 
     private func attach(_ result: Result<[URL], Error>) {
-        guard let target = exams.first(where: { $0.persistentModelID == importingInto }) else { return }
-        importingInto = nil
+        let wanted = importTarget
+        importTarget = nil
+
+        guard let wanted,
+              let target = exams.first(where: { $0.persistentModelID == wanted })
+        else { return }
 
         for file in FileAttaching.records(for: result, library: library, existing: target.files) {
             context.insert(file)

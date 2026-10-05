@@ -445,8 +445,14 @@ python3 tools/check_swift.py
 | Demet üzerinde key path | `ForEach(..., id: \.offset)` — Swift izin vermiyor, iki kez yazıldı |
 | Zincirli baştan-nokta | `.quaternary.opacity(...)` — jenerik `ShapeStyle` konumunda tip çıkarımı kırılgan |
 | `ForEach` closure'ında yerel let | — |
+| Sunum değiştiricisine sentetik `Binding` | `fileImporter`'ın kapanışı hedefi silince çıkmış sınava eklenen dosya hiçbir yere gitmiyordu |
 
 Her kontrol, yakalaması gereken hata geri konularak sınandı.
+
+Son kural bir kalıbı yasaklıyor: `isPresented:` gibi bir sunum bağlamasına
+`Binding(get:set:)` vermek. Kapanış o setter'ı çalıştırıyor, setter da
+tamamlanma bloğunun okuyacağı durumu siliyor. Sunum durumu ile hedef durumu
+ayrı tutulmalı.
 
 ## Proje dosyası
 

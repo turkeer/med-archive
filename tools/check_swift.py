@@ -184,6 +184,10 @@ def main():
                 problems.append(f"{filename}: jenerik ShapeStyle konumunda zincirli baştan-nokta")
             if re.search(r'ForEach\([^\n]*\)\s*\{[^\n]*\n\s+let\s', code):
                 problems.append(f"{filename}: ForEach closure'ında yerel let")
+            if re.search(r'(?:sheet|fileImporter|alert|popover|confirmationDialog)\(\s*isPresented:\s*Binding\(', code):
+                problems.append(
+                    f"{filename}: sunum değiştiricisine sentetik Binding — kapanış "
+                    f"setter'ı, tamamlanma bloğunun okuduğu durumu siler")
 
     if problems:
         print(f"{len(problems)} bulgu:")
