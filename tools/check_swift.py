@@ -43,7 +43,8 @@ KNOWN = {
 
 KEYWORDS = {'return', 'if', 'else', 'guard', 'while', 'for', 'switch', 'case',
             'private', 'public', 'init', 'self', 'try', 'await', 'in', 'where',
-            'let', 'var', 'func', 'some', 'any', 'true', 'false', 'nil'}
+            'let', 'var', 'func', 'some', 'any', 'true', 'false', 'nil',
+            'inout', 'throws', 'rethrows', 'defer', 'repeat', 'as', 'is'}
 
 
 def strip_noise(text):

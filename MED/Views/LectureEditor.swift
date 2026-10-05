@@ -150,17 +150,14 @@ struct LectureEditor: View {
                     Text("Yok")
                         .foregroundStyle(.secondary)
                 } else {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 90), spacing: 6, alignment: .leading)],
-                        alignment: .leading,
-                        spacing: 6
-                    ) {
+                    FlowLayout(spacing: 6, lineSpacing: 6) {
                         ForEach(sortedTags) { tag in
                             Chip(text: tag.name, color: Color(hex: tag.colorHex)) {
                                 remove(tag)
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 // Tags are the one thing genuinely created as you go, so this

@@ -373,6 +373,23 @@ tools/
   add_to_xcodeproj.py   proje dosyasına Swift dosyası ekler
 ```
 
+## Çip satırları
+
+Ders, komite ve etiket çipleri `FlowLayout` ile diziliyor: her çip kendi
+metni kadar yer alıyor, sığmayınca alta iniyor.
+
+Eşit sütunlu `LazyVGrid` bunu yapamıyor — sütunlar aynı genişlikte olduğu
+için "Tıbbi Biyoloji ve Genetik" kesiliyor, "Anatomi" ise sütununun yarısını
+boş bırakıyordu.
+
+Sıra verildiği gibi, yani alfabetik, bırakılıyor. Satır sayısını daha da
+azaltmak için çipleri yeniden sıralamak mümkün ama o zaman ders eklendikçe
+veya adı değiştikçe çipler yer değiştirir; aradığını bulmak bir satır
+yükseklikten değerli.
+
+Paketleme Python'da doğrulandı: taşma yok, çip kaybı yok, satırdan geniş tek
+bir ad satıra kırpılıyor, yer varsa hepsi tek satırda.
+
 ## Form içindeki metin alanları
 
 macOS'ta gruplu bir `Form` içindeki `TextField` iki şeyi birden ters

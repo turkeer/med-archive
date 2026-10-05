@@ -17,20 +17,17 @@ struct QuickPickRow: View {
     /// again to clear it.
     let pick: (PersistentIdentifier?) -> Void
 
-    var minimumWidth: CGFloat = 104
-
     var body: some View {
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: minimumWidth), spacing: 6, alignment: .leading)],
-            alignment: .leading,
-            spacing: 6
-        ) {
+        // Flow, not a grid: equal-width columns truncate a long course name
+        // and waste space on a short one.
+        FlowLayout(spacing: 6, lineSpacing: 6) {
             ForEach(items) { item in
                 QuickPickChip(item: item, isSelected: item.id == selectedID) {
                     pick(item.id == selectedID ? nil : item.id)
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 2)
     }
 }
