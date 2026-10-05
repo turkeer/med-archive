@@ -30,6 +30,32 @@ düz dosya yolu yetiyor ve o katman tümden yok.
 `LectureFile.bookmarkData` alanı yerinde duruyor ama kullanılmıyor; sandbox'ı
 sonradan açmak isterseniz yeri hazır.
 
+## Modele alan eklerken
+
+Var olan bir veritabanına yeni alan eklemenin bir tuzağı var ve bir kez
+düşüldü:
+
+**SwiftData yeni alanı eski satırlara doldurmuyor.** Swift'teki varsayılan
+yalnızca o andan sonra oluşan kayıtlar için geçerli; eldeki satırların o
+kolonu `NULL` kalıyor.
+
+- `String`, `Int`, `Date` gibi **düz tipler sorun değil** — varsayılan,
+  veritabanının kendi metadata'sına yazılabildiği için eski satırlar da
+  doluyor. (`Committee.code` böyle eklendi.)
+- **Codable enum'da sorun var.** Varsayılan metadata'ya yazılamıyor, kolon
+  `NULL` kalıyor ve opsiyonel olmayan bir enum'u `NULL`'dan okumak
+  `Could not cast value of type 'Swift.Optional<Any>'` ile çöküyor. Üstelik
+  bu `ModelContainer` kurulurken değil, **ilk satır okunurken** oluyor —
+  yani uygulama açılıyor, pencere hiç gelmiyor.
+
+Kural: **sonradan eklenen enum alanı opsiyonel saklanır, opsiyonel olmayan
+bir hesaplanmış özellikten okunur.** `Lecture.formatRaw` / `Lecture.format`
+bunun örneği. Çağrı yerleri değişmiyor, eski kayıtlar makul bir varsayılanla
+okunuyor, göç gerekmiyor.
+
+Şemanın ilk halinde olan enum'lar (`LectureFile.kind`) bu kuralın dışında —
+`NULL` satırı hiç olmadı.
+
 ## Veri modeli
 
 Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.

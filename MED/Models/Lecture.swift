@@ -20,9 +20,18 @@ final class Lecture {
     /// End time as minutes since midnight. `nil` means unknown.
     var endMinutes: Int?
 
-    /// Lecture or lab. Existing records read as theoretical, which is what
-    /// the great majority of them are.
-    var format: LectureFormat = LectureFormat.theoretical
+    /// Stored optional, read through `format`, even though every lecture has one.
+    ///
+    /// SwiftData does not backfill a newly added attribute with its Swift
+    /// default: the default applies to records created afterwards, while rows
+    /// that already existed keep NULL in the store. Reading NULL into a
+    /// non-optional Codable enum crashes with
+    /// "Could not cast value of type 'Swift.Optional<Any>'" — which is exactly
+    /// what happened when this field was first added as non-optional.
+    ///
+    /// Plain types like String and Int are fine, because their default can be
+    /// written into the store's own metadata. A Codable enum's cannot.
+    private var formatRaw: LectureFormat?
 
     var notes: String = ""
     var createdAt: Date = Date()
@@ -63,7 +72,7 @@ final class Lecture {
         self.date = Calendar.current.startOfDay(for: date)
         self.startMinutes = startMinutes
         self.endMinutes = endMinutes
-        self.format = format
+        self.formatRaw = format
         self.notes = notes
         self.createdAt = Date()
         self.course = course
@@ -81,6 +90,13 @@ extension Lecture {
 
     var timeRangeText: String {
         TimeOfDay.rangeText(start: startMinutes, end: endMinutes)
+    }
+
+    /// Lecture or lab. Records that predate this field read as theoretical,
+    /// which is what the great majority of them are.
+    var format: LectureFormat {
+        get { formatRaw ?? .theoretical }
+        set { formatRaw = newValue }
     }
 
     /// "3. ders · 10:30–11:10" when the times line up with the school's
