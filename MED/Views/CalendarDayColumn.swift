@@ -106,11 +106,13 @@ private struct SegmentRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(segment.label)
                     .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Text(segment.timeText)
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            .frame(width: 96, alignment: .leading)
+            .frame(width: 108, alignment: .leading)
 
             if segment.isFree {
                 Button(action: add) {

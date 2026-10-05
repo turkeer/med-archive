@@ -191,7 +191,9 @@ struct LectureLinkList: View {
                 Text(leadingText(for: group))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(width: 92, alignment: .leading)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(width: 104, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 1) {
                     meta(for: group, showCourse: showCourse)

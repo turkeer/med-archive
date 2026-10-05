@@ -214,6 +214,24 @@ Tarihler ve ay adları da seçilen dile uyuyor: `ContentView` pencereye
 `Committee.dateRangeText`, ayın adı, gün kısaltmaları) dil `L.format` ile
 ayrıca söyleniyor — `Date.formatted` süreç yerelini okur, pencerenin değil.
 
+### İki dilde ölçü
+
+İngilizce dizgeler Türkçe karşılıklarından uzun olabiliyor ve bir dile göre
+ölçülmüş sabit genişlik ikinci dilde taşıyor. İki önlem:
+
+- **Kendi içeriğine göre ölçülenler** `.fixedSize()` kullanıyor. Süre seçicisi
+  bunun yüzünden bozulmuştu: `.frame(width: 200)` "1 ders"e göre ölçülmüştü,
+  "3 lessons" sığmıyordu, ve sığmayan bir segmented control küçülmek yerine
+  yanındakinin üstüne çiziyor.
+- **Hizalanmak için sabit kalmak zorunda olanlar** (hafta ızgarasının saat
+  kolonu, gün görünümünün etiket kolonu, liste satırlarının öndeki kolonu) iki
+  dilin uzununa göre ölçülü, üstüne `lineLimit(1)` ve `minimumScaleFactor`:
+  taşmak yerine bir tık küçülüyorlar.
+
+Süre seçicisinin özet satırı da yanından altına indi. Orada hem seçilenin hem
+imlecin altındaki dersin saatleri yazıyor, yani genişliğe ihtiyacı var ve alt
+satırda çarpışacağı bir şey yok.
+
 ### Çevrilmeyenler
 
 - **Senin yazdığın her şey.** Ders adları, konular, akademisyen adları,

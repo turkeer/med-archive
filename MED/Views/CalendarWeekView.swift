@@ -21,7 +21,10 @@ struct CalendarWeekView: View {
     @State private var newLectureRequest: NewLectureRequest?
 
     private let calendar = Calendar.current
-    private let timeColumnWidth: CGFloat = 56
+    /// Wide enough for the longest period label in either language —
+    /// "Lesson 3" needs more room than "3. ders" — and the labels shrink
+    /// slightly rather than overflow if one ever outgrows it.
+    private let timeColumnWidth: CGFloat = 66
     private let rowHeight: CGFloat = 46
     private let rowSpacing: CGFloat = 3
 
@@ -146,6 +149,8 @@ struct CalendarWeekView: View {
                 VStack(alignment: .trailing, spacing: 0) {
                     Text(slot.label)
                         .font(.caption2.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     Text(TimeOfDay.text(slot.start))
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(.secondary)
