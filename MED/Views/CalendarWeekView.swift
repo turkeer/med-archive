@@ -339,6 +339,16 @@ private struct LectureBlock: View {
     /// copies the lecture into them.
     let fillDown: (() -> Void)?
 
+    /// The fill-down arrow is only there while you are pointing at the block.
+    ///
+    /// It is a shortcut for entering a schedule, so once a week is written
+    /// down an arrow on every block is clutter. Hiding it per day — say, once
+    /// the next day has something in it — guesses at whether you are
+    /// finished, and guesses wrong when you enter days out of order, come
+    /// back to fix an earlier one, or reach Friday, whose next day is a
+    /// weekend and stays empty. Pointing at a block is not a guess.
+    @State private var isHovered = false
+
     private var color: Color {
         Color(hex: lecture.course?.colorHex ?? "8B8D98")
     }
@@ -381,7 +391,7 @@ private struct LectureBlock: View {
             }
             .background(color.opacity(0.26), in: RoundedRectangle(cornerRadius: 5))
             .overlay(alignment: .bottomTrailing) {
-                if let fillDown {
+                if let fillDown, isHovered {
                     Button(action: fillDown) {
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.system(size: 13))
@@ -397,6 +407,7 @@ private struct LectureBlock: View {
         }
         .buttonStyle(.plain)
         .help(helpText)
+        .onHover { isHovered = $0 }
     }
 
     /// "Introduction to Anatomy (2)" — the school counts the parts as

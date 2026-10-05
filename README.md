@@ -178,8 +178,15 @@ soldaki saat kolonuyla hizalı duruyor. On iki yerleşim üzerinde doğrulandı 
 gün sonunda kırpılan blok, aynı saati isteyen iki oturum, ve içinde başka
 bir dersin başladığı çift ders dahil.
 
-**Aşağı doldurma:** bir bloğun sağ alt köşesindeki ok, aynı oturumu bir
-sonraki ders saatine **ayrı bir kayıt olarak** kopyalıyor. Okulda tek bir
+**Aşağı doldurma:** bir bloğun üzerine gelince sağ alt köşesinde çıkan ok,
+aynı oturumu bir sonraki ders saatine **ayrı bir kayıt olarak** kopyalıyor.
+
+Ok imleçle görünüyor, çünkü bu bir giriş kısayolu: bir hafta yazıldıktan
+sonra her blokta duran bir ok gürültü. Günü bazında gizlemek — mesela bir
+sonraki günde kayıt varsa saklamak — işin bitip bitmediği hakkında tahmin
+yürütür ve üç durumda yanılır: günleri sırayla girmezsen, eski bir güne
+dönüp düzeltirsen, ve Cuma'da (bir sonraki günü hafta sonu, hep boş kalıyor).
+Bloğa bakmak ise tahmin değil. Okulda tek bir
 konu iki ders saati boyunca işlenebiliyor ama bunlar ayrı dersler olarak
 sayılıyor; o yüzden uzatmıyor, çoğaltıyor. Ders, akademisyen, komite, tür ve
 etiketler kopyalanıyor; notlar ve dosyalar kopyalanmıyor — onlar oturuma ait,
