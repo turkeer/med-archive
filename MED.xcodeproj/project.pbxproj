@@ -51,6 +51,7 @@
         ED000000000000000000022A /* WeekGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012A /* WeekGrid.swift */; };
         ED000000000000000000022B /* CalendarWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012B /* CalendarWeekView.swift */; };
         ED000000000000000000022C /* FormatBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012C /* FormatBadge.swift */; };
+        ED000000000000000000022D /* StoreFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012D /* StoreFailureView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -99,6 +100,7 @@
         ED000000000000000000012A /* WeekGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekGrid.swift; sourceTree = "<group>"; };
         ED000000000000000000012B /* CalendarWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarWeekView.swift; sourceTree = "<group>"; };
         ED000000000000000000012C /* FormatBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBadge.swift; sourceTree = "<group>"; };
+        ED000000000000000000012D /* StoreFailureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFailureView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +158,7 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000012D /* StoreFailureView.swift */,
                 ED000000000000000000012B /* CalendarWeekView.swift */,
                 ED0000000000000000000127 /* SettingsView.swift */,
                 ED0000000000000000000126 /* LectureFilesSection.swift */,
@@ -279,6 +282,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000022D /* StoreFailureView.swift in Sources */,
                 ED000000000000000000022C /* FormatBadge.swift in Sources */,
                 ED000000000000000000022B /* CalendarWeekView.swift in Sources */,
                 ED000000000000000000022A /* WeekGrid.swift in Sources */,
