@@ -64,7 +64,7 @@ Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.
 | --- | --- | --- |
 | `Lecture` | Bir oturum | `title` o günün **konusu**, `format` teorik/pratik. Saatler `startMinutes` / `endMinutes` olarak gece yarısından itibaren dakika cinsinden; `date` yalnızca günü taşır. |
 | `Course` | Tekrar eden ders — Anatomi, Biyofizik | Diskteki ders klasörünün karşılığı. Bilerek komiteye bağlı **değil**: aynı ders birden çok komitede geçiyor. |
-| `Committee` | Komite I, II… | `name` gerçek başlık ("Introduction to Medicine"), `code` kısa hali ("Komite I") — uzun ad çipe sığmıyor. Tarih aralığı oturumun komitesini belirliyor. |
+| `Committee` | Komite I, II… | Aylık takvimdeki nokta rengi **dersten** gelir, komiteden değil — komite haftalarca sürdüğü için ayın her gününü aynı renge boyar ve hiçbir şey anlatmaz. `name` gerçek başlık ("Introduction to Medicine"), `code` kısa hali ("Komite I") — uzun ad çipe sığmıyor. Tarih aralığı oturumun komitesini belirliyor. |
 | `Instructor` | Akademisyen | Akademik unvan alanının adı `titleText` — `Lecture.title` ile karışmasın. |
 | `Tag` | Serbest etiket | Oturumları **enine kesen** konular: membran, sınavda çıktı. Yapısal seviye `Course`, serbest etiket `Tag`. `name` tekil (`@Attribute(.unique)`). |
 | `LectureFile` | Diskteki bir dosyaya işaretçi | Yol `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. |
@@ -106,16 +106,28 @@ Tek istisna akademisyen: yıl içinde yeni bir hoca çıkıyor, o yüzden seçim
 listesinin yanında bir `+` düğmesi var. Etiketler de akış içinde
 oluşturuluyor, onların alanı duruyor.
 
-## Sıralama
+## Sıralama ve liste içi arama
 
-İki kural var, ikisi de `LectureGrouping.Order` içinde:
+`LectureSort` dört seçenek sunuyor: yeniden eskiye, eskiden yeniye,
+konu A→Z, konu Z→A. Seçim `@AppStorage` ile hatırlanıyor — bir kez
+seçtiğin sırayı her derste yeniden seçmek istemezsin.
 
-- **`newestFirst`** — Konular ve ilişkili listeler. Baştan sona ters
-  kronolojik: en yeni gün üstte, **o gün içinde en geç ders üstte.** İki
-  yönü karıştırmak (yeni gün üstte ama erken ders üstte) hata gibi okunuyor,
-  çünkü bir günün en yeni dersi son dersidir.
-- **`timetable`** — takvimin gün kolonu. Orada liste tek bir güne ait, yani
-  uyulacak bir tarih ekseni yok; program gibi erken saatten geç saate akıyor.
+- **Yeniden eskiye** baştan sona ters kronolojik: en yeni gün üstte, **o gün
+  içinde en geç ders üstte.** İki yönü karıştırmak (yeni gün üstte ama erken
+  ders üstte) hata gibi okunuyor, çünkü bir günün en yeni dersi son dersidir.
+- **Alfabetik sıralama** `localizedStandardCompare` kullanıyor, katlama
+  değil: Türkçe'de ı harfi i'den önce gelir ve bunu yerel ayar bilir,
+  düzleştirilmiş bir karşılaştırma bilmez.
+- **Takvimin gün kolonu** sıralama seçimini yok sayıp her zaman eskiden
+  yeniye diziliyor: orada liste tek bir güne ait, uyulacak bir tarih ekseni
+  yok, program gibi okunması gerekiyor.
+
+İlişkili ekranlardaki listede **arama çubuğu** var (konu, ders, akademisyen,
+komite, etiket, not, dosya adı). Beşten az satırda görünmüyor — bir tutam
+satırı aramak yardım değil gürültü.
+
+Satırlarda **ataç ikonu** dosyası olanları gösteriyor. Asıl faydası tersi:
+hangi konuların slaytı eksik, listeye bakınca görünüyor.
 
 ## Elle doldurulmayan alanlar
 

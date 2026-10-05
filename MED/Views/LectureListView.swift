@@ -120,6 +120,10 @@ private struct LectureRow: View {
                     Label(instructor.displayName, systemImage: "person")
                 }
 
+                if !lecture.files.isEmpty {
+                    Label("\(lecture.files.count)", systemImage: "paperclip")
+                }
+
                 if let committee = lecture.committee {
                     Label {
                         Text(committee.shortLabel)

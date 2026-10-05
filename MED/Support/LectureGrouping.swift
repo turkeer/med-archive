@@ -1,6 +1,33 @@
 import Foundation
 import SwiftData
 
+/// How a list of lectures is ordered.
+enum LectureSort: String, CaseIterable, Identifiable {
+    /// Reverse chronological all the way down: the newest day first, and
+    /// within a day the latest period first. Mixing the two directions —
+    /// newest day but earliest period — reads as a mistake, because on any
+    /// given day the most recent lesson is the last one.
+    case newestFirst
+
+    /// Chronological. Also what a single day read as a timetable wants, so
+    /// the day column uses this rather than a separate notion.
+    case oldestFirst
+
+    case titleAscending
+    case titleDescending
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .newestFirst:     return "Yeniden eskiye"
+        case .oldestFirst:     return "Eskiden yeniye"
+        case .titleAscending:  return "Konu A→Z"
+        case .titleDescending: return "Konu Z→A"
+        }
+    }
+}
+
 /// Several lectures that are parts of one topic.
 struct LectureGroup: Identifiable {
     /// At least one lecture, in period order.
@@ -50,24 +77,11 @@ enum LectureGrouping {
         )
     }
 
-    /// Which way a list of lectures reads.
-    enum Order {
-        /// Reverse chronological all the way down: the newest day first, and
-        /// within a day the **latest** period first. Mixing the two
-        /// directions — newest day but earliest period — reads as a mistake,
-        /// because on any given day the most recent lesson is the last one.
-        case newestFirst
-
-        /// A single day read as a timetable: earliest period first. Used where
-        /// the whole list is one day, so there is no date axis to agree with.
-        case timetable
-    }
-
     /// Lectures folded into topics.
     ///
     /// Inside a group the parts stay in period order whichever way the list
     /// reads, so part (1) is always the earlier lesson.
-    static func groups(of lectures: [Lecture], order: Order = .newestFirst) -> [LectureGroup] {
+    static func groups(of lectures: [Lecture], sort: LectureSort = .newestFirst) -> [LectureGroup] {
         let buckets = Dictionary(grouping: lectures) { key(for: $0) }
             .values
             .map { bucket in
@@ -80,13 +94,25 @@ enum LectureGrouping {
             let left = one.first
             let right = other.first
 
-            switch order {
+            switch sort {
             case .newestFirst:
                 if left.date != right.date { return left.date > right.date }
                 return (left.startMinutes ?? 0) > (right.startMinutes ?? 0)
-            case .timetable:
+
+            case .oldestFirst:
                 if left.date != right.date { return left.date < right.date }
                 return (left.startMinutes ?? 0) < (right.startMinutes ?? 0)
+
+            case .titleAscending, .titleDescending:
+                // Collation, not folding: Turkish orders ı before i, and the
+                // locale knows that where a flattened comparison would not.
+                let comparison = left.displayTitle.localizedStandardCompare(right.displayTitle)
+                if comparison != .orderedSame {
+                    let ascending = comparison == .orderedAscending
+                    return sort == .titleAscending ? ascending : !ascending
+                }
+                // Same topic on different days: keep it stable and readable.
+                return left.date > right.date
             }
         }
     }

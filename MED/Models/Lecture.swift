@@ -108,10 +108,16 @@ extension Lecture {
         return "\(label) · \(timeRangeText)"
     }
 
-    /// The colour this lecture is marked with on the calendar: its committee's,
-    /// falling back to its course's. `nil` when it has neither.
+    /// The colour this lecture is marked with on the month calendar: its
+    /// course's, falling back to its committee's.
+    ///
+    /// The course comes first on purpose. A committee runs for weeks, so
+    /// marking by committee paints every day of a month the same colour and
+    /// tells you nothing beyond "something is on". Course colours make a day
+    /// legible at a glance — Anatomi and Biyofizik today, Histoloji tomorrow —
+    /// and match what the week grid already uses.
     var markerColorHex: String? {
-        committee?.colorHex ?? course?.colorHex
+        course?.colorHex ?? committee?.colorHex
     }
 
     /// True when a topic of its own was written down.
