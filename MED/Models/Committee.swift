@@ -63,7 +63,4 @@ extension Committee {
         return "\(startDate.formatted(style)) – \(endDate.formatted(style))"
     }
 
-    var lecturesByDate: [Lecture] {
-        lectures.sorted { $0.date > $1.date }
-    }
 }

@@ -26,8 +26,3 @@ final class Course {
     }
 }
 
-extension Course {
-    var lecturesByDate: [Lecture] {
-        lectures.sorted { $0.date > $1.date }
-    }
-}

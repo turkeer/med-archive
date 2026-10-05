@@ -19,8 +19,8 @@ struct LectureListView: View {
 
     var body: some View {
         List(selection: $selection) {
-            ForEach(lectures) { lecture in
-                LectureRow(lecture: lecture)
+            ForEach(rows) { row in
+                LectureRow(lecture: row.lecture, part: row.part)
             }
             .onDelete(perform: deleteLectures)
         }
@@ -49,6 +49,20 @@ struct LectureListView: View {
         }
     }
 
+    /// Rows are built in one pass. Looking the part numbers up per row would
+    /// group the whole list again for every row.
+    private var rows: [Row] {
+        let numbers = LectureGrouping.partNumbers(for: lectures)
+        return lectures.map { Row(lecture: $0, part: numbers[$0.persistentModelID]) }
+    }
+
+    private struct Row: Identifiable {
+        let lecture: Lecture
+        let part: (index: Int, total: Int)?
+
+        var id: PersistentIdentifier { lecture.persistentModelID }
+    }
+
     private func deleteLectures(at offsets: IndexSet) {
         for index in offsets {
             context.delete(lectures[index])
@@ -59,6 +73,14 @@ struct LectureListView: View {
 /// One line in the list.
 private struct LectureRow: View {
     let lecture: Lecture
+
+    /// Which of several parts of one topic this is.
+    let part: (index: Int, total: Int)?
+
+    private var titleText: String {
+        guard let part, lecture.hasTopic else { return lecture.displayTitle }
+        return "\(lecture.displayTitle) (\(part.index)/\(part.total))"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -73,7 +95,7 @@ private struct LectureRow: View {
                     }
 
                     HStack(spacing: 5) {
-                        Text(lecture.displayTitle)
+                        Text(titleText)
                             .font(.headline)
 
                         FormatBadge(format: lecture.format)

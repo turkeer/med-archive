@@ -20,8 +20,3 @@ final class Tag {
     }
 }
 
-extension Tag {
-    var lecturesByDate: [Lecture] {
-        lectures.sorted { $0.date > $1.date }
-    }
-}

@@ -168,6 +168,38 @@ satırda.
 Hafta sınırı hesabı Python'da doğrulandı: 2024-2030 arası 252 tarih, hem
 Pazartesi hem Pazar başlangıçlı takvimle.
 
+## Bir konu, birkaç ders
+
+Okulda tek bir konu iki ders saati boyunca işlenebiliyor ama bunlar ayrı
+dersler olarak sayılıyor — aralarında 10 dakika teneffüs var. Bu, bir
+oturumun iki ders saati **sürmesinden** farklı bir şey ve ikisi farklı
+görünmeli:
+
+| | Kayıt | Hafta ızgarası | İlişkili listeler |
+| --- | --- | --- | --- |
+| **Uzun tek oturum** (süre: 2 ders) | 1 kayıt | Tek uzun kutu | Tek satır |
+| **Aynı konu, iki ders** (aşağı doldurma) | 2 kayıt | İki kutu: `… (1)` ve `… (2)` | Tek satır, "2 ders" etiketiyle |
+
+Gruplama **türetiliyor, saklanmıyor.** İki oturum *aynı gün + aynı ders +
+aynı konu + aynı tür* ise aynı konunun parçalarıdır — "aradan sonra devam
+eden aynı ders" tam olarak bu demek, ve aşağı doldurma da tam bu şekli
+üretiyor. Yeni alan, göç, bozulacak bağ yok; elle aynı konuyu iki kez yazsan
+da gruplanıyor. Tek bedeli: bir parçanın adını değiştirmek onu ayırıyor —
+ki zaten doğru cevap bu.
+
+Konusu boş oturumlar hiç gruplanmıyor: aynı derste aynı gün iki başlıksız
+oturum, tek konu olduklarına dair kanıt değil.
+
+Gruplama **ilişkili ekranlarda** yapılıyor (Ders, Akademisyen, Komite,
+Etiket) — oralardaki liste bir gezinme aracı. **Konular** listesinde
+yapılmıyor, çünkü orada liste seçimi detay editörünü sürüyor; grupladığım
+anda ikinci parça düzenlenemez hale gelirdi. Takvimde de her parça kendi
+kutusunda ve tıklanabilir.
+
+On altı vaka Python'da doğrulandı: aynı gün sıralaması, iki parça, üç parça,
+aralıklı parçalar, uzun tek oturum, ve ayrışması gereken altı durum
+(farklı konu/ders/gün/tür, iki başlıksız, büyük-küçük harf).
+
 ## Teorik ve pratik
 
 `Lecture.format` iki değerli: teorik ya da pratik. Editörde ikili seçim,
@@ -299,6 +331,7 @@ MED/
     LibraryRoot         PDF kök klasörü (UserDefaults)
     FileNaming          dosya adından tür tahmini
     SearchText          Türkçe duyarlı metin katlama
+    LectureGrouping     bir konunun parçaları + sıralama kuralı
     Palette             ders/komite/etiket renkleri
     ModelContext+FindOrCreate
     Color+Hex

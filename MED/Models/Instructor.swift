@@ -31,9 +31,6 @@ extension Instructor {
         return trimmed.isEmpty ? name : "\(trimmed) \(name)"
     }
 
-    var lecturesByDate: [Lecture] {
-        lectures.sorted { $0.date > $1.date }
-    }
 
     /// The course this academic almost always teaches.
     ///

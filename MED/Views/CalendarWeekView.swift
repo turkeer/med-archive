@@ -158,16 +158,23 @@ struct CalendarWeekView: View {
     // MARK: The grid
 
     private func dayColumn(_ day: Date) -> some View {
-        VStack(spacing: rowSpacing) {
+        // Computed once per day, not once per cell.
+        let parts = LectureGrouping.partNumbers(for: dayLectures(on: day))
+
+        return VStack(spacing: rowSpacing) {
             ForEach(DayTimetable.segments(for: timetabled(on: day))) { segment in
-                segmentView(segment, on: day)
+                segmentView(segment, on: day, parts: parts)
                     .frame(height: height(ofSpan: segment.span))
             }
         }
     }
 
     @ViewBuilder
-    private func segmentView(_ segment: DaySegment, on day: Date) -> some View {
+    private func segmentView(
+        _ segment: DaySegment,
+        on day: Date,
+        parts: [PersistentIdentifier: (index: Int, total: Int)]
+    ) -> some View {
         if segment.isFree {
             Button {
                 newLectureRequest = NewLectureRequest(day: day, slot: segment.slot)
@@ -188,6 +195,7 @@ struct CalendarWeekView: View {
                     LectureBlock(
                         lecture: lecture,
                         span: segment.span,
+                        part: parts[lecture.persistentModelID],
                         open: { nav.show(lecture) },
                         fillDown: fillDownRange(for: lecture, on: day) == nil
                             ? nil
@@ -217,18 +225,8 @@ struct CalendarWeekView: View {
                     .frame(width: timeColumnWidth, alignment: .trailing)
 
                 ForEach(visibleDays, id: \.self) { day in
-                    VStack(spacing: 3) {
-                        ForEach(offTimetable(on: day)) { lecture in
-                            LectureBlock(
-                                lecture: lecture,
-                                span: 1,
-                                open: { nav.show(lecture) },
-                                fillDown: nil
-                            )
-                            .frame(height: rowHeight)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .top)
+                    offTimetableColumn(day)
+                        .frame(maxWidth: .infinity, alignment: .top)
                 }
             }
         }
@@ -291,6 +289,23 @@ struct CalendarWeekView: View {
 
     // MARK: Data
 
+    private func offTimetableColumn(_ day: Date) -> some View {
+        let parts = LectureGrouping.partNumbers(for: dayLectures(on: day))
+
+        return VStack(spacing: 3) {
+            ForEach(offTimetable(on: day)) { lecture in
+                LectureBlock(
+                    lecture: lecture,
+                    span: 1,
+                    part: parts[lecture.persistentModelID],
+                    open: { nav.show(lecture) },
+                    fillDown: nil
+                )
+                .frame(height: rowHeight)
+            }
+        }
+    }
+
     private func dayLectures(on day: Date) -> [Lecture] {
         let target = calendar.startOfDay(for: day)
         return lectures.filter { calendar.startOfDay(for: $0.date) == target }
@@ -314,6 +329,10 @@ struct CalendarWeekView: View {
 private struct LectureBlock: View {
     let lecture: Lecture
     let span: Int
+
+    /// Which of several parts of one topic this is, when there are several.
+    let part: (index: Int, total: Int)?
+
     let open: () -> Void
 
     /// Set when the periods right after this one are free, and pressing it
@@ -341,7 +360,7 @@ private struct LectureBlock: View {
                     }
 
                     if lecture.hasTopic {
-                        Text(lecture.title)
+                        Text(topicText)
                             .font(.system(size: 10))
                             .foregroundStyle(.secondary)
                             .lineLimit(span >= 2 ? 3 : 2)
@@ -380,9 +399,18 @@ private struct LectureBlock: View {
         .help(helpText)
     }
 
+    /// "Introduction to Anatomy (2)" — the school counts the parts as
+    /// separate lessons, so the block says which one this is instead of
+    /// pretending the two are one long session.
+    private var topicText: String {
+        guard let part else { return lecture.title }
+        return "\(lecture.title) (\(part.index))"
+    }
+
     private var helpText: String {
         [
             lecture.course?.name,
+            part.map { "\($0.index)/\($0.total). ders" },
             lecture.hasTopic ? lecture.title : nil,
             lecture.format.title,
             lecture.scheduleText.isEmpty ? nil : lecture.scheduleText,

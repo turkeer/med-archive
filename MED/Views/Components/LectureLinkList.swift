@@ -1,32 +1,38 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// The "its lectures" list that every related screen shows. Clicking a row
 /// hands you off to that lecture on the Konular screen.
+///
+/// Rows are **topics, not records.** One subject taught across two periods
+/// with a break in between is two records, and showing it as two cards reads
+/// as two lessons when it is one — so parts of a topic fold into a single row
+/// that says how many periods it took. The complete record list lives on the
+/// Konular screen, where every part is selectable in its own right.
 ///
 /// Emits its own `Section`s, so it goes straight into a `Form` rather than
 /// inside one — nesting sections would be wrong when grouping is on.
 struct LectureLinkList: View {
     let lectures: [Lecture]
 
-    /// Heading used when the list is not grouped.
+    /// Heading used when the list is not grouped by course.
     var title = "Oturumlar"
 
     /// Committees hold lectures from several courses, so their list reads
     /// better grouped. The design calls for exactly that.
     var groupByCourse = false
 
-    /// Everything in the list falls on one day: order by time instead of date,
-    /// and show the time in the leading column, where the date would be noise.
+    /// Everything in the list falls on one day: show the periods in the
+    /// leading column, where the date would be noise.
     var dayMode = false
 
     @Environment(AppNavigation.self) private var nav
 
-    /// Swift demet elemanlarına key path yazmaya izin vermiyor, bu yüzden
-    /// grupların kendi tipi var.
-    private struct CourseGroup: Identifiable {
+    /// Swift does not allow key paths into tuples, so the course runs get
+    /// their own type.
+    private struct CourseRun: Identifiable {
         let name: String
-        let lectures: [Lecture]
+        let groups: [LectureGroup]
         var id: String { name }
     }
 
@@ -37,62 +43,72 @@ struct LectureLinkList: View {
                     .foregroundStyle(.secondary)
             }
         } else if groupByCourse {
-            ForEach(groups) { group in
+            ForEach(courseRuns) { run in
                 Section {
-                    ForEach(group.lectures) { lecture in
-                        row(for: lecture, showCourse: false)
+                    ForEach(run.groups) { group in
+                        row(for: group, showCourse: false)
                     }
                 } header: {
-                    Text(group.name)
+                    Text(run.name)
                 }
             }
         } else {
-            Section("\(title) (\(lectures.count))") {
-                ForEach(ordered) { lecture in
-                    row(for: lecture, showCourse: true)
+            Section("\(title) (\(groups.count))") {
+                ForEach(groups) { group in
+                    row(for: group, showCourse: true)
                 }
             }
         }
     }
 
-    private var ordered: [Lecture] {
-        dayMode
-            ? lectures.sorted { ($0.startMinutes ?? 0, $0.title) < ($1.startMinutes ?? 0, $1.title) }
-            : lectures.sorted { $0.date > $1.date }
+    private var groups: [LectureGroup] {
+        LectureGrouping.groups(of: lectures)
     }
 
-    private var groups: [CourseGroup] {
-        Dictionary(grouping: lectures) { $0.course?.name ?? "Dersi belirtilmemiş" }
-            .map { CourseGroup(name: $0.key, lectures: $0.value.sorted { $0.date > $1.date }) }
+    private var courseRuns: [CourseRun] {
+        Dictionary(grouping: groups) { $0.first.course?.name ?? "Dersi belirtilmemiş" }
+            .map { CourseRun(name: $0.key, groups: $0.value) }
             .sorted { $0.name < $1.name }
     }
 
-    private func leadingText(for lecture: Lecture) -> String {
+    private func leadingText(for group: LectureGroup) -> String {
         if dayMode {
-            let time = lecture.timeRangeText
-            return time.isEmpty ? "saat yok" : time
+            return LectureGrouping.slotLabel(for: group.lectures)
         }
-        return lecture.date.formatted(.dateTime.day().month(.abbreviated).year())
+        return group.first.date.formatted(.dateTime.day().month(.abbreviated).year())
     }
 
-    private func row(for lecture: Lecture, showCourse: Bool) -> some View {
+    private func row(for group: LectureGroup, showCourse: Bool) -> some View {
         Button {
-            nav.show(lecture)
+            nav.show(group.first)
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(leadingText(for: lecture))
+                Text(leadingText(for: group))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 92, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    if showCourse, let course = lecture.course, lecture.hasTopic {
+                    if showCourse, let course = group.first.course, group.first.hasTopic {
                         Text(course.name)
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(Color(hex: course.colorHex))
                     }
 
-                    Text(lecture.displayTitle)
+                    HStack(spacing: 5) {
+                        Text(group.first.displayTitle)
+
+                        FormatBadge(format: group.first.format)
+
+                        if group.count > 1 {
+                            Text("\(group.count) ders")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.secondary.opacity(0.16), in: Capsule())
+                        }
+                    }
                 }
 
                 Spacer()
@@ -104,5 +120,11 @@ struct LectureLinkList: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(helpText(for: group))
+    }
+
+    private func helpText(for group: LectureGroup) -> String {
+        guard group.count > 1 else { return group.first.displayTitle }
+        return "\(group.first.displayTitle) — \(group.count) ders, \(LectureGrouping.slotLabel(for: group.lectures))"
     }
 }
