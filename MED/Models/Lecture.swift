@@ -4,6 +4,8 @@ import SwiftData
 /// A single lecture: the centre of the data model. Everything else hangs off it.
 @Model
 final class Lecture {
+    /// The topic of this particular session ("Üst ekstremite kasları").
+    /// The recurring course it belongs to is `course`.
     var title: String = ""
 
     /// The calendar day of the lecture, normalised to the start of the day.
@@ -22,6 +24,10 @@ final class Lecture {
     var createdAt: Date = Date()
 
     // MARK: Relationships
+
+    /// The recurring course this session belongs to (see `Course.lectures`).
+    /// Deleting a course nullifies this.
+    var course: Course?
 
     /// Deleting an instructor nullifies this (see `Instructor.lectures`).
     var instructor: Instructor?
@@ -43,6 +49,7 @@ final class Lecture {
         startMinutes: Int? = nil,
         endMinutes: Int? = nil,
         notes: String = "",
+        course: Course? = nil,
         instructor: Instructor? = nil,
         committee: Committee? = nil,
         tags: [Tag] = []
@@ -53,6 +60,7 @@ final class Lecture {
         self.endMinutes = endMinutes
         self.notes = notes
         self.createdAt = Date()
+        self.course = course
         self.instructor = instructor
         self.committee = committee
         self.tags = tags
@@ -67,5 +75,19 @@ extension Lecture {
 
     var timeRangeText: String {
         TimeOfDay.rangeText(start: startMinutes, end: endMinutes)
+    }
+
+    /// True when a topic of its own was written down.
+    var hasTopic: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// What to show as the heading: the topic, or the course name when there is
+    /// no topic ("Anatomi — pratik" style entries), or a last-resort placeholder.
+    var displayTitle: String {
+        let topic = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !topic.isEmpty { return topic }
+        if let course, !course.name.isEmpty { return course.name }
+        return "(başlıksız)"
     }
 }

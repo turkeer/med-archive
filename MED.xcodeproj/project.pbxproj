@@ -24,6 +24,7 @@
         ED0000000000000000000210 /* LectureEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000110 /* LectureEditor.swift */; };
         ED0000000000000000000211 /* LectureDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000111 /* LectureDetailView.swift */; };
         ED0000000000000000000212 /* NewLectureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000112 /* NewLectureSheet.swift */; };
+        ED0000000000000000000213 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000113 /* Course.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
         ED0000000000000000000110 /* LectureEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureEditor.swift; sourceTree = "<group>"; };
         ED0000000000000000000111 /* LectureDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureDetailView.swift; sourceTree = "<group>"; };
         ED0000000000000000000112 /* NewLectureSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewLectureSheet.swift; sourceTree = "<group>"; };
+        ED0000000000000000000113 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +90,7 @@
         ED0000000000000000000011 /* Models */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000113 /* Course.swift */,
                 ED0000000000000000000102 /* Lecture.swift */,
                 ED0000000000000000000103 /* Instructor.swift */,
                 ED0000000000000000000104 /* Committee.swift */,
@@ -198,6 +201,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000213 /* Course.swift in Sources */,
                 ED0000000000000000000202 /* Lecture.swift in Sources */,
                 ED0000000000000000000203 /* Instructor.swift in Sources */,
                 ED0000000000000000000204 /* Committee.swift in Sources */,

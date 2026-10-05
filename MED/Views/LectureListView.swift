@@ -69,8 +69,18 @@ private struct LectureRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
-                Text(lecture.title.isEmpty ? "(başlıksız)" : lecture.title)
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 1) {
+                    // Only when there is a topic of its own — otherwise
+                    // displayTitle is already showing the course name.
+                    if let course = lecture.course, lecture.hasTopic {
+                        Text(course.name)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color(hex: course.colorHex))
+                    }
+
+                    Text(lecture.displayTitle)
+                        .font(.headline)
+                }
 
                 Spacer()
 

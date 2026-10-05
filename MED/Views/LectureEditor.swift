@@ -12,15 +12,32 @@ struct LectureEditor: View {
 
     @Environment(\.modelContext) private var context
 
+    @Query(sort: \Course.name) private var courses: [Course]
     @Query(sort: \Instructor.name) private var instructors: [Instructor]
     @Query(sort: \Committee.name) private var committees: [Committee]
     @Query(sort: \Tag.name) private var allTags: [Tag]
 
     var body: some View {
         Form {
-            Section("Ders") {
-                TextField("Başlık", text: $lecture.title)
+            Section("Ders ve konu") {
+                currentValue(
+                    lecture.course?.name,
+                    color: Color(hex: lecture.course?.colorHex ?? "")
+                ) {
+                    lecture.course = nil
+                }
 
+                NameSuggestField(
+                    placeholder: "Ders ara veya yeni ekle — Anatomi, Biyofizik…",
+                    suggestions: courses.map(\.name)
+                ) { name in
+                    lecture.course = context.findOrCreateCourse(named: name)
+                }
+
+                TextField("Konu", text: $lecture.title, prompt: Text("O günün konusu"))
+            }
+
+            Section("Zaman") {
                 DatePicker("Tarih", selection: dayBinding, displayedComponents: .date)
 
                 Toggle("Başlangıç saati", isOn: hasTimeBinding(for: \.startMinutes, default: TimeOfDay.defaultStart))
@@ -43,16 +60,8 @@ struct LectureEditor: View {
             }
 
             Section("Akademisyen") {
-                if let instructor = lecture.instructor {
-                    HStack {
-                        Chip(text: instructor.displayName, color: .accentColor) {
-                            lecture.instructor = nil
-                        }
-                        Spacer()
-                    }
-                } else {
-                    Text("Yok")
-                        .foregroundStyle(.secondary)
+                currentValue(lecture.instructor?.displayName, color: .accentColor) {
+                    lecture.instructor = nil
                 }
 
                 NameSuggestField(
@@ -64,16 +73,11 @@ struct LectureEditor: View {
             }
 
             Section("Komite") {
-                if let committee = lecture.committee {
-                    HStack {
-                        Chip(text: committee.name, color: Color(hex: committee.colorHex)) {
-                            lecture.committee = nil
-                        }
-                        Spacer()
-                    }
-                } else {
-                    Text("Yok")
-                        .foregroundStyle(.secondary)
+                currentValue(
+                    lecture.committee?.name,
+                    color: Color(hex: lecture.committee?.colorHex ?? "")
+                ) {
+                    lecture.committee = nil
                 }
 
                 NameSuggestField(
@@ -84,7 +88,7 @@ struct LectureEditor: View {
                 }
             }
 
-            Section("Etiketler") {
+            Section {
                 if lecture.tags.isEmpty {
                     Text("Yok")
                         .foregroundStyle(.secondary)
@@ -108,6 +112,12 @@ struct LectureEditor: View {
                 ) { name in
                     add(tagNamed: name)
                 }
+            } header: {
+                Text("Etiketler")
+            } footer: {
+                Text("Dersleri enine kesen serbest konular: membran, sınavda çıktı, klinik korelasyon…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Notlar") {
@@ -121,6 +131,24 @@ struct LectureEditor: View {
 
     private var sortedTags: [Tag] {
         lecture.tags.sorted { $0.name < $1.name }
+    }
+
+    /// The single value a section currently holds, with a way to clear it.
+    @ViewBuilder
+    private func currentValue(
+        _ text: String?,
+        color: Color,
+        clear: @escaping () -> Void
+    ) -> some View {
+        if let text, !text.isEmpty {
+            HStack {
+                Chip(text: text, color: color, onRemove: clear)
+                Spacer()
+            }
+        } else {
+            Text("Yok")
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: Bindings

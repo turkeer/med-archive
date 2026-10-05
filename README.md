@@ -28,20 +28,33 @@ yetiyor. 5. aşamada kesinleşir; model şimdiden iki yola da uygun.
 
 ## Veri modeli
 
-Merkezde `Lecture` var, diğer dört varlık ona bağlı.
+Merkezde `Lecture` var — tek bir oturum. Diğer beş varlık ona bağlanıyor.
 
-| Varlık | Not |
-| --- | --- |
-| `Lecture` | Saatler `startMinutes` / `endMinutes` olarak, gece yarısından itibaren dakika cinsinden tutulur. `date` yalnızca günü taşır. |
-| `Instructor` | Akademik unvan alanı `titleText` adını taşıyor; `Lecture.title` ile karışmasın. |
-| `Committee` | `colorHex` takvimde günleri işaretlemek için. |
-| `Tag` | `name` tekil (`@Attribute(.unique)`) — aynı konu iki yazımla birikmez. |
-| `LectureFile` | Dosya yolu `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. |
+| Varlık | Ne | Not |
+| --- | --- | --- |
+| `Lecture` | Bir oturum | `title` o günün **konusu**. Saatler `startMinutes` / `endMinutes` olarak gece yarısından itibaren dakika cinsinden; `date` yalnızca günü taşır. |
+| `Course` | Tekrar eden ders — Anatomi, Biyofizik | Diskteki ders klasörünün karşılığı. Bilerek komiteye bağlı **değil**: aynı ders birden çok komitede geçiyor. |
+| `Committee` | Komite I, II… | `colorHex` takvimde günleri işaretlemek için. |
+| `Instructor` | Akademisyen | Akademik unvan alanının adı `titleText` — `Lecture.title` ile karışmasın. |
+| `Tag` | Serbest etiket | Oturumları **enine kesen** konular: membran, sınavda çıktı. Yapısal seviye `Course`, serbest etiket `Tag`. `name` tekil (`@Attribute(.unique)`). |
+| `LectureFile` | Diskteki bir dosyaya işaretçi | Yol `relativePath`'te; `bookmarkData` yalnızca sandbox açılırsa gerekir. |
+
+`Course`, `Committee` ve `Instructor` oturumda tekil ve boş bırakılabilir.
+`Tag` çoklu ve çift yönlü. `LectureFile` çoklu ve tek bir oturuma ait.
 
 Silme kuralları:
 
-- Akademisyen veya komite silinirse dersler **silinmez**, alan boşalır (`.nullify`).
-- Ders silinirse `LectureFile` kayıtları silinir (`.cascade`), **diskteki dosyaya dokunulmaz**.
+- `Course`, `Instructor` veya `Committee` silinirse **oturumlar silinmez**, ilgili alan boşalır (`.nullify`).
+- Bir oturum silinirse `LectureFile` kayıtları silinir (`.cascade`), **diskteki dosyaya dokunulmaz**.
+
+## Kavram sırası
+
+Diskteki klasör hiyerarşisi veri modeliyle birebir örtüşüyor:
+
+```
+Komite I  /  Biyofizik  /  2026-10-01 | Basic Principles in Biophysics.pdf
+Committee     Course                    Lecture.date   Lecture.title (konu)
+```
 
 ## Dosyaların yeri
 
@@ -69,7 +82,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 ```
 MED/
   MEDApp.swift          @main, ModelContainer kurulumu
-  Models/               Lecture, Instructor, Committee, Tag, LectureFile
+  Models/               Lecture, Course, Instructor, Committee, Tag, LectureFile
   Views/
     ContentView         NavigationSplitView kabuğu, seçim durumu
     LectureListView     liste kolonu

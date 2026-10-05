@@ -5,6 +5,10 @@ import SwiftData
 /// under two spellings. A name that folds to an existing one reuses that
 /// record; anything else becomes a new one.
 extension ModelContext {
+    func findOrCreateCourse(named rawName: String) -> Course? {
+        findOrCreate(rawName, name: \Course.name) { Course(name: $0) }
+    }
+
     func findOrCreateInstructor(named rawName: String) -> Instructor? {
         findOrCreate(rawName, name: \Instructor.name) { Instructor(name: $0) }
     }

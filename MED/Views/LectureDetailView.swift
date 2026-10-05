@@ -8,13 +8,24 @@ struct LectureDetailView: View {
     @Environment(\.modelContext) private var context
     @State private var isConfirmingDelete = false
 
+    /// Course and time, whichever of them is set. The course is left out when
+    /// the title is already standing in for it.
+    private var subtitle: String {
+        [
+            lecture.hasTopic ? lecture.course?.name : nil,
+            lecture.timeRangeText.isEmpty ? nil : lecture.timeRangeText,
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
     var body: some View {
         LectureEditor(lecture: lecture)
             // Resets the editor's own field state when a different lecture
             // is selected, instead of carrying half-typed text across.
             .id(lecture.persistentModelID)
-            .navigationTitle(lecture.title.isEmpty ? "(başlıksız)" : lecture.title)
-            .navigationSubtitle(lecture.timeRangeText)
+            .navigationTitle(lecture.displayTitle)
+            .navigationSubtitle(subtitle)
             .toolbar {
                 ToolbarItem {
                     Button(role: .destructive) {

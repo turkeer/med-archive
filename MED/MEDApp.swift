@@ -9,6 +9,7 @@ struct MEDApp: App {
         do {
             modelContainer = try ModelContainer(
                 for: Lecture.self,
+                Course.self,
                 Instructor.self,
                 Committee.self,
                 Tag.self,
