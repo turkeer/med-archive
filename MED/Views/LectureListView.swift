@@ -10,7 +10,9 @@ struct LectureListView: View {
     @Query(
         sort: [
             SortDescriptor(\Lecture.date, order: .reverse),
-            SortDescriptor(\Lecture.startMinutes)
+            // Reverse chronological the whole way down: on a given day the
+            // most recent lesson is the last period, so it belongs on top.
+            SortDescriptor(\Lecture.startMinutes, order: .reverse)
         ]
     )
     private var lectures: [Lecture]

@@ -62,7 +62,9 @@ struct LectureLinkList: View {
     }
 
     private var groups: [LectureGroup] {
-        LectureGrouping.groups(of: lectures)
+        // One day read as a timetable runs earliest first; a list with a date
+        // axis runs the other way, consistently with that axis.
+        LectureGrouping.groups(of: lectures, order: dayMode ? .timetable : .newestFirst)
     }
 
     private var courseRuns: [CourseRun] {

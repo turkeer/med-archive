@@ -50,31 +50,54 @@ enum LectureGrouping {
         )
     }
 
-    /// Newest day first, and within a day the earliest period first.
-    ///
-    /// Both halves matter. Sorting by date alone left same-day lectures in
-    /// whatever order they came out of the store, so an afternoon lecture
-    /// could sit above a morning one.
-    static func inOrder(_ lectures: [Lecture]) -> [Lecture] {
-        lectures.sorted { one, other in
-            if one.date != other.date { return one.date > other.date }
-            return (one.startMinutes ?? 0) < (other.startMinutes ?? 0)
-        }
+    /// Which way a list of lectures reads.
+    enum Order {
+        /// Reverse chronological all the way down: the newest day first, and
+        /// within a day the **latest** period first. Mixing the two
+        /// directions — newest day but earliest period — reads as a mistake,
+        /// because on any given day the most recent lesson is the last one.
+        case newestFirst
+
+        /// A single day read as a timetable: earliest period first. Used where
+        /// the whole list is one day, so there is no date axis to agree with.
+        case timetable
     }
 
-    /// Lectures folded into topics, newest first.
-    static func groups(of lectures: [Lecture]) -> [LectureGroup] {
-        Dictionary(grouping: lectures) { key(for: $0) }
+    /// Lectures folded into topics.
+    ///
+    /// Inside a group the parts stay in period order whichever way the list
+    /// reads, so part (1) is always the earlier lesson.
+    static func groups(of lectures: [Lecture], order: Order = .newestFirst) -> [LectureGroup] {
+        let buckets = Dictionary(grouping: lectures) { key(for: $0) }
             .values
             .map { bucket in
                 LectureGroup(
                     lectures: bucket.sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }
                 )
             }
-            .sorted { one, other in
-                if one.first.date != other.first.date { return one.first.date > other.first.date }
-                return (one.first.startMinutes ?? 0) < (other.first.startMinutes ?? 0)
+
+        return buckets.sorted { one, other in
+            let left = one.first
+            let right = other.first
+
+            switch order {
+            case .newestFirst:
+                if left.date != right.date { return left.date > right.date }
+                return (left.startMinutes ?? 0) > (right.startMinutes ?? 0)
+            case .timetable:
+                if left.date != right.date { return left.date < right.date }
+                return (left.startMinutes ?? 0) < (right.startMinutes ?? 0)
             }
+        }
+    }
+
+    /// The lectures that are parts of the same topic as this one, itself
+    /// included, in period order.
+    static func parts(of lecture: Lecture, among lectures: [Lecture]) -> [Lecture] {
+        let target = key(for: lecture)
+        return lectures
+            .filter { key(for: $0) == target }
+            .sorted { ($0.startMinutes ?? 0) < ($1.startMinutes ?? 0) }
     }
 
     /// Which part each lecture is, for the ones that have siblings. Built in

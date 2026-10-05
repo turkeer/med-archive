@@ -106,6 +106,17 @@ Tek istisna akademisyen: yıl içinde yeni bir hoca çıkıyor, o yüzden seçim
 listesinin yanında bir `+` düğmesi var. Etiketler de akış içinde
 oluşturuluyor, onların alanı duruyor.
 
+## Sıralama
+
+İki kural var, ikisi de `LectureGrouping.Order` içinde:
+
+- **`newestFirst`** — Konular ve ilişkili listeler. Baştan sona ters
+  kronolojik: en yeni gün üstte, **o gün içinde en geç ders üstte.** İki
+  yönü karıştırmak (yeni gün üstte ama erken ders üstte) hata gibi okunuyor,
+  çünkü bir günün en yeni dersi son dersidir.
+- **`timetable`** — takvimin gün kolonu. Orada liste tek bir güne ait, yani
+  uyulacak bir tarih ekseni yok; program gibi erken saatten geç saate akıyor.
+
 ## Elle doldurulmayan alanlar
 
 Yüzlerce oturum girilecek, aynı cevabı tekrar tekrar yazmamak için üç yerde
@@ -195,6 +206,11 @@ Etiket) — oralardaki liste bir gezinme aracı. **Konular** listesinde
 yapılmıyor, çünkü orada liste seçimi detay editörünü sürüyor; grupladığım
 anda ikinci parça düzenlenemez hale gelirdi. Takvimde de her parça kendi
 kutusunda ve tıklanabilir.
+
+**Dosyalar konunun tamamına ait.** İki ders aynı slayttan işleniyor —
+aradaki teneffüs ikinci bir slayt dağıtmıyor. Bir parçaya bağlanan dosya
+diğerinden de görünüyor; eklediğinde baktığın parçaya bağlanıyor,
+kaldırdığında hangisinde duruyorsa oradan kalkıyor.
 
 On altı vaka Python'da doğrulandı: aynı gün sıralaması, iki parça, üç parça,
 aralıklı parçalar, uzun tek oturum, ve ayrışması gereken altı durum
