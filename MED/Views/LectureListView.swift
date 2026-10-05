@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// All lectures, newest first. Selection drives the detail column.
+/// Every session, newest first. Selection drives the detail column.
 struct LectureListView: View {
     @Binding var selection: PersistentIdentifier?
 
@@ -28,13 +28,13 @@ struct LectureListView: View {
             }
             .onDelete(perform: deleteLectures)
         }
-        .navigationTitle("Dersler")
+        .navigationTitle("Konular")
         .overlay {
             if lectures.isEmpty {
                 ContentUnavailableView(
-                    "Henüz ders yok",
+                    "Henüz oturum yok",
                     systemImage: "calendar.badge.plus",
-                    description: Text("Sağ üstteki + ile ilk dersini ekle.")
+                    description: Text("Sağ üstteki + ile ilk kaydını ekle.")
                 )
             }
         }

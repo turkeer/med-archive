@@ -30,6 +30,12 @@ final class Committee {
 }
 
 extension Committee {
+    /// "1 Eki 2026 – 14 Kas 2026"
+    var dateRangeText: String {
+        let style = Date.FormatStyle.dateTime.day().month(.abbreviated).year()
+        return "\(startDate.formatted(style)) – \(endDate.formatted(style))"
+    }
+
     var lecturesByDate: [Lecture] {
         lectures.sorted { $0.date > $1.date }
     }

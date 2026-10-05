@@ -25,6 +25,18 @@
         ED0000000000000000000211 /* LectureDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000111 /* LectureDetailView.swift */; };
         ED0000000000000000000212 /* NewLectureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000112 /* NewLectureSheet.swift */; };
         ED0000000000000000000213 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000113 /* Course.swift */; };
+        ED000000000000000000020B /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010B /* AppNavigation.swift */; };
+        ED0000000000000000000214 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000114 /* Palette.swift */; };
+        ED0000000000000000000215 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000115 /* SidebarView.swift */; };
+        ED0000000000000000000216 /* RelatedColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000116 /* RelatedColumns.swift */; };
+        ED0000000000000000000217 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000117 /* CourseDetailView.swift */; };
+        ED0000000000000000000218 /* InstructorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000118 /* InstructorDetailView.swift */; };
+        ED0000000000000000000219 /* CommitteeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000119 /* CommitteeDetailView.swift */; };
+        ED000000000000000000021A /* TagDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011A /* TagDetailView.swift */; };
+        ED000000000000000000021B /* NameListColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011B /* NameListColumn.swift */; };
+        ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011C /* ColorSwatchPicker.swift */; };
+        ED000000000000000000021D /* LectureLinkList.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011D /* LectureLinkList.swift */; };
+        ED000000000000000000021E /* DeleteRecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011E /* DeleteRecordButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +59,18 @@
         ED0000000000000000000111 /* LectureDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureDetailView.swift; sourceTree = "<group>"; };
         ED0000000000000000000112 /* NewLectureSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewLectureSheet.swift; sourceTree = "<group>"; };
         ED0000000000000000000113 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
+        ED000000000000000000010B /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
+        ED0000000000000000000114 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+        ED0000000000000000000115 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000116 /* RelatedColumns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedColumns.swift; sourceTree = "<group>"; };
+        ED0000000000000000000117 /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000118 /* InstructorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructorDetailView.swift; sourceTree = "<group>"; };
+        ED0000000000000000000119 /* CommitteeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitteeDetailView.swift; sourceTree = "<group>"; };
+        ED000000000000000000011A /* TagDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailView.swift; sourceTree = "<group>"; };
+        ED000000000000000000011B /* NameListColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameListColumn.swift; sourceTree = "<group>"; };
+        ED000000000000000000011C /* ColorSwatchPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSwatchPicker.swift; sourceTree = "<group>"; };
+        ED000000000000000000011D /* LectureLinkList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureLinkList.swift; sourceTree = "<group>"; };
+        ED000000000000000000011E /* DeleteRecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRecordButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +127,12 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000011A /* TagDetailView.swift */,
+                ED0000000000000000000119 /* CommitteeDetailView.swift */,
+                ED0000000000000000000118 /* InstructorDetailView.swift */,
+                ED0000000000000000000117 /* CourseDetailView.swift */,
+                ED0000000000000000000116 /* RelatedColumns.swift */,
+                ED0000000000000000000115 /* SidebarView.swift */,
                 ED0000000000000000000014 /* Components */,
                 ED0000000000000000000110 /* LectureEditor.swift */,
                 ED0000000000000000000111 /* LectureDetailView.swift */,
@@ -116,6 +146,8 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000114 /* Palette.swift */,
+                ED000000000000000000010B /* AppNavigation.swift */,
                 ED000000000000000000010C /* SearchText.swift */,
                 ED000000000000000000010D /* ModelContext+FindOrCreate.swift */,
                 ED0000000000000000000107 /* TimeOfDay.swift */,
@@ -127,6 +159,10 @@
         ED0000000000000000000014 /* Components */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000011E /* DeleteRecordButton.swift */,
+                ED000000000000000000011D /* LectureLinkList.swift */,
+                ED000000000000000000011C /* ColorSwatchPicker.swift */,
+                ED000000000000000000011B /* NameListColumn.swift */,
                 ED000000000000000000010E /* NameSuggestField.swift */,
                 ED000000000000000000010F /* Chip.swift */,
             );
@@ -201,6 +237,18 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000021E /* DeleteRecordButton.swift in Sources */,
+                ED000000000000000000021D /* LectureLinkList.swift in Sources */,
+                ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */,
+                ED000000000000000000021B /* NameListColumn.swift in Sources */,
+                ED000000000000000000021A /* TagDetailView.swift in Sources */,
+                ED0000000000000000000219 /* CommitteeDetailView.swift in Sources */,
+                ED0000000000000000000218 /* InstructorDetailView.swift in Sources */,
+                ED0000000000000000000217 /* CourseDetailView.swift in Sources */,
+                ED0000000000000000000216 /* RelatedColumns.swift in Sources */,
+                ED0000000000000000000215 /* SidebarView.swift in Sources */,
+                ED0000000000000000000214 /* Palette.swift in Sources */,
+                ED000000000000000000020B /* AppNavigation.swift in Sources */,
                 ED0000000000000000000213 /* Course.swift in Sources */,
                 ED0000000000000000000202 /* Lecture.swift in Sources */,
                 ED0000000000000000000203 /* Instructor.swift in Sources */,

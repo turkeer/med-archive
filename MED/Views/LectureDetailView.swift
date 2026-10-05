@@ -6,7 +6,6 @@ struct LectureDetailView: View {
     let lecture: Lecture
 
     @Environment(\.modelContext) private var context
-    @State private var isConfirmingDelete = false
 
     /// Course and time, whichever of them is set. The course is left out when
     /// the title is already standing in for it.
@@ -28,23 +27,13 @@ struct LectureDetailView: View {
             .navigationSubtitle(subtitle)
             .toolbar {
                 ToolbarItem {
-                    Button(role: .destructive) {
-                        isConfirmingDelete = true
-                    } label: {
-                        Label("Dersi sil", systemImage: "trash")
+                    DeleteRecordButton(
+                        question: "Bu oturum silinsin mi?",
+                        explanation: "Bağlı dosya kayıtları da silinir. Diskteki dosyalara dokunulmaz."
+                    ) {
+                        context.delete(lecture)
                     }
                 }
-            }
-            .confirmationDialog(
-                "Bu ders silinsin mi?",
-                isPresented: $isConfirmingDelete
-            ) {
-                Button("Sil", role: .destructive) {
-                    context.delete(lecture)
-                }
-                Button("Vazgeç", role: .cancel) {}
-            } message: {
-                Text("Derse bağlı dosya kayıtları da silinir. Diskteki dosyalara dokunulmaz.")
             }
     }
 }

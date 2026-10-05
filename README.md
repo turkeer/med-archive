@@ -47,6 +47,25 @@ Silme kuralları:
 - `Course`, `Instructor` veya `Committee` silinirse **oturumlar silinmez**, ilgili alan boşalır (`.nullify`).
 - Bir oturum silinirse `LectureFile` kayıtları silinir (`.cascade`), **diskteki dosyaya dokunulmaz**.
 
+## Ekranlar
+
+Kalıcı kenar çubuğu, ortada seçilen bölümün listesi, sağda seçilen kayıt.
+
+| Bölüm | Liste | Detay |
+| --- | --- | --- |
+| Konular | Tüm oturumlar, tarihe göre tersten | Alanlar canlı düzenlenir, silme onaylı |
+| Dersler | Anatomi, Biyofizik… | Ad, renk, o dersin oturumları |
+| Akademisyenler | Unvanlı ad, bölüm | Ad, unvan, bölüm, e-posta, verdiği oturumlar |
+| Komiteler | Tarih aralığına göre sıralı | Ad, tarih aralığı, renk, oturumlar **derse göre gruplu** |
+| Etiketler | Ad, oturum sayısı | Ad, renk, oturumlar, **başka etiketle birleştirme** |
+
+Takvim 4. aşamada kenar çubuğuna eklenecek.
+
+Her bölüm kendi seçimini `AppNavigation` içinde tutuyor, yani
+Akademisyenler'den çıkıp dönünce aynı kişide kalıyorsun. Aynı ortak nesne
+sayesinde bir akademisyenin altındaki oturum satırına tıklamak seni
+Konular bölümüne, o oturuma götürüyor.
+
 ## Kavram sırası
 
 Diskteki klasör hiyerarşisi veri modeliyle birebir örtüşüyor:
@@ -71,7 +90,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 
 - [x] **1. Veri modeli ve ders listesi** — beş `@Model`, `ModelContainer`, liste + ekleme formu
 - [x] **2. Ders detayı ve düzenleme** — iki kolonlu düzen, canlı düzenleme, tamamlamalı alanlar
-- [ ] 3. Akademisyen / komite / etiket detay ekranları
+- [x] **3. Kenar çubuğu ve ilişkili ekranlar** — Ders, Akademisyen, Komite, Etiket
 - [ ] 4. Aylık takvim
 - [ ] 5. Dosya bağlama ve QuickLook
 - [ ] 6. Otomatik klasör tarama ve eşleştirme
@@ -84,17 +103,38 @@ MED/
   MEDApp.swift          @main, ModelContainer kurulumu
   Models/               Lecture, Course, Instructor, Committee, Tag, LectureFile
   Views/
-    ContentView         NavigationSplitView kabuğu, seçim durumu
-    LectureListView     liste kolonu
-    LectureDetailView   detay kolonu, silme
-    LectureEditor       alanlar — detay ve yeni ders sayfası aynı kodu kullanıyor
-    NewLectureSheet     yeni ders
-    Components/         NameSuggestField (tamamlama), Chip
+    ContentView         üç kolonlu kabuk, bölüm anahtarları
+    SidebarView         kalıcı kenar çubuğu
+    LectureListView     Konular listesi
+    LectureEditor       oturum alanları — detay ve yeni kayıt aynı kodu kullanıyor
+    LectureDetailView   oturum detayı
+    NewLectureSheet     yeni oturum
+    RelatedColumns      dört varlığın liste ve detay kolonları (bağlantı katmanı)
+    CourseDetailView  InstructorDetailView  CommitteeDetailView  TagDetailView
+    Components/
+      NameSuggestField  tamamlamalı isim alanı
+      NameListColumn    dört bölümün paylaştığı liste kolonu
+      LectureLinkList   "ait olduğu oturumlar" listesi, oturuma atlar
+      ColorSwatchPicker  Chip  DeleteRecordButton
   Support/
+    AppNavigation       bölüm ve seçim durumu
     TimeOfDay           dakika ↔ Date köprüsü
     SearchText          Türkçe duyarlı metin katlama
+    Palette             ders/komite/etiket renkleri
     ModelContext+FindOrCreate
     Color+Hex
+tools/
+  add_to_xcodeproj.py   proje dosyasına Swift dosyası ekler
+```
+
+## Proje dosyası
+
+`MED.xcodeproj` elle yazıldı (klasik biçim, `objectVersion 56`). Yeni bir
+Swift dosyası eklerken pbxproj'da dört yere dokunmak gerekiyor, bu yüzden iş
+bir araca bağlandı:
+
+```
+python3 tools/add_to_xcodeproj.py MED/Views/Foo.swift
 ```
 
 ## İsim eşleştirme
