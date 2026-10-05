@@ -15,18 +15,18 @@ enum LectureFormat: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .theoretical: return "Teorik"
-        case .practical:   return "Pratik"
-        case .exam:        return "Sınav"
+        case .theoretical: return L.pick("Teorik", "Theory")
+        case .practical:   return L.pick("Pratik", "Lab")
+        case .exam:        return L.pick("Sınav", "Exam")
         }
     }
 
     /// One letter, for a badge in a list row or a week-grid cell.
     var badge: String {
         switch self {
-        case .theoretical: return "T"
-        case .practical:   return "P"
-        case .exam:        return "S"
+        case .theoretical: return L.pick("T", "T")
+        case .practical:   return L.pick("P", "L")
+        case .exam:        return L.pick("S", "E")
         }
     }
 }

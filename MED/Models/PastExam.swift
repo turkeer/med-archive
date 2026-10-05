@@ -11,8 +11,8 @@ enum ExamLanguage: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .turkish: return "Türkçe"
-        case .english: return "İngilizce"
+        case .turkish: return L.pick("Türkçe", "Turkish")
+        case .english: return L.pick("İngilizce", "English")
         }
     }
 

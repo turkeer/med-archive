@@ -42,10 +42,10 @@ struct WeekGrid {
         let full = Date.FormatStyle.dateTime.day().month(.abbreviated).year()
 
         if calendar.isDate(first, equalTo: last, toGranularity: .month) {
-            return "\(first.formatted(day)) – \(last.formatted(full))"
+            return "\(L.format(first, day)) – \(L.format(last, full))"
         }
         let withMonth = Date.FormatStyle.dateTime.day().month(.abbreviated)
-        return "\(first.formatted(withMonth)) – \(last.formatted(full))"
+        return "\(L.format(first, withMonth)) – \(L.format(last, full))"
     }
 
     func adding(weeks: Int) -> Date {

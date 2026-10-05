@@ -131,6 +131,6 @@ extension Lecture {
         let topic = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !topic.isEmpty { return topic }
         if let course, !course.name.isEmpty { return course.name }
-        return "(başlıksız)"
+        return L.untitled
     }
 }

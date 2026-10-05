@@ -13,9 +13,9 @@ enum LectureFileKind: String, Codable, CaseIterable, Identifiable {
 
     var sectionTitle: String {
         switch self {
-        case .slide: return "Slaytlar"
-        case .note:  return "Notlarım"
-        case .other: return "Diğer"
+        case .slide: return L.pick("Slaytlar", "Slides")
+        case .note:  return L.pick("Notlarım", "My notes")
+        case .other: return L.pick("Diğer", "Other")
         }
     }
 

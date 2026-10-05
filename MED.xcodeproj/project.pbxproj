@@ -68,6 +68,7 @@
         ED000000000000000000023B /* FolderScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013B /* FolderScan.swift */; };
         ED000000000000000000023C /* ScanFolderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013C /* ScanFolderSheet.swift */; };
         ED000000000000000000023D /* ArchiveExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013D /* ArchiveExport.swift */; };
+        ED000000000000000000023E /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013E /* Localization.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -133,6 +134,7 @@
         ED000000000000000000013B /* FolderScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScan.swift; sourceTree = "<group>"; };
         ED000000000000000000013C /* ScanFolderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFolderSheet.swift; sourceTree = "<group>"; };
         ED000000000000000000013D /* ArchiveExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveExport.swift; sourceTree = "<group>"; };
+        ED000000000000000000013E /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -218,6 +220,7 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED000000000000000000013E /* Localization.swift */,
                 ED000000000000000000013D /* ArchiveExport.swift */,
                 ED000000000000000000013B /* FolderScan.swift */,
                 ED000000000000000000013A /* ScanNaming.swift */,
@@ -330,6 +333,7 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED000000000000000000023E /* Localization.swift in Sources */,
                 ED000000000000000000023D /* ArchiveExport.swift in Sources */,
                 ED000000000000000000023C /* ScanFolderSheet.swift in Sources */,
                 ED000000000000000000023B /* FolderScan.swift in Sources */,

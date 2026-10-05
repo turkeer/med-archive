@@ -245,13 +245,13 @@ enum ArchiveExport {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
 
-        return "MED arşivi \(formatter.string(from: day)).json"
+        return L.pick("MED arşivi", "MED archive") + " \(formatter.string(from: day)).json"
     }
 
     /// Asks where to put the file, then writes it. Does nothing if cancelled.
     static func save(from context: ModelContext) {
         let panel = NSSavePanel()
-        panel.title = "Arşivi dışa aktar"
+        panel.title = L.pick("Arşivi dışa aktar", "Export archive")
         panel.nameFieldStringValue = defaultFileName()
         panel.allowedContentTypes = [UTType.json]
         panel.canCreateDirectories = true
@@ -264,7 +264,7 @@ enum ArchiveExport {
             try json(snapshot(from: context)).write(to: url, options: .atomic)
         } catch {
             let alert = NSAlert()
-            alert.messageText = "Dışa aktarma başarısız"
+            alert.messageText = L.pick("Dışa aktarma başarısız", "Export failed")
             alert.informativeText = String(describing: error)
             alert.runModal()
         }

@@ -22,7 +22,7 @@ struct LessonSlot: Identifiable, Hashable {
 
     /// "3. ders"
     var label: String {
-        "\(number). ders"
+        L.lesson(number)
     }
 
     /// "3. ders · 10:30–11:10"
@@ -76,8 +76,8 @@ struct LessonSlot: Identifiable, Hashable {
         let slots = span(start: start, end: end)
         guard let first = slots.first, let last = slots.last else { return nil }
         return first.number == last.number
-            ? "\(first.number). ders"
-            : "\(first.number).–\(last.number). ders"
+            ? L.lesson(first.number)
+            : L.lessonRange(first.number, last.number)
     }
 
     /// The range starting at this slot and running for `count` slots, clamped

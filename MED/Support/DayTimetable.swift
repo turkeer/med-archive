@@ -78,7 +78,7 @@ extension DaySegment {
     /// "2. ders", or "2.–3. ders" for a run of several.
     var label: String {
         guard let last = slots.last, last.number != slot.number else { return slot.label }
-        return "\(slot.number).–\(last.number). ders"
+        return L.lessonRange(slot.number, last.number)
     }
 
     /// "09:40", or "09:40–11:10" for a run of several.

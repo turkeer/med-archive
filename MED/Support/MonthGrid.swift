@@ -39,14 +39,18 @@ struct MonthGrid {
 
     /// Weekday headings in the order this calendar lays them out.
     var weekdaySymbols: [String] {
-        let symbols = calendar.shortWeekdaySymbols      // index 0 is Sunday
+        // Not the calendar's own symbols: those follow the Mac's language,
+        // which is the one thing the window is not following any more.
+        let formatter = DateFormatter()
+        formatter.locale = L.locale
+        let symbols = formatter.shortWeekdaySymbols
         let start = calendar.firstWeekday - 1
         return (0..<7).map { symbols[(start + $0) % 7] }
     }
 
     /// "Ekim 2026"
     var title: String {
-        month.formatted(.dateTime.month(.wide).year())
+        L.format(month, Date.FormatStyle.dateTime.month(.wide).year())
     }
 
     func adding(months: Int) -> Date {

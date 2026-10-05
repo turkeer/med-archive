@@ -26,6 +26,11 @@ struct ContentView: View {
             detailColumn
         }
         .environment(nav)
+        // Dates and months follow the chosen language, so a week heading does
+        // not read "5 – 11 Eki" in an otherwise English window. Set here
+        // rather than on the scene: reading the language inside a view's body
+        // is what makes the window redraw when it changes.
+        .environment(\.locale, L.locale)
         // Hands the store the window's undo manager rather than one of its
         // own. A private `UndoManager` would record every change faithfully
         // and ⌘Z would still do nothing, because the Edit menu does not know

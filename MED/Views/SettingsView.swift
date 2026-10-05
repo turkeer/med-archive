@@ -13,8 +13,35 @@ struct SettingsView: View {
 
     @State private var isChoosingFolder = false
 
+    /// Reads and writes the shared object directly. A `@State` copy would own
+    /// a second one, and the rest of the app would never hear about the
+    /// change.
+    private var languageBinding: Binding<AppLanguageChoice> {
+        Binding(
+            get: { AppLanguage.shared.choice },
+            set: { AppLanguage.shared.choice = $0 }
+        )
+    }
+
     var body: some View {
         Form {
+            Section {
+                Picker(L.pick("Dil", "Language"), selection: languageBinding) {
+                    ForEach(AppLanguageChoice.allCases) { choice in
+                        Text(choice.endonym).tag(choice)
+                    }
+                }
+            } header: {
+                Text(L.pick("Dil", "Language"))
+            } footer: {
+                Text(L.pick(
+                    "Hemen değişir, uygulamayı kapatmak gerekmez. Ders adları, konular ve notlar senin yazdığın gibi kalır — çevrilen yalnızca arayüz.",
+                    "Takes effect at once, with no need to quit. Course names, topics and notes stay exactly as you typed them — only the interface is translated."
+                ))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
             Section {
                 if let url = library.url {
                     LabeledContent("Klasör") {
@@ -101,6 +128,6 @@ struct SettingsView: View {
                 library.set(url)
             }
         }
-        .frame(width: 540, height: 440)
+        .frame(width: 560, height: 540)
     }
 }

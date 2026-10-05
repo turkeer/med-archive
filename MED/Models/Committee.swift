@@ -65,7 +65,7 @@ extension Committee {
     /// "1 Eki 2026 – 14 Kas 2026"
     var dateRangeText: String {
         let style = Date.FormatStyle.dateTime.day().month(.abbreviated).year()
-        return "\(startDate.formatted(style)) – \(endDate.formatted(style))"
+        return "\(L.format(startDate, style)) – \(L.format(endDate, style))"
     }
 
 }

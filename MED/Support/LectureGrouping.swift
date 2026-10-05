@@ -20,10 +20,10 @@ enum LectureSort: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .newestFirst:     return "Yeniden eskiye"
-        case .oldestFirst:     return "Eskiden yeniye"
-        case .titleAscending:  return "Konu A→Z"
-        case .titleDescending: return "Konu Z→A"
+        case .newestFirst:     return L.pick("Yeniden eskiye", "Newest first")
+        case .oldestFirst:     return L.pick("Eskiden yeniye", "Oldest first")
+        case .titleAscending:  return L.pick("Konu A→Z", "Topic A→Z")
+        case .titleDescending: return L.pick("Konu Z→A", "Topic Z→A")
         }
     }
 }
@@ -179,13 +179,13 @@ enum LectureGrouping {
 
         guard let first = numbers.first, let last = numbers.last else {
             let times = lectures.first?.timeRangeText ?? ""
-            return times.isEmpty ? "saat yok" : times
+            return times.isEmpty ? L.noTime : times
         }
 
         if numbers.count == last - first + 1 {
-            return first == last ? "\(first). ders" : "\(first).–\(last). ders"
+            return L.lessonRange(first, last)
         }
 
-        return numbers.map(String.init).joined(separator: ", ") + ". ders"
+        return L.lessonList(numbers)
     }
 }

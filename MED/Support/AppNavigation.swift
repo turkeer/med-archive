@@ -15,12 +15,12 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .calendar:    return "Takvim"
-        case .lectures:    return "Konular"
-        case .courses:     return "Dersler"
-        case .instructors: return "Akademisyenler"
-        case .committees:  return "Komiteler"
-        case .tags:        return "Etiketler"
+        case .calendar:    return L.calendar
+        case .lectures:    return L.topics
+        case .courses:     return L.courses
+        case .instructors: return L.instructors
+        case .committees:  return L.committees
+        case .tags:        return L.tags
         }
     }
 
@@ -45,8 +45,8 @@ enum CalendarMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .week: return "Hafta"
-        case .day:  return "Gün"
+        case .week: return L.pick("Hafta", "Week")
+        case .day:  return L.pick("Gün", "Day")
         }
     }
 }
