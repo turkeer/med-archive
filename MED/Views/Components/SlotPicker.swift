@@ -10,8 +10,10 @@ struct SlotPicker: View {
     @Binding var startMinutes: Int?
     @Binding var endMinutes: Int?
 
-    /// Hovering a number shows its hours, so the row can stay as bare numbers
-    /// — nine times written out would not fit the column.
+    /// Hovering a number shows its hours in the line below, so the row can
+    /// stay as bare numbers — nine times written out would not fit the column,
+    /// and a hint long enough to explain that got truncated anyway. Each
+    /// button also carries its hours as a tooltip.
     @State private var hoveredSlot: LessonSlot?
 
     private var selected: [LessonSlot] {
@@ -118,7 +120,7 @@ struct SlotPicker: View {
             return "\(label) · \(TimeOfDay.rangeText(start: startMinutes, end: endMinutes))"
         }
         if !hasTime {
-            return "Saat seçilmedi — numaranın üzerine gelince saatini görürsün"
+            return "Saat seçilmedi"
         }
         return "Özel saat · \(TimeOfDay.rangeText(start: startMinutes, end: endMinutes))"
     }
