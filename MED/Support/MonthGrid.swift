@@ -43,7 +43,7 @@ struct MonthGrid {
         // which is the one thing the window is not following any more.
         let formatter = DateFormatter()
         formatter.locale = L.locale
-        let symbols = formatter.shortWeekdaySymbols
+        let symbols = formatter.shortWeekdaySymbols ?? calendar.shortWeekdaySymbols
         let start = calendar.firstWeekday - 1
         return (0..<7).map { symbols[(start + $0) % 7] }
     }

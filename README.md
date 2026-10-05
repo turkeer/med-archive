@@ -651,6 +651,20 @@ Son kural bir kalıbı yasaklıyor: `isPresented:` gibi bir sunum bağlamasına
 tamamlanma bloğunun okuyacağı durumu siliyor. Sunum durumu ile hedef durumu
 ayrı tutulmalı.
 
+### Yakalanan hata sınıfları
+
+Her kural gerçek bir hatadan doğdu ve hatayı yeniden sokarak kanıtlandı:
+
+1. Tanımsız üye çağrısı (dosya yeniden yazılırken düşen yardımcı)
+2. Eksik argüman etiketi — trailing closure'ı tanıyor
+3. Demet üzerinde key path (`ForEach(x.enumerated(), id: \.offset)`)
+4. Jenerik ShapeStyle konumunda zincirli baştan-nokta
+5. ForEach closure'ında yerel `let`
+6. Sunum değiştiricisine sentetik `Binding` — setter, tamamlanma bloğunun
+   okuduğu durumu siler
+7. `DateFormatter`'ın sembol dizileri (`shortWeekdaySymbols` ve kardeşleri)
+   `[String]?` geliyor, `[String]!` değil: doğrudan indekslemek derlenmiyor
+
 ## Proje dosyası
 
 `MED.xcodeproj` elle yazıldı (klasik biçim, `objectVersion 56`). Yeni bir

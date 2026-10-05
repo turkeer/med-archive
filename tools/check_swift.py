@@ -201,6 +201,21 @@ def main():
                     f"{filename}: sunum değiştiricisine sentetik Binding — kapanış "
                     f"setter'ı, tamamlanma bloğunun okuduğu durumu siler")
 
+            # 7. Foundation'ın örtük açılmayan opsiyonelleri
+            #
+            # DateFormatter'ın sembol dizileri `[String]?` olarak geliyor,
+            # `[String]!` değil: doğrudan indekslemek derlenmiyor.
+            for member in ('shortWeekdaySymbols', 'weekdaySymbols', 'monthSymbols',
+                           'shortMonthSymbols', 'veryShortWeekdaySymbols'):
+                pattern = r'(?<!\?\?\s)\b\w*[Ff]ormatter\.' + member + r'\b(?!\s*(?:\?\?|=))'
+                for match in re.finditer(pattern, code):
+                    tail = code[match.end():match.end() + 40]
+                    if tail.lstrip().startswith('??'):
+                        continue
+                    problems.append(
+                        f"{filename}: DateFormatter.{member} opsiyonel — "
+                        f"?? ile açılması gerekiyor")
+
     if problems:
         print(f"{len(problems)} bulgu:")
         for problem in problems:
