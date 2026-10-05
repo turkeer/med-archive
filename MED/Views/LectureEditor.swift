@@ -10,6 +10,11 @@ import SwiftData
 struct LectureEditor: View {
     @Bindable var lecture: Lecture
 
+    /// Files belong to a stored lecture. The new-lecture sheet works on a
+    /// lecture that is not inserted yet, so it leaves this off and you attach
+    /// files once the record exists.
+    var showsFiles = false
+
     @Environment(\.modelContext) private var context
 
     @Query(sort: \Course.name) private var courses: [Course]
@@ -140,6 +145,10 @@ struct LectureEditor: View {
                 TextEditor(text: $lecture.notes)
                     .font(.body)
                     .frame(minHeight: 100)
+            }
+
+            if showsFiles {
+                LectureFilesSection(lecture: lecture)
             }
         }
         .formStyle(.grouped)

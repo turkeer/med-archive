@@ -21,10 +21,14 @@ iOS/iPadOS cihazlarına kurulumda gerekiyor, burada öyle bir şey yok.
 
 ### App Sandbox kapalı
 
-Uygulama App Store'a gönderilmeyeceği için sandbox açılmadı. Bunun tek sebebi
+Uygulama App Store'a gönderilmeyeceği için sandbox açılmadı. Tek sebebi
 sadelik: sandbox altında iCloud klasörüne erişmek güvenlik kapsamlı yer imi
-(security-scoped bookmark) makinesi gerektiriyor, kapalıyken düz dosya yolu
-yetiyor. 5. aşamada kesinleşir; model şimdiden iki yola da uygun.
+(security-scoped bookmark) makinesi gerektiriyor — bayatlayan yer imleri, her
+açılışta izni geri alma, `startAccessingSecurityScopedResource`. Kapalıyken
+düz dosya yolu yetiyor ve o katman tümden yok.
+
+`LectureFile.bookmarkData` alanı yerinde duruyor ama kullanılmıyor; sandbox'ı
+sonradan açmak isterseniz yeri hazır.
 
 ## Veri modeli
 
@@ -110,7 +114,27 @@ Komite I  /  Biyofizik  /  2026-10-01 | Basic Principles in Biophysics.pdf
 Committee     Course                    Lecture.date   Lecture.title (konu)
 ```
 
-## Dosyaların yeri
+## Dosyalar
+
+Kök klasör bir kez Ayarlar'dan (⌘,) seçiliyor ve bir yol olarak saklanıyor.
+Bir dosya bağlanırken yolu **kökün altındaysa köke göreli**, değilse mutlak
+olarak kaydediliyor. Göreli yol, kök klasörü taşısan ya da yeniden
+adlandırsan da bağların kopmaması demek.
+
+Oturum detayında dosyalar Slaytlar / Notlarım / Diğer başlıkları altında
+gruplu. Satıra tıklamak QuickLook ile uygulama içinde önizliyor, klasör
+simgesi Finder'da gösteriyor, ok simgesi varsayılan uygulamada açıyor.
+Diskte bulunamayan dosya sessizce kalmıyor, uyarı simgesiyle söylüyor.
+
+Tür (slayt / not) dosya adından tahmin ediliyor. Kural **tam kelime**
+eşleştiriyor, alt dizge değil: "Notochord gelişimi" içinde "not" geçiyor ama
+not değil. On üç gerçekçi dosya adı üzerinde alt dizge kuralı beşini yanlış
+sınıflandırıyordu.
+
+Hiçbir işlem dosyayı kopyalamıyor, taşımıyor, yeniden adlandırmıyor,
+silmiyor. Listeden kaldırmak yalnızca yerini unutuyor.
+
+## Önerilen klasör düzeni
 
 PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 
@@ -127,7 +151,7 @@ PDF'ler uygulamanın içine kopyalanmaz, iCloud Drive'da kalır:
 - [x] **2. Ders detayı ve düzenleme** — iki kolonlu düzen, canlı düzenleme, tamamlamalı alanlar
 - [x] **3. Kenar çubuğu ve ilişkili ekranlar** — Ders, Akademisyen, Komite, Etiket
 - [x] **4. Aylık takvim** — ızgara, gün seçimi, günden oturum ekleme
-- [ ] 5. Dosya bağlama ve QuickLook
+- [x] **5. Dosya bağlama ve QuickLook** — elle ekleme, önizleme, Finder'da gösterme
 - [ ] 6. Otomatik klasör tarama ve eşleştirme
 - [ ] 7. Arama ve JSON dışa aktarma
 
@@ -146,6 +170,8 @@ MED/
     LectureEditor       oturum alanları — detay ve yeni kayıt aynı kodu kullanıyor
     LectureDetailView   oturum detayı
     NewLectureSheet     yeni oturum
+    LectureFilesSection oturumun dosyaları, QuickLook
+    SettingsView        kök klasör ayarı (⌘,)
     RelatedColumns      dört varlığın liste ve detay kolonları (bağlantı katmanı)
     CourseDetailView  InstructorDetailView  CommitteeDetailView  TagDetailView
     Components/
@@ -159,6 +185,8 @@ MED/
     TimeOfDay           dakika ↔ Date köprüsü
     MonthGrid           aylık ızgaranın 42 hücresi
     LessonSlot          okulun dokuz ders saati
+    LibraryRoot         PDF kök klasörü (UserDefaults)
+    FileNaming          dosya adından tür tahmini
     SearchText          Türkçe duyarlı metin katlama
     Palette             ders/komite/etiket renkleri
     ModelContext+FindOrCreate

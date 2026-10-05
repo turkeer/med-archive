@@ -41,9 +41,10 @@ enum LectureFileKind: String, Codable, CaseIterable, Identifiable {
 final class LectureFile {
     var fileName: String = ""
 
-    /// Path relative to the MED root folder, e.g.
-    /// "Komite I/Biyofizik/2026-10-01 | Basic Principles.pdf".
-    /// Empty when the file lives outside the root and is only reachable by bookmark.
+    /// Where the file is. Relative to the library root when it sits inside it —
+    /// "Komite I/Biyofizik/2026-10-01 | Basic Principles.pdf" — which survives
+    /// the root folder being moved or renamed. Absolute when the file was
+    /// picked from somewhere else. Empty when nothing is known.
     var relativePath: String = ""
 
     /// Security-scoped bookmark, when one is needed. See the type comment.
@@ -68,5 +69,21 @@ final class LectureFile {
         self.kind = kind
         self.addedAt = Date()
         self.lecture = lecture
+    }
+}
+
+extension LectureFile {
+    /// Resolves to a file on disk, or `nil` when there is nothing to resolve.
+    /// Whether the file is actually there is a separate question — the caller
+    /// checks, because a file can be moved out from under us at any time.
+    func url(root: URL?) -> URL? {
+        guard !relativePath.isEmpty else { return nil }
+
+        if relativePath.hasPrefix("/") {
+            return URL(fileURLWithPath: relativePath)
+        }
+
+        guard let root else { return nil }
+        return root.appending(path: relativePath)
     }
 }

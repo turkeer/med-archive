@@ -42,6 +42,10 @@
         ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000121 /* CalendarDayColumn.swift */; };
         ED0000000000000000000222 /* LessonSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000122 /* LessonSlot.swift */; };
         ED0000000000000000000223 /* SlotPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000123 /* SlotPicker.swift */; };
+        ED0000000000000000000224 /* FileNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000124 /* FileNaming.swift */; };
+        ED0000000000000000000225 /* LibraryRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000125 /* LibraryRoot.swift */; };
+        ED0000000000000000000226 /* LectureFilesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000126 /* LectureFilesSection.swift */; };
+        ED0000000000000000000227 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000127 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -81,6 +85,10 @@
         ED0000000000000000000121 /* CalendarDayColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayColumn.swift; sourceTree = "<group>"; };
         ED0000000000000000000122 /* LessonSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonSlot.swift; sourceTree = "<group>"; };
         ED0000000000000000000123 /* SlotPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotPicker.swift; sourceTree = "<group>"; };
+        ED0000000000000000000124 /* FileNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileNaming.swift; sourceTree = "<group>"; };
+        ED0000000000000000000125 /* LibraryRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoot.swift; sourceTree = "<group>"; };
+        ED0000000000000000000126 /* LectureFilesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilesSection.swift; sourceTree = "<group>"; };
+        ED0000000000000000000127 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +145,8 @@
         ED0000000000000000000012 /* Views */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000127 /* SettingsView.swift */,
+                ED0000000000000000000126 /* LectureFilesSection.swift */,
                 ED0000000000000000000121 /* CalendarDayColumn.swift */,
                 ED0000000000000000000120 /* CalendarMonthView.swift */,
                 ED000000000000000000011A /* TagDetailView.swift */,
@@ -158,6 +168,8 @@
         ED0000000000000000000013 /* Support */ = {
             isa = PBXGroup;
             children = (
+                ED0000000000000000000125 /* LibraryRoot.swift */,
+                ED0000000000000000000124 /* FileNaming.swift */,
                 ED0000000000000000000122 /* LessonSlot.swift */,
                 ED000000000000000000011F /* MonthGrid.swift */,
                 ED0000000000000000000114 /* Palette.swift */,
@@ -252,6 +264,10 @@
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
             files = (
+                ED0000000000000000000227 /* SettingsView.swift in Sources */,
+                ED0000000000000000000226 /* LectureFilesSection.swift in Sources */,
+                ED0000000000000000000225 /* LibraryRoot.swift in Sources */,
+                ED0000000000000000000224 /* FileNaming.swift in Sources */,
                 ED0000000000000000000223 /* SlotPicker.swift in Sources */,
                 ED0000000000000000000222 /* LessonSlot.swift in Sources */,
                 ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */,

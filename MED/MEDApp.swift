@@ -5,6 +5,8 @@ import SwiftData
 struct MEDApp: App {
     private let modelContainer: ModelContainer
 
+    @State private var library = LibraryRoot()
+
     init() {
         do {
             modelContainer = try ModelContainer(
@@ -24,8 +26,14 @@ struct MEDApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(library)
         }
         .modelContainer(modelContainer)
-        .defaultSize(width: 900, height: 620)
+        .defaultSize(width: 980, height: 660)
+
+        Settings {
+            SettingsView()
+                .environment(library)
+        }
     }
 }

@@ -19,7 +19,7 @@ struct LectureDetailView: View {
     }
 
     var body: some View {
-        LectureEditor(lecture: lecture)
+        LectureEditor(lecture: lecture, showsFiles: true)
             // Resets the editor's own field state when a different lecture
             // is selected, instead of carrying half-typed text across.
             .id(lecture.persistentModelID)
