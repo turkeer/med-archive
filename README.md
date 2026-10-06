@@ -1,5 +1,22 @@
 # MED — Ders Takip Uygulaması
 
+*[English version / İngilizce sürüm](README.en.md)*
+
+Tıp fakültesi için ders arşivi, macOS uygulaması. Native SwiftUI, tek
+kullanıcı, hesap yok, sunucu yok, abonelik yok. Lisans: [MIT](LICENSE).
+
+## Kurulum
+
+**Sürümden:** [releases sayfasından](../../releases) `MED.dmg` indir, aç,
+**MED**'i Applications'a sürükle. Uygulama **imzasız** dağıtıldığı için ilk
+açılışta macOS "geliştirici doğrulanamadı" diyecek: **Sistem Ayarları →
+Gizlilik ve Güvenlik**'i aç, aşağıdaki MED satırındaki **"Yine de Aç"**
+düğmesine bas. Bir kez yapılıyor.
+
+**Kaynaktan:** macOS 14+ ve Xcode 15+ yeterli, Apple Developer hesabı
+gerekmiyor.
+
+
 macOS için tek kullanıcılı ders arşivi. SwiftUI + SwiftData, hedef macOS 14+.
 
 Tasarım belgesi: [`docs/teknik-tarif.md`](docs/teknik-tarif.md)

@@ -1,0 +1,71 @@
+# Bir sürüm etiketi atıldığında (v1.0 gibi) uygulamayı derler, DMG'ye paketler
+# ve GitHub release'ine ekler. Public depolarda macOS runner'ı ücretsiz.
+#
+# Uygulama imzasız çıkıyor. İndiren kişi Gatekeeper uyarısı alır ve bir kez
+# Sistem Ayarları → Gizlilik ve Güvenlik → "Yine de Aç" yolundan geçer;
+# README bunu anlatıyor. Temiz açılış için Apple Developer Program gerekiyor:
+# o zaman sertifikayı depo secret'ına koyup bu dosyaya codesign + notarytool
+# + stapler adımlarını eklemek yeterli, başka bir şey değişmiyor.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derle
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project MED.xcodeproj \
+            -scheme MED \
+            -configuration Release \
+            -derivedDataPath build \
+            clean build
+        # İmzalama yüzünden burada takılırsa şunları ekle:
+        #   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: DMG paketle
+        run: |
+          mkdir -p staging
+          cp -R build/Build/Products/Release/MED.app staging/
+          ln -s /Applications staging/Applications
+          hdiutil create \
+            -volname MED \
+            -srcfolder staging \
+            -ov -format UDZO \
+            MED.dmg
+
+      - name: Release'e ekle
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MED.dmg
+          body: |
+            ## Kurulum
+
+            1. `MED.dmg` dosyasını indir ve aç.
+            2. **MED**'i Applications klasörüne sürükle.
+            3. İlk açılışta macOS "geliştirici doğrulanamadı" diyecek. **Sistem
+               Ayarları → Gizlilik ve Güvenlik**'i aç, aşağıda MED ile ilgili
+               satırdaki **"Yine de Aç"** düğmesine bas. Bir kez yapılıyor.
+
+            Uygulama imzasız dağıtılıyor (Apple Developer Program gerektirmez).
+            Kaynak kodun tamamı bu depoda.
+
+      - name: Derleme çıktısını da yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: MED-dmg
+          path: MED.dmg

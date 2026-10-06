@@ -47,6 +47,12 @@ struct MEDApp: App {
             // Dışa aktarma Dosya menüsünde, çünkü oraya bakılır. Panel ve
             // yazma işi `ArchiveExport`'ta: burada tutulacak bir durum yok,
             // o yüzden görünüm katmanına da ihtiyaç yok.
+            CommandGroup(replacing: .appInfo) {
+                Button(L.pick("MED Hakkında", "About MED")) {
+                    AboutPanel.show()
+                }
+            }
+
             CommandGroup(replacing: .importExport) {
                 Button(L.pick("JSON olarak dışa aktar…", "Export as JSON…")) {
                     if let modelContainer {
