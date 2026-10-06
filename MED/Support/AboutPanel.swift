@@ -21,7 +21,7 @@ enum AboutPanel {
             "",
             L.pick("Türker Akın & Claude tarafından yapıldı", "Made by Türker Akın & Claude"),
             "",
-            L.pick("Açık kaynak · MIT", "Open source · MIT"),
+            L.pick("Kaynak kodu açık · Ticari olmayan kullanım", "Source available · Noncommercial"),
             "github.com/turkeer/med-archive",
         ]
 

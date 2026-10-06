@@ -84,6 +84,18 @@ Mimari kararlar, SwiftData tuzakları ve her şeyin neden böyle olduğu
 
 ## Lisans
 
-MIT — [LICENSE](LICENSE). Kullan, değiştir, dağıt.
+**PolyForm Noncommercial 1.0.0** — [LICENSE](LICENSE).
+
+Kullanabilirsin, inceleyebilirsin, değiştirebilirsin, değiştirdiğin hâlini
+dağıtabilirsin: kendi dersin için, arkadaşların için, eğitim ve araştırma
+için, bir üniversite ya da dernek için. **Ticari kullanım yok** — satmak,
+erişimi satmak, ücretli sürüm yapmak, reklam koymak, satılan bir şeyin içine
+koymak olmuyor.
+
+Bu projenin amacı, tıp öğrencisinin kendi derslerinin arşivi için para
+ödemek zorunda olmaması. Geliştirip başkasına ulaştırmak tam olarak istenen
+şey; ücret alma yolu bulmak değil.
+
+Ticari bir kullanım düşünüyorsan önce sor.
 
 Türker Akın & Claude tarafından yapıldı.

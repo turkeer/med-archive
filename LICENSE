@@ -1,21 +1,40 @@
-MIT License
+MED is licensed under the PolyForm Noncommercial License 1.0.0.
+
+SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
 Copyright (c) 2026 Türker Akın
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The licence text is published at
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+    https://polyformproject.org/licenses/noncommercial/1.0.0/
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+and governs this software in full. Where this file and that text differ, that
+text prevails.
+
+
+WHAT IT MEANS, IN SHORT
+
+This summary is for orientation only and grants nothing by itself; the licence
+text above is what applies.
+
+  You may        use, study, change and share this software, and share your
+                 changed versions, for any noncommercial purpose — your own
+                 studies, your classmates, teaching, research, a university,
+                 a charity.
+
+  You may not    use it, or anything derived from it, to make money. No
+                 selling it, no selling access to it, no paid tiers, no ads,
+                 no bundling it into something sold.
+
+The point of this project is that medical students should not have to pay for
+an archive of their own lectures. Improving it and passing it on is exactly
+what it is for; finding a way to charge for it is not.
+
+If you want to use this commercially, ask first.
+
+
+NOTE ON EARLIER VERSIONS
+
+Commits up to and including 3d1eba1 were published under the MIT License.
+Anyone who received a copy under those terms keeps them for that copy. This
+licence applies from the commit that introduced it onward.

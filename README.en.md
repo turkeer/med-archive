@@ -84,6 +84,17 @@ every choice are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). Use it, change it, ship it.
+**PolyForm Noncommercial 1.0.0** — see [LICENSE](LICENSE).
+
+You may use, study, change and share it, including your changed versions, for
+any noncommercial purpose: your own studies, your classmates, teaching,
+research, a university or a charity. **No commercial use** — no selling it, no
+selling access, no paid tiers, no ads, no bundling it into something sold.
+
+The point of this project is that medical students should not have to pay for
+an archive of their own lectures. Improving it and passing it on is exactly
+what it is for; finding a way to charge for it is not.
+
+If you want to use it commercially, ask first.
 
 Made by Türker Akın & Claude.
