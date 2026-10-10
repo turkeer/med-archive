@@ -16,6 +16,11 @@ struct MEDApp: App {
 
     init() {
         do {
+            // The URL is given explicitly on purpose: see `StoreLocation`.
+            // Letting SwiftData pick the default put this archive in a file
+            // another process also treats as its own, and it was emptied.
+            try StoreLocation.prepare()
+
             modelContainer = try ModelContainer(
                 for: Lecture.self,
                 Course.self,
@@ -23,7 +28,8 @@ struct MEDApp: App {
                 Committee.self,
                 Tag.self,
                 LectureFile.self,
-                PastExam.self
+                PastExam.self,
+                configurations: ModelConfiguration(url: StoreLocation.storeURL)
             )
             storeError = nil
         } catch {
@@ -38,6 +44,7 @@ struct MEDApp: App {
                 ContentView()
                     .environment(library)
                     .modelContainer(modelContainer)
+                    .task { StoreBackup.write(from: modelContainer.mainContext) }
             } else {
                 StoreFailureView(message: storeError ?? L.pick("Bilinmeyen hata", "Unknown error"))
             }

@@ -13,7 +13,7 @@ struct StoreFailureView: View {
     @State private var status: String?
 
     private var supportDirectory: URL {
-        URL.applicationSupportDirectory
+        StoreLocation.directory
     }
 
     var body: some View {
@@ -49,6 +49,22 @@ struct StoreFailureView: View {
 
                     Button(L.pick("Finder'da aç", "Open in Finder")) {
                         NSWorkspace.shared.activateFileViewerSelecting([supportDirectory])
+                    }
+                }
+            }
+
+            if let backup = StoreBackup.newest {
+                GroupBox(L.pick("Son otomatik yedek", "Newest automatic backup")) {
+                    HStack {
+                        Text(backup.lastPathComponent)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+
+                        Spacer()
+
+                        Button(L.pick("Finder'da aç", "Open in Finder")) {
+                            NSWorkspace.shared.activateFileViewerSelecting([backup])
+                        }
                     }
                 }
             }
@@ -108,7 +124,7 @@ struct StoreFailureView: View {
                 at: supportDirectory,
                 includingPropertiesForKeys: nil
             )
-            let storeFiles = items.filter { $0.lastPathComponent.hasPrefix("default.store") }
+            let storeFiles = items.filter { $0.lastPathComponent.hasPrefix(StoreLocation.storeName) }
 
             guard !storeFiles.isEmpty else {
                 status = L.pick(
