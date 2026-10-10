@@ -30,7 +30,9 @@ struct CalendarDayColumn: View {
 
     private func content(for day: Date) -> some View {
         // Computed once for the day rather than once per row.
-        let parts = LectureGrouping.partNumbers(for: dayLectures(on: day))
+        let all = dayLectures(on: day)
+        let parts = LectureGrouping.partNumbers(for: all)
+        let topicsWithoutFiles = LectureGrouping.lacksFiles(among: all)
 
         return Form {
             if calendar.isDateInWeekend(day) {
@@ -38,7 +40,11 @@ struct CalendarDayColumn: View {
             } else {
                 Section(L.pick("Ders saatleri", "Lesson times")) {
                     ForEach(DayTimetable.segments(for: timetabled(on: day))) { segment in
-                        SegmentRow(segment: segment, parts: parts) {
+                        SegmentRow(
+                            segment: segment,
+                            parts: parts,
+                            topicsWithoutFiles: topicsWithoutFiles
+                        ) {
                             newLectureRequest = NewLectureRequest(day: day, slot: segment.slot)
                         }
                     }
@@ -95,6 +101,11 @@ struct CalendarDayColumn: View {
 private struct SegmentRow: View {
     let segment: DaySegment
     let parts: [PersistentIdentifier: (index: Int, total: Int)]
+
+    /// Lectures whose topic has nothing attached, so a row can say the
+    /// opposite without counting files itself.
+    let topicsWithoutFiles: Set<PersistentIdentifier>
+
     let add: () -> Void
 
     @Environment(AppNavigation.self) private var nav
@@ -156,6 +167,15 @@ private struct SegmentRow: View {
 
                 FormatBadge(format: lecture.format)
 
+                // The same mark the Konular lists use, for the same reason:
+                // which lessons already have their slides, without opening
+                // any of them.
+                if hasFiles(lecture) {
+                    Image(systemName: "paperclip")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
                 Image(systemName: "chevron.right")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
@@ -163,6 +183,12 @@ private struct SegmentRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// Topic-wide, as everywhere else: the parts of one topic share their
+    /// files, so part (2) is marked by what part (1) is carrying.
+    private func hasFiles(_ lecture: Lecture) -> Bool {
+        !topicsWithoutFiles.contains(lecture.persistentModelID)
     }
 
     /// Parts of one topic say which part they are. A lecture that merely
