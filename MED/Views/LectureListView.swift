@@ -30,6 +30,8 @@ struct LectureListView: View {
     /// an order you chose once is not something to choose again per screen.
     @AppStorage("lectureListSort") private var sort: LectureSort = .newestFirst
 
+    @Environment(SlideIndex.self) private var slideIndex
+
     @State private var query = ""
     @State private var filter = LectureFilter()
     @State private var newLectureRequest: NewLectureRequest?
@@ -129,9 +131,12 @@ struct LectureListView: View {
 
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // Worked out once for the search, not once per row.
+        let slideHits = slideIndex.matchingPaths(query: needle)
+
         return lectures
             .filter { filter.matches($0, lackingFiles: lacking) }
-            .filter { needle.isEmpty || LectureSearch.matches($0, query: needle) }
+            .filter { needle.isEmpty || LectureSearch.matches($0, query: needle, slideHits: slideHits) }
             .sorted { sort.precedes($0, $1) }
             .map { Row(lecture: $0, part: numbers[$0.persistentModelID]) }
     }

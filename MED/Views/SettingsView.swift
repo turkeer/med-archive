@@ -10,6 +10,7 @@ struct SettingsView: View {
     var storeURL: URL?
 
     @Environment(LibraryRoot.self) private var library
+    @Environment(SlideIndex.self) private var slideIndex
 
     @State private var isChoosingFolder = false
 
@@ -118,6 +119,53 @@ struct SettingsView: View {
                 Text(L.pick(
                     "Dosya menüsünden (⌘⇧E) arşivin tamamını okunabilir bir JSON dosyasına aktarabilirsin: ne var ne yok görmek ve veriyi başka bir yere taşımak için. Geri yükleme yapmıyor — asıl yedek yukarıdaki veritabanı dosyası, onu düzenli olarak kopyala.",
                     "The File menu (⌘⇧E) exports the whole archive as a readable JSON file: for checking what is there and for carrying the data elsewhere. It does not restore — the real backup is the database file above, so copy that regularly."
+                ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                LabeledContent(L.pick("Slayt fihristi", "Slide index")) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if slideIndex.isWorking {
+                            Text(L.pick("okunuyor…", "reading…"))
+                                .foregroundStyle(.secondary)
+                        } else if slideIndex.fileCount == 0 {
+                            Text(L.pick("henüz kurulmadı", "not built yet"))
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(L.pick(
+                                "\(slideIndex.fileCount) dosya · \(slideIndex.pageCount) sayfa",
+                                "\(slideIndex.fileCount) files · \(slideIndex.pageCount) pages"
+                            ))
+
+                            if slideIndex.ocrPageCount > 0 {
+                                Text(L.pick(
+                                    "\(slideIndex.ocrPageCount) sayfa görüntüden okundu",
+                                    "\(slideIndex.ocrPageCount) pages read from the image"
+                                ))
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            if slideIndex.unreadablePageCount > 0 {
+                                // Said out loud rather than left as a silent
+                                // hole: a search that misses these reads as
+                                // "the word is not in your slides".
+                                Text(L.pick(
+                                    "\(slideIndex.unreadablePageCount) sayfada okunacak metin yok",
+                                    "\(slideIndex.unreadablePageCount) pages have no readable text"
+                                ))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text(L.pick("Arama", "Search"))
+            } footer: {
+                Text(L.pick(
+                    "Kök klasördeki bütün PDF'lerin metni okunur, böylece arama slaytların içinde de bulur. Metni olmayan sayfalar — taranmış slaytlar, yazısı resmin içinde olan diyagramlar — görüntüden okunur. Fihrist veritabanının yanında ayrı bir dosyada tutulur; silinse bir sonraki açılışta yeniden kurulur.",
+                    "The text of every PDF under the root folder is read, so searching reaches inside the slides. Pages with no text of their own — scanned slides, diagrams whose labels live in the picture — are read from the image instead. The index is kept in its own file beside the database; delete it and it is rebuilt on the next launch."
                 ))
                     .font(.caption)
                     .foregroundStyle(.secondary)

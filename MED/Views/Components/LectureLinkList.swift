@@ -28,6 +28,7 @@ struct LectureLinkList: View {
     var dayMode = false
 
     @Environment(AppNavigation.self) private var nav
+    @Environment(SlideIndex.self) private var slideIndex
 
     /// Remembered across screens and launches — a sort order you chose once
     /// is not something to choose again on every course.
@@ -106,8 +107,8 @@ struct LectureLinkList: View {
                         .borderlessFormTextField()
                         .lineLimit(1)
                         .help(L.pick(
-                            "Konu, ders, akademisyen, komite, etiket, not ve dosya adında arar",
-                            "Searches topic, course, instructor, committee, tag, notes and file names"
+                            "Konu, ders, akademisyen, komite, etiket, not, dosya adı ve slaytların içinde arar",
+                            "Searches topic, course, instructor, committee, tag, notes, file names and inside the slides"
                         ))
 
                     if !query.isEmpty {
@@ -163,8 +164,10 @@ struct LectureLinkList: View {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !needle.isEmpty else { return all }
 
+        let slideHits = slideIndex.matchingPaths(query: needle)
+
         return all.filter { group in
-            group.lectures.contains { LectureSearch.matches($0, query: needle) }
+            group.lectures.contains { LectureSearch.matches($0, query: needle, slideHits: slideHits) }
         }
     }
 

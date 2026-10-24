@@ -7,8 +7,14 @@ import Foundation
 /// means the two cannot disagree about what a hit is.
 enum LectureSearch {
     /// Everything worth searching: the topic, the course, the academic, the
-    /// committee, the tags and the notes.
-    static func matches(_ lecture: Lecture, query: String) -> Bool {
+    /// committee, the tags, the notes and the file names — plus, when
+    /// `slideHits` is given, what the slides themselves say.
+    ///
+    /// `slideHits` is the set of stored paths whose slide text matches, worked
+    /// out once per search by `SlideIndex` rather than asked per lecture. The
+    /// default of `[]` keeps every caller that has no index, and means a
+    /// missing index quietly narrows the search instead of breaking it.
+    static func matches(_ lecture: Lecture, query: String, slideHits: Set<String> = []) -> Bool {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !needle.isEmpty else { return true }
 
@@ -31,6 +37,10 @@ enum LectureSearch {
             return true
         }
 
-        return lecture.files.contains { SearchText.contains($0.fileName, query: needle) }
+        if lecture.files.contains(where: { SearchText.contains($0.fileName, query: needle) }) {
+            return true
+        }
+
+        return !slideHits.isEmpty && lecture.files.contains { slideHits.contains($0.relativePath) }
     }
 }

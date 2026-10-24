@@ -13,6 +13,7 @@ struct MEDApp: App {
     private let storeError: String?
 
     @State private var library = LibraryRoot()
+    @State private var slideIndex = SlideIndex()
 
     init() {
         do {
@@ -43,7 +44,12 @@ struct MEDApp: App {
             if let modelContainer {
                 ContentView()
                     .environment(library)
+                    .environment(slideIndex)
                     .modelContainer(modelContainer)
+                    .task { slideIndex.refresh(root: library.url) }
+                    .onChange(of: library.url) { _, root in
+                        slideIndex.refresh(root: root)
+                    }
                     .task { await StoreBackup.keepWriting(from: modelContainer.mainContext) }
                     .task { await StoreBackup.writeOnLeaving(from: modelContainer.mainContext) }
             } else {
@@ -75,6 +81,7 @@ struct MEDApp: App {
         Settings {
             SettingsView(storeURL: modelContainer?.configurations.first?.url)
                 .environment(library)
+                .environment(slideIndex)
         }
     }
 }
