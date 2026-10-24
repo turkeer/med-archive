@@ -60,7 +60,12 @@ struct LectureLinkList: View {
 
             if visibleGroups.isEmpty {
                 Section {
-                    Text(L.pick("“\(query)” ile eşleşen oturum yok.", "No session matches “\(query)”."))
+                    Text(
+                        L.pick("“\(query)” ile eşleşen oturum yok.", "No session matches “\(query)”.")
+                            + (slideIndex.isWorking
+                               ? L.pick(" Slaytlar hâlâ okunuyor.", " The slides are still being read.")
+                               : "")
+                    )
                         .foregroundStyle(.secondary)
                 }
             } else if groupByCourse {

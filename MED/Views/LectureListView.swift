@@ -196,8 +196,24 @@ struct LectureListView: View {
         }
         if hasQuery {
             return L.pick("“\(query)” ile eşleşen oturum yok.", "No session matches “\(query)”.")
+                + stillReadingNote
         }
         return L.pick("Açık filtrelere uyan oturum yok.", "No session matches the active filters.")
+    }
+
+    /// Added to a fruitless search while the slides are still being read.
+    ///
+    /// Without it the one case where the search is genuinely incomplete looks
+    /// exactly like the case where the word is not in the archive, and the
+    /// honest answer — "ask again in a moment" — is the one thing the screen
+    /// cannot say.
+    private var stillReadingNote: String {
+        guard slideIndex.isWorking else { return "" }
+
+        return L.pick(
+            " Slaytlar hâlâ okunuyor, birazdan tekrar dene.",
+            " The slides are still being read; try again in a moment."
+        )
     }
 
     // MARK: Sorting

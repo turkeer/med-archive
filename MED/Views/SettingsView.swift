@@ -127,7 +127,7 @@ struct SettingsView: View {
             Section {
                 LabeledContent(L.pick("Slayt fihristi", "Slide index")) {
                     VStack(alignment: .leading, spacing: 2) {
-                        if slideIndex.isWorking {
+                        if slideIndex.fileCount == 0, slideIndex.isWorking {
                             Text(L.pick("okunuyor…", "reading…"))
                                 .foregroundStyle(.secondary)
                         } else if slideIndex.fileCount == 0 {
@@ -138,6 +138,11 @@ struct SettingsView: View {
                                 "\(slideIndex.fileCount) dosya · \(slideIndex.pageCount) sayfa",
                                 "\(slideIndex.fileCount) files · \(slideIndex.pageCount) pages"
                             ))
+
+                            if slideIndex.isWorking {
+                                Text(L.pick("resimli sayfalar okunuyor…", "reading the image pages…"))
+                                    .foregroundStyle(.secondary)
+                            }
 
                             if slideIndex.ocrPageCount > 0 {
                                 Text(L.pick(

@@ -33,6 +33,11 @@ final class SlideIndex {
         /// weaker claim than one the file itself spelled out.
         var ocrPages: [Int] = []
 
+        /// Whether the image-reading pass has been over this file. Without it
+        /// the second pass cannot tell "nothing to recognise here" from "not
+        /// looked at yet", and would start again on every launch.
+        var ocrDone: Bool
+
         /// Pages that have no text even after being looked at as an image.
         var unreadablePages: Int {
             pages.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).count < Self.minimumUseful }.count
@@ -44,9 +49,10 @@ final class SlideIndex {
 
     private struct Cache: Codable, Sendable {
         /// Bumped when `Entry` changes shape, so an old file is discarded
-        /// rather than decoded into something it is not. 2 added OCR, which
-        /// also has to re-read the pages an older index gave up on.
-        var version = 2
+        /// rather than decoded into something it is not. 2 added reading from
+        /// the image; 3 added the flag that lets that happen in a pass of its
+        /// own.
+        var version = 3
         var entries: [String: Entry] = [:]
     }
 
@@ -132,16 +138,28 @@ final class SlideIndex {
         let known = entries
 
         Task.detached(priority: .utility) {
-            let (cache, changed) = Self.build(root: root, reusing: known)
+            // Two passes, because they cost wildly different amounts and only
+            // one of them is needed for searching to start working.
+            //
+            // The text the PDFs already carry comes out in about five seconds.
+            // Reading the pages that have no text of their own takes minutes
+            // on a first run — and doing both before handing anything over
+            // meant a new install had three minutes where searching inside
+            // slides silently found nothing at all. Whoever opened it then
+            // would have concluded the feature was broken.
+            let (text, textChanged) = Self.build(root: root, reusing: known, readingImages: false)
+            if textChanged { Self.write(text) }
+            await MainActor.run { self.adopt(text, built: Date()) }
 
             // Rewriting an unchanged index would cost a launch-time write of
             // several hundred kilobytes and, worse, would reset the file's
             // date — the one cheap way of seeing when the index last actually
             // changed.
-            if changed { Self.write(cache) }
+            let (full, fullChanged) = Self.build(root: root, reusing: text.entries, readingImages: true)
+            if fullChanged { Self.write(full) }
 
             await MainActor.run {
-                self.adopt(cache, built: Date())
+                self.adopt(full, built: Date())
                 self.isWorking = false
             }
         }
@@ -154,7 +172,8 @@ final class SlideIndex {
     /// find by any other means.
     private nonisolated static func build(
         root: URL,
-        reusing known: [String: Entry]
+        reusing known: [String: Entry],
+        readingImages: Bool
     ) -> (cache: Cache, changed: Bool) {
         let manager = FileManager.default
         let rootPath = root.standardizedFileURL.path(percentEncoded: false)
@@ -179,7 +198,12 @@ final class SlideIndex {
             let size = values?.fileSize ?? 0
             let modified = values?.contentModificationDate ?? .distantPast
 
-            if let seen = known[key], seen.size == size, seen.modified == modified {
+            // Unchanged, and already as complete as this pass can make it.
+            // Leaving a file alone here is what makes a later launch cost
+            // seconds instead of minutes, and what lets the image pass pick up
+            // where it left off if the app was quit halfway through.
+            if let seen = known[key], seen.size == size, seen.modified == modified,
+               seen.ocrDone || !readingImages {
                 cache.entries[key] = seen
                 continue
             }
@@ -196,7 +220,11 @@ final class SlideIndex {
                 }
 
                 let embedded = page.string ?? ""
-                if embedded.trimmingCharacters(in: .whitespacesAndNewlines).count >= Entry.minimumUseful {
+                let hasText = embedded
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .count >= Entry.minimumUseful
+
+                if hasText || !readingImages {
                     pages.append(embedded)
                     continue
                 }
@@ -215,7 +243,8 @@ final class SlideIndex {
                 size: size,
                 modified: modified,
                 pages: pages,
-                ocrPages: recognised
+                ocrPages: recognised,
+                ocrDone: readingImages
             )
             changed = true
         }
