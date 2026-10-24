@@ -44,7 +44,8 @@ struct MEDApp: App {
                 ContentView()
                     .environment(library)
                     .modelContainer(modelContainer)
-                    .task { StoreBackup.write(from: modelContainer.mainContext) }
+                    .task { await StoreBackup.keepWriting(from: modelContainer.mainContext) }
+                    .task { await StoreBackup.writeOnLeaving(from: modelContainer.mainContext) }
             } else {
                 StoreFailureView(message: storeError ?? L.pick("Bilinmeyen hata", "Unknown error"))
             }
