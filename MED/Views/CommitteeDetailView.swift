@@ -74,7 +74,7 @@ struct CommitteeDetailView: View {
         }
         .formStyle(.grouped)
         .navigationTitle(committee.fullLabel.isEmpty ? L.pick("(adsız komite)", "(unnamed committee)") : committee.fullLabel)
-        .navigationSubtitle("\(committee.dateRangeText) · " + L.sessionCount(committee.lectures.count))
+        .navigationSubtitle(subtitle)
         .toolbar {
             ToolbarItem {
                 DeleteRecordButton(
@@ -91,6 +91,64 @@ struct CommitteeDetailView: View {
     }
 
     /// Lectures inside this committee's range that have no committee yet.
+    private var subtitle: String {
+        [
+            committee.dateRangeText,
+            L.sessionCount(committee.lectures.count),
+            coverageText,
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
+    /// Topics in this committee that have a file on them.
+    ///
+    /// Topics rather than sessions, matching the rows below, and counted only
+    /// over the ones whose day has come — a committee that starts next week is
+    /// not a committee missing all its slides. The ones still ahead are said
+    /// separately rather than folded into the fraction.
+    ///
+    /// `nil` when nothing has been taught yet: "0/0 konuda slayt" says
+    /// nothing.
+    private var coverageText: String? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        let groups = LectureGrouping.groups(of: committee.lectures)
+        let (due, upcoming) = groups.reduce(into: ([LectureGroup](), 0)) { result, group in
+            if calendar.startOfDay(for: group.first.date) > today {
+                result.1 += 1
+            } else {
+                result.0.append(group)
+            }
+        }
+
+        guard !due.isEmpty else {
+            guard upcoming > 0 else { return nil }
+            return L.pick("\(upcoming) konu ileride", "\(upcoming) topics to come")
+        }
+
+        let covered = due.filter { group in
+            group.lectures.contains { !$0.files.isEmpty }
+        }.count
+
+        // Not "\(due.count) konudan \(covered)'inde": the Turkish suffix
+        // follows the number's last vowel — 0'ında, 3'ünde, 7'sinde, 10'unda —
+        // so any single hardcoded ending is wrong for most numbers. A form
+        // that needs no suffix is correct for all of them.
+        let taught = L.pick(
+            "\(covered)/\(due.count) işlenen konuda slayt",
+            "slides on \(covered)/\(due.count) topics taught"
+        )
+
+        guard upcoming > 0 else { return taught }
+
+        return taught + L.pick(
+            " · \(upcoming) konu ileride",
+            " · \(upcoming) to come"
+        )
+    }
+
     private var pending: [Lecture] {
         allLectures.filter { $0.committee == nil && committee.covers($0.date) }
     }

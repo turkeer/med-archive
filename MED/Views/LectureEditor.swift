@@ -216,7 +216,7 @@ struct LectureEditor: View {
 
     // MARK: Choosing
 
-    private func courseItem(_ course: Course) -> QuickPickRow.Item {
+    private func courseItem(_ course: Course) -> QuickPickRow<PersistentIdentifier>.Item {
         QuickPickRow.Item(
             id: course.persistentModelID,
             label: course.name.isEmpty ? L.unnamed : course.name,
@@ -224,7 +224,7 @@ struct LectureEditor: View {
         )
     }
 
-    private func committeeItem(_ committee: Committee) -> QuickPickRow.Item {
+    private func committeeItem(_ committee: Committee) -> QuickPickRow<PersistentIdentifier>.Item {
         QuickPickRow.Item(
             id: committee.persistentModelID,
             label: committee.shortLabel.isEmpty ? L.unnamed : committee.shortLabel,

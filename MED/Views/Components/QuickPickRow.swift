@@ -1,21 +1,25 @@
 import SwiftData
 import SwiftUI
 
-/// A small fixed set of records as buttons. Courses and committees both come
+/// A small fixed set of choices as buttons. Courses and committees both come
 /// in handfuls, so picking one should be a single tap, not a search.
-struct QuickPickRow: View {
+///
+/// Generic over the identifier because not every list of choices is a list of
+/// records: an instructor's department is one of the course *names*, so its
+/// chips are keyed by string.
+struct QuickPickRow<ID: Hashable>: View {
     struct Item: Identifiable {
-        let id: PersistentIdentifier
+        let id: ID
         let label: String
         let colorHex: String
     }
 
     let items: [Item]
-    let selectedID: PersistentIdentifier?
+    let selectedID: ID?
 
     /// Receives the new choice, or `nil` when the selected item is tapped
     /// again to clear it.
-    let pick: (PersistentIdentifier?) -> Void
+    let pick: (ID?) -> Void
 
     var body: some View {
         // Flow, not a grid: equal-width columns truncate a long course name
@@ -32,8 +36,8 @@ struct QuickPickRow: View {
     }
 }
 
-private struct QuickPickChip: View {
-    let item: QuickPickRow.Item
+private struct QuickPickChip<ID: Hashable>: View {
+    let item: QuickPickRow<ID>.Item
     let isSelected: Bool
     let tap: () -> Void
 
