@@ -58,9 +58,18 @@ final class SlideIndex {
 
     private var entries: [String: Entry] = [:]
 
-    /// Folded once at build time, not per keystroke: `SearchText.fold` over
-    /// 650 KB on every character typed would be felt.
-    private var foldedText: [String: String] = [:]
+    /// Folded once when the index is adopted, never per keystroke.
+    ///
+    /// This is the whole performance story of searching. Folding is what makes
+    /// case and Turkish letters stop mattering, and doing it inside the search
+    /// meant normalising all 769,000 characters of the archive on every
+    /// character typed: 105 ms a keystroke, several times over per redraw,
+    /// which is exactly as bad as it sounds. Folded up front, the same search
+    /// is 16 ms.
+    ///
+    /// Held per page rather than per file so that a hit knows which page it is
+    /// on without the raw text being folded again to find out.
+    private var foldedPages: [String: [String]] = [:]
 
     private(set) var isWorking = false
     private(set) var fileCount = 0
@@ -97,22 +106,129 @@ final class SlideIndex {
         guard !needle.isEmpty else { return [] }
 
         var hits: Set<String> = []
-        for (path, text) in foldedText where text.contains(needle) {
+        for (path, pages) in foldedPages where pages.contains(where: { $0.contains(needle) }) {
             hits.insert(path)
         }
 
         return hits
     }
 
-    /// Pages of one file that contain `query`, one-based. For telling you
-    /// where to look rather than only which file to open.
-    func matchingPages(in path: String, query: String) -> [Int] {
-        let needle = SearchText.fold(query)
-        guard !needle.isEmpty, let entry = entries[path] else { return [] }
+    /// One page that answers a search.
+    struct PageHit: Identifiable, Hashable {
+        /// One-based, as printed on the page and as a reader counts.
+        let number: Int
 
-        return entry.pages.enumerated()
-            .filter { SearchText.contains($0.element, query: needle) }
-            .map { $0.offset + 1 }
+        /// Read from the image rather than from the file's own text. Worth
+        /// saying: OCR misreads, so this is a weaker claim than the rest.
+        let isRecognised: Bool
+
+        var id: Int { number }
+    }
+
+    /// One slide deck's answer to a search.
+    struct FileHit: Identifiable, Hashable {
+        /// The stored path, which is also how a file record refers to it.
+        let path: String
+
+        /// At most `maxPagesPerFile` of them: a deck matching on sixty pages
+        /// is not sixty things to read.
+        let pages: [PageHit]
+
+        /// How many matched in all, so the list can say what it is not
+        /// showing.
+        let totalPages: Int
+
+        var id: String { path }
+    }
+
+    /// Shortest query worth running. Two letters match a third of the
+    /// archive, which is a list nobody reads.
+    static let minimumQuery = 3
+
+    /// Enough to see the shape of a deck's coverage without the list turning
+    /// into the deck itself.
+    static let maxPagesPerFile = 12
+
+    /// Every slide deck with a page matching `query`.
+    ///
+    /// Grouped by file rather than returned as a flat list of pages: thirteen
+    /// hits in one deck is one thing to read, not thirteen, and a flat list
+    /// buries the deck that has a single decisive page.
+    func search(_ query: String) -> [FileHit] {
+        let needle = SearchText.fold(query)
+        guard needle.count >= Self.minimumQuery else { return [] }
+
+        var results: [FileHit] = []
+
+        for (path, pages) in foldedPages {
+            let recognised = Set(entries[path]?.ocrPages ?? [])
+            var hits: [PageHit] = []
+            var total = 0
+
+            for (index, page) in pages.enumerated() where page.contains(needle) {
+                total += 1
+                guard hits.count < Self.maxPagesPerFile else { continue }
+
+                hits.append(PageHit(number: index + 1, isRecognised: recognised.contains(index)))
+            }
+
+            if !hits.isEmpty {
+                results.append(FileHit(path: path, pages: hits, totalPages: total))
+            }
+        }
+
+        return results
+    }
+
+    /// The line a hit sits in, worked out on demand.
+    ///
+    /// Not part of the search result on purpose: a two-word query can match a
+    /// thousand pages, and building a thousand snippets to show a dozen was
+    /// most of what made typing feel heavy. The list is lazy, so this is asked
+    /// for a row at the moment it appears.
+    func snippet(path: String, page: Int, query: String) -> String {
+        guard let text = entries[path]?.pages[safe: page - 1] else { return "" }
+        return Self.snippet(of: text, around: query)
+    }
+
+    /// A readable line from `page` around the first occurrence of `query`.
+    ///
+    /// The match is located with Foundation's own folded search so that the
+    /// range comes back in the *original* text: folding changes string
+    /// lengths — a ligature becomes two letters — so an offset found in
+    /// folded text cannot be used to cut the real one. When that search
+    /// cannot find it (Turkish's dotless ı folds in a way only `SearchText`
+    /// knows), the opening of the page is shown instead, which is still
+    /// enough to recognise the slide.
+    private nonisolated static func snippet(of page: String, around query: String) -> String {
+        let clean = page
+            // PDF text carries a placeholder where an image sat. Left in, it
+            // litters every snippet with boxes.
+            .replacingOccurrences(of: "\u{FFFC}", with: " ")
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+
+        let before = 45
+        let after = 75
+
+        guard let found = clean.range(
+            of: query.trimmingCharacters(in: .whitespacesAndNewlines),
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        ) else {
+            return String(clean.prefix(before + after)).trimmingCharacters(in: .whitespaces)
+        }
+
+        let start = clean.index(found.lowerBound, offsetBy: -before, limitedBy: clean.startIndex)
+            ?? clean.startIndex
+        let end = clean.index(found.upperBound, offsetBy: after, limitedBy: clean.endIndex)
+            ?? clean.endIndex
+
+        var text = String(clean[start..<end]).trimmingCharacters(in: .whitespaces)
+        if start > clean.startIndex { text = "…" + text }
+        if end < clean.endIndex { text += "…" }
+
+        return text
     }
 
     /// True when this page's text came from OCR, so a caller can mark a hit
@@ -302,7 +418,7 @@ final class SlideIndex {
 
     private func adopt(_ cache: Cache, built: Date?) {
         entries = cache.entries
-        foldedText = cache.entries.mapValues { SearchText.fold($0.pages.joined(separator: "\n")) }
+        foldedPages = cache.entries.mapValues { $0.pages.map(SearchText.fold) }
 
         fileCount = cache.entries.count
         pageCount = cache.entries.values.reduce(0) { $0 + $1.pages.count }
@@ -335,5 +451,13 @@ final class SlideIndex {
             // just gets rebuilt next launch.
             print("MED: slayt fihristi yazılamadı — \(error)")
         }
+    }
+}
+
+private extension Array {
+    /// The index may be out of range when the index was rebuilt under a
+    /// selection taken from the previous one.
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }

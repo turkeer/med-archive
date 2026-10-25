@@ -6,6 +6,7 @@ import SwiftData
 enum SidebarSection: String, CaseIterable, Identifiable {
     case calendar
     case lectures
+    case search
     case courses
     case instructors
     case committees
@@ -17,6 +18,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .calendar:    return L.calendar
         case .lectures:    return L.topics
+        case .search:      return L.pick("Slaytlarda ara", "Search slides")
         case .courses:     return L.courses
         case .instructors: return L.instructors
         case .committees:  return L.committees
@@ -28,6 +30,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         switch self {
         case .calendar:    return "calendar"
         case .lectures:    return "list.bullet.rectangle"
+        case .search:      return "text.page.badge.magnifyingglass"
         case .courses:     return "books.vertical"
         case .instructors: return "person.2"
         case .committees:  return "square.stack.3d.up"
@@ -64,6 +67,14 @@ final class AppNavigation {
     var visibleMonth = Date()
     var selectedDay: Date? = Calendar.current.startOfDay(for: Date())
 
+    /// The Ara screen's question and which page of which deck it is showing.
+    ///
+    /// Kept here like the other selections, so switching to Takvim and back
+    /// does not throw away a search you are halfway through reading. Not
+    /// written to disk: a question you asked once is not a setting.
+    var slideQuery = ""
+    var slidePage: SlidePageSelection?
+
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?
     var instructorID: PersistentIdentifier?
@@ -74,4 +85,14 @@ final class AppNavigation {
         section = .lectures
         lectureID = lecture.persistentModelID
     }
+}
+
+/// A page of a slide deck, as picked from the Ara screen.
+///
+/// Carries the query as well as the place, because the page is opened with
+/// the matches marked on it — without the words there is nothing to mark.
+struct SlidePageSelection: Hashable {
+    let path: String
+    let page: Int
+    let query: String
 }
