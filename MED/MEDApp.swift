@@ -14,6 +14,7 @@ struct MEDApp: App {
 
     @State private var library = LibraryRoot()
     @State private var slideIndex = SlideIndex()
+    @State private var queryAssistant = QueryAssistant()
 
     init() {
         do {
@@ -45,6 +46,7 @@ struct MEDApp: App {
                 ContentView()
                     .environment(library)
                     .environment(slideIndex)
+                    .environment(queryAssistant)
                     .modelContainer(modelContainer)
                     .task { slideIndex.refresh(root: library.url) }
                     .onChange(of: library.url) { _, root in

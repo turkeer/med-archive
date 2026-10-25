@@ -118,6 +118,10 @@ final class SlideIndex {
         /// One-based, as printed on the page and as a reader counts.
         let number: Int
 
+        /// How many of the searched terms this page carries. One for a plain
+        /// search; more when several terms were asked for at once.
+        let terms: Int
+
         /// Read from the image rather than from the file's own text. Worth
         /// saying: OCR misreads, so this is a weaker claim than the rest.
         let isRecognised: Bool
@@ -138,6 +142,12 @@ final class SlideIndex {
         /// showing.
         let totalPages: Int
 
+        /// How many of the searched terms this deck covers anywhere. What
+        /// ranks a deck when several terms were asked for: a deck touching
+        /// five of them is more about the subject than one touching a single
+        /// term on thirty pages.
+        let matchedTerms: Int
+
         var id: String { path }
     }
 
@@ -155,8 +165,8 @@ final class SlideIndex {
     /// hits in one deck is one thing to read, not thirteen, and a flat list
     /// buries the deck that has a single decisive page.
     func search(_ query: String) -> [FileHit] {
-        let needle = SearchText.fold(query)
-        guard needle.count >= Self.minimumQuery else { return [] }
+        let terms = Self.terms(in: query)
+        guard !terms.isEmpty else { return [] }
 
         var results: [FileHit] = []
 
@@ -164,20 +174,135 @@ final class SlideIndex {
             let recognised = Set(entries[path]?.ocrPages ?? [])
             var hits: [PageHit] = []
             var total = 0
+            var covered: Set<String> = []
 
-            for (index, page) in pages.enumerated() where page.contains(needle) {
+            for (index, page) in pages.enumerated() {
+                let found = terms.filter { page.contains($0) }
+                guard !found.isEmpty else { continue }
+
                 total += 1
-                guard hits.count < Self.maxPagesPerFile else { continue }
+                covered.formUnion(found)
 
-                hits.append(PageHit(number: index + 1, isRecognised: recognised.contains(index)))
+                guard hits.count < Self.maxPagesPerFile else { continue }
+                hits.append(PageHit(
+                    number: index + 1,
+                    terms: found.count,
+                    isRecognised: recognised.contains(index)
+                ))
             }
 
             if !hits.isEmpty {
-                results.append(FileHit(path: path, pages: hits, totalPages: total))
+                results.append(FileHit(
+                    path: path,
+                    pages: hits,
+                    totalPages: total,
+                    matchedTerms: covered.count
+                ))
             }
         }
 
         return results
+    }
+
+    // MARK: Vocabulary
+
+    /// The words the slides actually use, for a helper that must not invent
+    /// terms. See `QueryAssistant`.
+    struct Vocabulary {
+        /// The most common of them, as a list to choose from.
+        let terms: [String]
+
+        /// All of them, for checking that a chosen term is really one of
+        /// ours.
+        let allowed: Set<String>
+
+        var isEmpty: Bool { terms.isEmpty }
+    }
+
+    private var cachedVocabulary: Vocabulary?
+
+    /// Built on first use rather than at launch: it costs a pass over the
+    /// whole archive and is only needed by a button that already takes
+    /// seconds.
+    var vocabulary: Vocabulary {
+        if let cachedVocabulary { return cachedVocabulary }
+
+        let built = buildVocabulary()
+        cachedVocabulary = built
+        return built
+    }
+
+    private func buildVocabulary() -> Vocabulary {
+        let pages = foldedPages.values.flatMap { $0 }
+        guard !pages.isEmpty else { return Vocabulary(terms: [], allowed: []) }
+
+        var documentCount: [String: Int] = [:]
+        var totalCount: [String: Int] = [:]
+
+        for page in pages {
+            var seen: Set<String> = []
+
+            for word in page.split(whereSeparator: { !$0.isLetter && $0 != "-" }) {
+                let term = String(word).trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+                guard term.count >= 5, !Self.ignoredWords.contains(term) else { continue }
+
+                totalCount[term, default: 0] += 1
+                seen.insert(term)
+            }
+
+            for term in seen { documentCount[term, default: 0] += 1 }
+        }
+
+        // A word on almost every page tells the search nothing and would drag
+        // in the whole archive; a word on one page is noise. What is left is
+        // the vocabulary that distinguishes one lecture from another.
+        let ceiling = max(4, Int(Double(pages.count) * 0.15))
+        let useful = documentCount
+            .filter { $0.value >= 3 && $0.value <= ceiling }
+            .map(\.key)
+
+        let ranked = useful.sorted { (totalCount[$0] ?? 0) > (totalCount[$1] ?? 0) }
+
+        return Vocabulary(
+            terms: Array(ranked.prefix(400)),
+            allowed: Set(useful)
+        )
+    }
+
+    /// English function words and the citation furniture of slide footers
+    /// ("Alberts, sixth edition"), which are frequent and say nothing about
+    /// what a lecture is about.
+    private static let ignoredWords: Set<String> = Set("""
+    about above after again against alone along already also although always among another because
+    become becomes becoming been before being below besides better between both bring called cannot
+    certain could different does doing done during each either enough especially even every example
+    examples except finally first following forms found four from further general give given gives
+    going great have having here high higher however important inside instead into itself just know
+    known large larger last later least level like likely little long look made main make makes many
+    more most much must near need needed never next nearly often only other others otherwise over
+    part parts possible present previous rather really same second seen several should show shows
+    side similar simple since single small smaller some sometimes still such take taken than that
+    their them then there these they thing things this those three through thus time together towards
+    under until upon used uses using usually very want well were what when where which while with
+    within without would your edition sixth seventh eighth alberts junqueira guyton figure figures
+    chapter lippincott williams wilkins elsevier saunders copyright reserved rights https
+    """.split(whereSeparator: \.isWhitespace).map(String.init))
+
+    /// The terms a query asks for.
+    ///
+    /// Commas mean "any of these". It is a rule you can use by hand, and it is
+    /// also what lets the question-to-keywords helper put its answer straight
+    /// into the search box: what gets searched stays visible and editable
+    /// rather than becoming hidden state.
+    static func terms(in query: String) -> [String] {
+        let parts = query
+            .split(separator: ",")
+            .map { SearchText.fold(String($0)) }
+            .filter { $0.count >= minimumQuery }
+
+        // Longest first, so a snippet shows the most specific term that the
+        // page actually carries.
+        return Array(Set(parts)).sorted { $0.count > $1.count }
     }
 
     /// The line a hit sits in, worked out on demand.
@@ -188,7 +313,14 @@ final class SlideIndex {
     /// for a row at the moment it appears.
     func snippet(path: String, page: Int, query: String) -> String {
         guard let text = entries[path]?.pages[safe: page - 1] else { return "" }
-        return Self.snippet(of: text, around: query)
+
+        // With several terms asked for, the line to show is the one around a
+        // term this page actually has.
+        let folded = foldedPages[path]?[safe: page - 1] ?? ""
+        let terms = Self.terms(in: query)
+        let present = terms.first { folded.contains($0) } ?? terms.first ?? query
+
+        return Self.snippet(of: text, around: present)
     }
 
     /// A readable line from `page` around the first occurrence of `query`.
@@ -419,6 +551,8 @@ final class SlideIndex {
     private func adopt(_ cache: Cache, built: Date?) {
         entries = cache.entries
         foldedPages = cache.entries.mapValues { $0.pages.map(SearchText.fold) }
+
+        cachedVocabulary = nil
 
         fileCount = cache.entries.count
         pageCount = cache.entries.values.reduce(0) { $0 + $1.pages.count }

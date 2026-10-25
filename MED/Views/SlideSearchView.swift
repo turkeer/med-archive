@@ -34,6 +34,7 @@ struct SlideSearchView: View {
     @Binding var selection: SlidePageSelection?
 
     @Environment(SlideIndex.self) private var slideIndex
+    @Environment(QueryAssistant.self) private var assistant
 
     /// Files, to put a lecture's name on a hit. Every PDF under the root is
     /// indexed, including ones not attached to anything, so this is a lookup
@@ -83,6 +84,7 @@ struct SlideSearchView: View {
                 emptyState
             } else {
                 summary
+                assistantNote
 
                 ForEach(results) { result in
                     Section {
@@ -110,6 +112,28 @@ struct SlideSearchView: View {
         }
         .navigationTitle(L.pick("Slaytlarda ara", "Search slides"))
         .toolbar {
+            // Only there when the system actually has the model. On anything
+            // older, or with Apple Intelligence off, searching is unchanged.
+            if assistant.isAvailable {
+                ToolbarItem {
+                    Button {
+                        translate()
+                    } label: {
+                        if assistant.isWorking {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label(L.pick("Soruyu terimlere çevir", "Turn the question into terms"), systemImage: "sparkles")
+                        }
+                    }
+                    .disabled(assistant.isWorking || query.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
+                    .help(L.pick(
+                        "Türkçe sorunu İngilizce arama terimlerine çevirir. Terimler arama kutusuna yazılır, istersen düzeltirsin.",
+                        "Turns your question into English search terms. They go into the search box, where you can edit them."
+                    ))
+                }
+            }
+
             ToolbarItem {
                 Menu {
                     ForEach(SlideSearchSort.allCases) { option in
@@ -142,6 +166,31 @@ struct SlideSearchView: View {
         ))
             .font(.caption)
             .foregroundStyle(.secondary)
+    }
+
+    /// Says what went wrong with a translation, and nothing at all when
+    /// there is nothing to say.
+    @ViewBuilder
+    private var assistantNote: some View {
+        if let failure = assistant.failure {
+            Text(failure)
+                .font(.caption)
+                .foregroundStyle(.orange)
+        }
+    }
+
+    /// Replaces the question with the terms, rather than searching for
+    /// something the box does not show.
+    ///
+    /// The point is that you can see what was searched and correct it. A
+    /// model that quietly rewrote the query would be impossible to argue
+    /// with when it got it wrong.
+    private func translate() {
+        Task {
+            if let terms = await assistant.terms(for: query, vocabulary: slideIndex.vocabulary) {
+                query = terms
+            }
+        }
     }
 
     private func header(for result: Result) -> some View {
@@ -204,8 +253,10 @@ struct SlideSearchView: View {
     private var emptyState: some View {
         if query.trimmingCharacters(in: .whitespacesAndNewlines).count < SlideIndex.minimumQuery {
             Text(L.pick(
-                "Bir terim yaz. Arama slaytların içinde geçer; ders başlığında olması gerekmez.",
-                "Type a term. This searches what the slides say, not what the lessons are called."
+                "Bir terim yaz. Arama slaytların içinde geçer; ders başlığında olması gerekmez. Virgülle ayırırsan terimlerden herhangi birini arar."
+                    + (assistant.isAvailable ? " Türkçe soru yazıp sağ üstteki ✦ ile terimlere çevirebilirsin." : ""),
+                "Type a term. This searches what the slides say, not what the lessons are called. Separate terms with commas to search for any of them."
+                    + (assistant.isAvailable ? " You can also write a question and turn it into terms with ✦ at the top right." : "")
             ))
                 .foregroundStyle(.secondary)
         } else if slideIndex.isWorking {
@@ -256,10 +307,17 @@ struct SlideSearchView: View {
             }
 
         case .relevance:
+            // Terms covered first: with several terms asked for, a deck that
+            // touches five of them is more about the subject than one that
+            // repeats a single term on thirty pages.
             return found.sorted { left, right in
-                left.hit.pages.count == right.hit.pages.count
-                    ? left.fileName < right.fileName
-                    : left.hit.pages.count > right.hit.pages.count
+                if left.hit.matchedTerms != right.hit.matchedTerms {
+                    return left.hit.matchedTerms > right.hit.matchedTerms
+                }
+                if left.hit.totalPages != right.hit.totalPages {
+                    return left.hit.totalPages > right.hit.totalPages
+                }
+                return left.fileName < right.fileName
             }
         }
     }
