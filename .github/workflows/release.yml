@@ -19,10 +19,20 @@ permissions:
 
 jobs:
   dmg:
-    runs-on: macos-14
+    # macOS 26 ya da yenisi şart, eskisi değil: QueryAssistant macOS 26
+    # SDK'sındaki FoundationModels'ı kullanıyor. Kod `#if canImport` ile
+    # sarılı olduğu için eski SDK'da da DERLENİR — ama o çerçeve bulunmadığı
+    # için özellik sessizce dışarıda kalır, yani DMG'yi indiren kişide Türkçe
+    # soru çevirisi hiç olmaz. Sessiz eksilme, derleme hatasından kötü.
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v4
+
+      # İlk çalıştırmada hangi Xcode'un kullanıldığını görmek için: imaj
+      # güncellemeleri varsayılan sürümü zamanla değiştiriyor.
+      - name: Xcode sürümü
+        run: xcodebuild -version
 
       - name: Derle
         run: |
