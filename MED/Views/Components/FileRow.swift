@@ -11,7 +11,11 @@ struct FileRow: View {
     let file: LectureFile
     let url: URL?
     let preview: (URL) -> Void
-    let remove: () -> Void
+
+    /// Left out where the row is only for reading. Opening, previewing and
+    /// revealing stay — they are what you came for; taking the record away is
+    /// the part that belongs to editing.
+    var remove: (() -> Void)?
 
     /// Set only where the slide / note / other distinction means something.
     /// A past paper is a past paper.
@@ -81,23 +85,25 @@ struct FileRow: View {
                 .help(L.pick("Varsayılan uygulamada aç", "Open in default app"))
             }
 
-            Menu {
-                if let setKind {
-                    Picker(L.format, selection: kindBinding(setKind)) {
-                        ForEach(LectureFileKind.allCases) { kind in
-                            Text(kind.sectionTitle).tag(kind)
+            if let remove {
+                Menu {
+                    if let setKind {
+                        Picker(L.format, selection: kindBinding(setKind)) {
+                            ForEach(LectureFileKind.allCases) { kind in
+                                Text(kind.sectionTitle).tag(kind)
+                            }
                         }
+
+                        Divider()
                     }
 
-                    Divider()
+                    Button(L.pick("Listeden kaldır", "Remove from list"), role: .destructive, action: remove)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
-
-                Button(L.pick("Listeden kaldır", "Remove from list"), role: .destructive, action: remove)
-            } label: {
-                Image(systemName: "ellipsis.circle")
+                .menuIndicator(.hidden)
+                .frame(width: 28)
             }
-            .menuIndicator(.hidden)
-            .frame(width: 28)
         }
         .padding(.vertical, 2)
     }

@@ -15,6 +15,11 @@ import SwiftUI
 struct LectureFilesSection: View {
     let lecture: Lecture
 
+    /// Off while reading, which hides removing a file and changing what kind
+    /// it is. Attaching one stays: filing a slide is what this app is for,
+    /// not a change to the record you have to switch modes for.
+    var showsControls = true
+
     @Environment(\.modelContext) private var context
     @Environment(LibraryRoot.self) private var library
 
@@ -44,8 +49,8 @@ struct LectureFilesSection: View {
                             file: file,
                             url: file.url(root: library.url),
                             preview: { previewURL = $0 },
-                            remove: { remove(file) },
-                            setKind: { file.kind = $0 }
+                            remove: showsControls ? { remove(file) } : nil,
+                            setKind: showsControls ? { file.kind = $0 } : nil
                         )
                     }
                 }
