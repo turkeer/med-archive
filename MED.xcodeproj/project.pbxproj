@@ -1,571 +1,269 @@
 // !$*UTF8*$!
 {
-    archiveVersion = 1;
-    classes = {
-    };
-    objectVersion = 56;
-    objects = {
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
 
 /* Begin PBXBuildFile section */
-        ED0000000000000000000201 /* MEDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000101 /* MEDApp.swift */; };
-        ED0000000000000000000202 /* Lecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000102 /* Lecture.swift */; };
-        ED0000000000000000000203 /* Instructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000103 /* Instructor.swift */; };
-        ED0000000000000000000204 /* Committee.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000104 /* Committee.swift */; };
-        ED0000000000000000000205 /* Tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000105 /* Tag.swift */; };
-        ED0000000000000000000206 /* LectureFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000106 /* LectureFile.swift */; };
-        ED0000000000000000000207 /* TimeOfDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000107 /* TimeOfDay.swift */; };
-        ED0000000000000000000208 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000108 /* Color+Hex.swift */; };
-        ED0000000000000000000209 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000109 /* ContentView.swift */; };
-        ED000000000000000000020A /* LectureListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010A /* LectureListView.swift */; };
-        ED000000000000000000020C /* SearchText.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010C /* SearchText.swift */; };
-        ED000000000000000000020D /* ModelContext+FindOrCreate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010D /* ModelContext+FindOrCreate.swift */; };
-        ED000000000000000000020E /* NameSuggestField.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010E /* NameSuggestField.swift */; };
-        ED000000000000000000020F /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010F /* Chip.swift */; };
-        ED0000000000000000000210 /* LectureEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000110 /* LectureEditor.swift */; };
-        ED0000000000000000000211 /* LectureDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000111 /* LectureDetailView.swift */; };
-        ED0000000000000000000212 /* NewLectureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000112 /* NewLectureSheet.swift */; };
-        ED0000000000000000000213 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000113 /* Course.swift */; };
-        ED000000000000000000020B /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000010B /* AppNavigation.swift */; };
-        ED0000000000000000000214 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000114 /* Palette.swift */; };
-        ED0000000000000000000215 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000115 /* SidebarView.swift */; };
-        ED0000000000000000000216 /* RelatedColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000116 /* RelatedColumns.swift */; };
-        ED0000000000000000000217 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000117 /* CourseDetailView.swift */; };
-        ED0000000000000000000218 /* InstructorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000118 /* InstructorDetailView.swift */; };
-        ED0000000000000000000219 /* CommitteeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000119 /* CommitteeDetailView.swift */; };
-        ED000000000000000000021A /* TagDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011A /* TagDetailView.swift */; };
-        ED000000000000000000021B /* NameListColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011B /* NameListColumn.swift */; };
-        ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011C /* ColorSwatchPicker.swift */; };
-        ED000000000000000000021D /* LectureLinkList.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011D /* LectureLinkList.swift */; };
-        ED000000000000000000021E /* DeleteRecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011E /* DeleteRecordButton.swift */; };
-        ED000000000000000000021F /* MonthGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000011F /* MonthGrid.swift */; };
-        ED0000000000000000000220 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000120 /* CalendarMonthView.swift */; };
-        ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000121 /* CalendarDayColumn.swift */; };
-        ED0000000000000000000222 /* LessonSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000122 /* LessonSlot.swift */; };
-        ED0000000000000000000223 /* SlotPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000123 /* SlotPicker.swift */; };
-        ED0000000000000000000224 /* FileNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000124 /* FileNaming.swift */; };
-        ED0000000000000000000225 /* LibraryRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000125 /* LibraryRoot.swift */; };
-        ED00000000000000000000248 /* LectureReadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000148 /* LectureReadView.swift */; };
-        ED00000000000000000000247 /* QueryAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000147 /* QueryAssistant.swift */; };
-        ED00000000000000000000246 /* SlidePageDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000146 /* SlidePageDetail.swift */; };
-        ED00000000000000000000245 /* SlideSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000145 /* SlideSearchView.swift */; };
-        ED00000000000000000000244 /* SlideIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000144 /* SlideIndex.swift */; };
-        ED00000000000000000000243 /* StoreBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000143 /* StoreBackup.swift */; };
-        ED00000000000000000000242 /* StoreLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED00000000000000000000142 /* StoreLocation.swift */; };
-        ED0000000000000000000226 /* LectureFilesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000126 /* LectureFilesSection.swift */; };
-        ED0000000000000000000227 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000127 /* SettingsView.swift */; };
-        ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000128 /* ModelContext+Inference.swift */; };
-        ED0000000000000000000229 /* LectureFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000129 /* LectureFormat.swift */; };
-        ED000000000000000000022A /* WeekGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012A /* WeekGrid.swift */; };
-        ED000000000000000000022B /* CalendarWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012B /* CalendarWeekView.swift */; };
-        ED000000000000000000022C /* FormatBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012C /* FormatBadge.swift */; };
-        ED000000000000000000022D /* StoreFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012D /* StoreFailureView.swift */; };
-        ED000000000000000000022E /* DayTimetable.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012E /* DayTimetable.swift */; };
-        ED000000000000000000022F /* QuickPickRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000012F /* QuickPickRow.swift */; };
-        ED0000000000000000000230 /* LectureGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000130 /* LectureGrouping.swift */; };
-        ED0000000000000000000231 /* LectureSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000131 /* LectureSearch.swift */; };
-        ED0000000000000000000232 /* FormTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000132 /* FormTextField.swift */; };
-        ED0000000000000000000233 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000133 /* FlowLayout.swift */; };
-        ED0000000000000000000234 /* AcademicYear.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000134 /* AcademicYear.swift */; };
-        ED0000000000000000000235 /* PastExam.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000135 /* PastExam.swift */; };
-        ED0000000000000000000236 /* FileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000136 /* FileRow.swift */; };
-        ED0000000000000000000237 /* FileAttaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000137 /* FileAttaching.swift */; };
-        ED0000000000000000000238 /* PastExamsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000138 /* PastExamsSection.swift */; };
-        ED0000000000000000000239 /* LectureFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000139 /* LectureFilter.swift */; };
-        ED000000000000000000023A /* ScanNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013A /* ScanNaming.swift */; };
-        ED000000000000000000023B /* FolderScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013B /* FolderScan.swift */; };
-        ED000000000000000000023C /* ScanFolderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013C /* ScanFolderSheet.swift */; };
-        ED000000000000000000023D /* ArchiveExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013D /* ArchiveExport.swift */; };
-        ED000000000000000000023E /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013E /* Localization.swift */; };
-        ED000000000000000000023F /* FileHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED000000000000000000013F /* FileHealth.swift */; };
-        ED0000000000000000000240 /* BrokenLinksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000140 /* BrokenLinksSheet.swift */; };
-        ED0000000000000000000241 /* AboutPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000141 /* AboutPanel.swift */; };
+		ED0000000000000000000201 /* MEDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0000000000000000000101 /* MEDApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-        ED0000000000000000000005 /* MED.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MED.app; sourceTree = BUILT_PRODUCTS_DIR; };
-        ED0000000000000000000101 /* MEDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MEDApp.swift; sourceTree = "<group>"; };
-        ED0000000000000000000102 /* Lecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lecture.swift; sourceTree = "<group>"; };
-        ED0000000000000000000103 /* Instructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructor.swift; sourceTree = "<group>"; };
-        ED0000000000000000000104 /* Committee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Committee.swift; sourceTree = "<group>"; };
-        ED0000000000000000000105 /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
-        ED0000000000000000000106 /* LectureFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFile.swift; sourceTree = "<group>"; };
-        ED0000000000000000000107 /* TimeOfDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeOfDay.swift; sourceTree = "<group>"; };
-        ED0000000000000000000108 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
-        ED0000000000000000000109 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-        ED000000000000000000010A /* LectureListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureListView.swift; sourceTree = "<group>"; };
-        ED000000000000000000010C /* SearchText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchText.swift; sourceTree = "<group>"; };
-        ED000000000000000000010D /* ModelContext+FindOrCreate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+FindOrCreate.swift"; sourceTree = "<group>"; };
-        ED000000000000000000010E /* NameSuggestField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameSuggestField.swift; sourceTree = "<group>"; };
-        ED000000000000000000010F /* Chip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip.swift; sourceTree = "<group>"; };
-        ED0000000000000000000110 /* LectureEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureEditor.swift; sourceTree = "<group>"; };
-        ED0000000000000000000111 /* LectureDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureDetailView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000112 /* NewLectureSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewLectureSheet.swift; sourceTree = "<group>"; };
-        ED0000000000000000000113 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
-        ED000000000000000000010B /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
-        ED0000000000000000000114 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
-        ED0000000000000000000115 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000116 /* RelatedColumns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedColumns.swift; sourceTree = "<group>"; };
-        ED0000000000000000000117 /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000118 /* InstructorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructorDetailView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000119 /* CommitteeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitteeDetailView.swift; sourceTree = "<group>"; };
-        ED000000000000000000011A /* TagDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailView.swift; sourceTree = "<group>"; };
-        ED000000000000000000011B /* NameListColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameListColumn.swift; sourceTree = "<group>"; };
-        ED000000000000000000011C /* ColorSwatchPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSwatchPicker.swift; sourceTree = "<group>"; };
-        ED000000000000000000011D /* LectureLinkList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureLinkList.swift; sourceTree = "<group>"; };
-        ED000000000000000000011E /* DeleteRecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRecordButton.swift; sourceTree = "<group>"; };
-        ED000000000000000000011F /* MonthGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthGrid.swift; sourceTree = "<group>"; };
-        ED0000000000000000000120 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000121 /* CalendarDayColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayColumn.swift; sourceTree = "<group>"; };
-        ED0000000000000000000122 /* LessonSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonSlot.swift; sourceTree = "<group>"; };
-        ED0000000000000000000123 /* SlotPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotPicker.swift; sourceTree = "<group>"; };
-        ED0000000000000000000124 /* FileNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileNaming.swift; sourceTree = "<group>"; };
-        ED0000000000000000000125 /* LibraryRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoot.swift; sourceTree = "<group>"; };
-        ED00000000000000000000148 /* LectureReadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureReadView.swift; sourceTree = "<group>"; };
-        ED00000000000000000000147 /* QueryAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryAssistant.swift; sourceTree = "<group>"; };
-        ED00000000000000000000146 /* SlidePageDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidePageDetail.swift; sourceTree = "<group>"; };
-        ED00000000000000000000145 /* SlideSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideSearchView.swift; sourceTree = "<group>"; };
-        ED00000000000000000000144 /* SlideIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideIndex.swift; sourceTree = "<group>"; };
-        ED00000000000000000000143 /* StoreBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreBackup.swift; sourceTree = "<group>"; };
-        ED00000000000000000000142 /* StoreLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreLocation.swift; sourceTree = "<group>"; };
-        ED0000000000000000000126 /* LectureFilesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilesSection.swift; sourceTree = "<group>"; };
-        ED0000000000000000000127 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-        ED0000000000000000000128 /* ModelContext+Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+Inference.swift"; sourceTree = "<group>"; };
-        ED0000000000000000000129 /* LectureFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFormat.swift; sourceTree = "<group>"; };
-        ED000000000000000000012A /* WeekGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekGrid.swift; sourceTree = "<group>"; };
-        ED000000000000000000012B /* CalendarWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarWeekView.swift; sourceTree = "<group>"; };
-        ED000000000000000000012C /* FormatBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBadge.swift; sourceTree = "<group>"; };
-        ED000000000000000000012D /* StoreFailureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFailureView.swift; sourceTree = "<group>"; };
-        ED000000000000000000012E /* DayTimetable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTimetable.swift; sourceTree = "<group>"; };
-        ED000000000000000000012F /* QuickPickRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPickRow.swift; sourceTree = "<group>"; };
-        ED0000000000000000000130 /* LectureGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureGrouping.swift; sourceTree = "<group>"; };
-        ED0000000000000000000131 /* LectureSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureSearch.swift; sourceTree = "<group>"; };
-        ED0000000000000000000132 /* FormTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormTextField.swift; sourceTree = "<group>"; };
-        ED0000000000000000000133 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
-        ED0000000000000000000134 /* AcademicYear.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademicYear.swift; sourceTree = "<group>"; };
-        ED0000000000000000000135 /* PastExam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExam.swift; sourceTree = "<group>"; };
-        ED0000000000000000000136 /* FileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileRow.swift; sourceTree = "<group>"; };
-        ED0000000000000000000137 /* FileAttaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileAttaching.swift; sourceTree = "<group>"; };
-        ED0000000000000000000138 /* PastExamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastExamsSection.swift; sourceTree = "<group>"; };
-        ED0000000000000000000139 /* LectureFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectureFilter.swift; sourceTree = "<group>"; };
-        ED000000000000000000013A /* ScanNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanNaming.swift; sourceTree = "<group>"; };
-        ED000000000000000000013B /* FolderScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScan.swift; sourceTree = "<group>"; };
-        ED000000000000000000013C /* ScanFolderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFolderSheet.swift; sourceTree = "<group>"; };
-        ED000000000000000000013D /* ArchiveExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveExport.swift; sourceTree = "<group>"; };
-        ED000000000000000000013E /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
-        ED000000000000000000013F /* FileHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHealth.swift; sourceTree = "<group>"; };
-        ED0000000000000000000140 /* BrokenLinksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrokenLinksSheet.swift; sourceTree = "<group>"; };
-        ED0000000000000000000141 /* AboutPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutPanel.swift; sourceTree = "<group>"; };
+		ED0000000000000000000005 /* MED.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MED.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ED0000000000000000000101 /* MEDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MEDApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		ED0000000000000000000011 /* Models */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Models; sourceTree = "<group>"; };
+		ED0000000000000000000012 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
+		ED0000000000000000000013 /* Support */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Support; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
-        ED0000000000000000000007 /* Frameworks */ = {
-            isa = PBXFrameworksBuildPhase;
-            buildActionMask = 2147483647;
-            files = (
-            );
-            runOnlyForDeploymentPostprocessing = 0;
-        };
+		ED0000000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-        ED0000000000000000000002 = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000010 /* MED */,
-                ED0000000000000000000003 /* Products */,
-            );
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000003 /* Products */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000005 /* MED.app */,
-            );
-            name = Products;
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000010 /* MED */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000101 /* MEDApp.swift */,
-                ED0000000000000000000011 /* Models */,
-                ED0000000000000000000012 /* Views */,
-                ED0000000000000000000013 /* Support */,
-            );
-            path = MED;
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000011 /* Models */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000135 /* PastExam.swift */,
-                ED0000000000000000000129 /* LectureFormat.swift */,
-                ED0000000000000000000113 /* Course.swift */,
-                ED0000000000000000000102 /* Lecture.swift */,
-                ED0000000000000000000103 /* Instructor.swift */,
-                ED0000000000000000000104 /* Committee.swift */,
-                ED0000000000000000000105 /* Tag.swift */,
-                ED0000000000000000000106 /* LectureFile.swift */,
-            );
-            path = Models;
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000012 /* Views */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000140 /* BrokenLinksSheet.swift */,
-                ED000000000000000000013C /* ScanFolderSheet.swift */,
-                ED0000000000000000000138 /* PastExamsSection.swift */,
-                ED000000000000000000012D /* StoreFailureView.swift */,
-                ED000000000000000000012B /* CalendarWeekView.swift */,
-                ED0000000000000000000127 /* SettingsView.swift */,
-                ED0000000000000000000126 /* LectureFilesSection.swift */,
-                ED0000000000000000000121 /* CalendarDayColumn.swift */,
-                ED0000000000000000000120 /* CalendarMonthView.swift */,
-                ED000000000000000000011A /* TagDetailView.swift */,
-                ED0000000000000000000119 /* CommitteeDetailView.swift */,
-                ED0000000000000000000118 /* InstructorDetailView.swift */,
-                ED0000000000000000000117 /* CourseDetailView.swift */,
-                ED0000000000000000000116 /* RelatedColumns.swift */,
-                ED0000000000000000000115 /* SidebarView.swift */,
-                ED0000000000000000000014 /* Components */,
-                ED0000000000000000000110 /* LectureEditor.swift */,
-                ED0000000000000000000111 /* LectureDetailView.swift */,
-                ED0000000000000000000112 /* NewLectureSheet.swift */,
-                ED0000000000000000000109 /* ContentView.swift */,
-                ED000000000000000000010A /* LectureListView.swift */,
-                ED00000000000000000000148 /* LectureReadView.swift */,
-                ED00000000000000000000145 /* SlideSearchView.swift */,
-                ED00000000000000000000146 /* SlidePageDetail.swift */,
-            );
-            path = Views;
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000013 /* Support */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000141 /* AboutPanel.swift */,
-                ED000000000000000000013F /* FileHealth.swift */,
-                ED000000000000000000013E /* Localization.swift */,
-                ED000000000000000000013D /* ArchiveExport.swift */,
-                ED000000000000000000013B /* FolderScan.swift */,
-                ED000000000000000000013A /* ScanNaming.swift */,
-                ED0000000000000000000139 /* LectureFilter.swift */,
-                ED0000000000000000000137 /* FileAttaching.swift */,
-                ED0000000000000000000134 /* AcademicYear.swift */,
-                ED0000000000000000000131 /* LectureSearch.swift */,
-                ED0000000000000000000130 /* LectureGrouping.swift */,
-                ED000000000000000000012E /* DayTimetable.swift */,
-                ED000000000000000000012A /* WeekGrid.swift */,
-                ED0000000000000000000128 /* ModelContext+Inference.swift */,
-                ED0000000000000000000125 /* LibraryRoot.swift */,
-                ED00000000000000000000147 /* QueryAssistant.swift */,
-                ED00000000000000000000144 /* SlideIndex.swift */,
-                ED00000000000000000000143 /* StoreBackup.swift */,
-                ED00000000000000000000142 /* StoreLocation.swift */,
-                ED0000000000000000000124 /* FileNaming.swift */,
-                ED0000000000000000000122 /* LessonSlot.swift */,
-                ED000000000000000000011F /* MonthGrid.swift */,
-                ED0000000000000000000114 /* Palette.swift */,
-                ED000000000000000000010B /* AppNavigation.swift */,
-                ED000000000000000000010C /* SearchText.swift */,
-                ED000000000000000000010D /* ModelContext+FindOrCreate.swift */,
-                ED0000000000000000000107 /* TimeOfDay.swift */,
-                ED0000000000000000000108 /* Color+Hex.swift */,
-            );
-            path = Support;
-            sourceTree = "<group>";
-        };
-        ED0000000000000000000014 /* Components */ = {
-            isa = PBXGroup;
-            children = (
-                ED0000000000000000000136 /* FileRow.swift */,
-                ED0000000000000000000133 /* FlowLayout.swift */,
-                ED0000000000000000000132 /* FormTextField.swift */,
-                ED000000000000000000012F /* QuickPickRow.swift */,
-                ED000000000000000000012C /* FormatBadge.swift */,
-                ED0000000000000000000123 /* SlotPicker.swift */,
-                ED000000000000000000011E /* DeleteRecordButton.swift */,
-                ED000000000000000000011D /* LectureLinkList.swift */,
-                ED000000000000000000011C /* ColorSwatchPicker.swift */,
-                ED000000000000000000011B /* NameListColumn.swift */,
-                ED000000000000000000010E /* NameSuggestField.swift */,
-                ED000000000000000000010F /* Chip.swift */,
-            );
-            path = Components;
-            sourceTree = "<group>";
-        };
+		ED0000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				ED0000000000000000000010 /* MED */,
+				ED0000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ED0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ED0000000000000000000005 /* MED.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ED0000000000000000000010 /* MED */ = {
+			isa = PBXGroup;
+			children = (
+				ED0000000000000000000101 /* MEDApp.swift */,
+				ED0000000000000000000011 /* Models */,
+				ED0000000000000000000012 /* Views */,
+				ED0000000000000000000013 /* Support */,
+			);
+			path = MED;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-        ED0000000000000000000004 /* MED */ = {
-            isa = PBXNativeTarget;
-            buildConfigurationList = ED000000000000000000000C /* Build configuration list for PBXNativeTarget "MED" */;
-            buildPhases = (
-                ED0000000000000000000006 /* Sources */,
-                ED0000000000000000000007 /* Frameworks */,
-                ED0000000000000000000008 /* Resources */,
-            );
-            buildRules = (
-            );
-            dependencies = (
-            );
-            name = MED;
-            productName = MED;
-            productReference = ED0000000000000000000005 /* MED.app */;
-            productType = "com.apple.product-type.application";
-        };
+		ED0000000000000000000004 /* MED */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ED000000000000000000000C /* Build configuration list for PBXNativeTarget "MED" */;
+			buildPhases = (
+				ED0000000000000000000006 /* Sources */,
+				ED0000000000000000000007 /* Frameworks */,
+				ED0000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				ED0000000000000000000011 /* Models */,
+				ED0000000000000000000012 /* Views */,
+				ED0000000000000000000013 /* Support */,
+			);
+			name = MED;
+			productName = MED;
+			productReference = ED0000000000000000000005 /* MED.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-        ED0000000000000000000001 /* Project object */ = {
-            isa = PBXProject;
-            attributes = {
-                BuildIndependentTargetsInParallel = 1;
-                LastSwiftUpdateCheck = 1500;
-                LastUpgradeCheck = 1500;
-                TargetAttributes = {
-                    ED0000000000000000000004 = {
-                        CreatedOnToolsVersion = 15.0;
-                    };
-                };
-            };
-            buildConfigurationList = ED0000000000000000000009 /* Build configuration list for PBXProject "MED" */;
-            compatibilityVersion = "Xcode 14.0";
-            developmentRegion = en;
-            hasScannedForEncodings = 0;
-            knownRegions = (
-                en,
-                Base,
-            );
-            mainGroup = ED0000000000000000000002;
-            productRefGroup = ED0000000000000000000003 /* Products */;
-            projectDirPath = "";
-            projectRoot = "";
-            targets = (
-                ED0000000000000000000004 /* MED */,
-            );
-        };
+		ED0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					ED0000000000000000000004 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = ED0000000000000000000009 /* Build configuration list for PBXProject "MED" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ED0000000000000000000002;
+			productRefGroup = ED0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ED0000000000000000000004 /* MED */,
+			);
+		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-        ED0000000000000000000008 /* Resources */ = {
-            isa = PBXResourcesBuildPhase;
-            buildActionMask = 2147483647;
-            files = (
-            );
-            runOnlyForDeploymentPostprocessing = 0;
-        };
+		ED0000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-        ED0000000000000000000006 /* Sources */ = {
-            isa = PBXSourcesBuildPhase;
-            buildActionMask = 2147483647;
-            files = (
-                ED0000000000000000000241 /* AboutPanel.swift in Sources */,
-                ED0000000000000000000240 /* BrokenLinksSheet.swift in Sources */,
-                ED000000000000000000023F /* FileHealth.swift in Sources */,
-                ED000000000000000000023E /* Localization.swift in Sources */,
-                ED000000000000000000023D /* ArchiveExport.swift in Sources */,
-                ED000000000000000000023C /* ScanFolderSheet.swift in Sources */,
-                ED000000000000000000023B /* FolderScan.swift in Sources */,
-                ED000000000000000000023A /* ScanNaming.swift in Sources */,
-                ED0000000000000000000239 /* LectureFilter.swift in Sources */,
-                ED0000000000000000000238 /* PastExamsSection.swift in Sources */,
-                ED0000000000000000000237 /* FileAttaching.swift in Sources */,
-                ED0000000000000000000236 /* FileRow.swift in Sources */,
-                ED0000000000000000000235 /* PastExam.swift in Sources */,
-                ED0000000000000000000234 /* AcademicYear.swift in Sources */,
-                ED0000000000000000000233 /* FlowLayout.swift in Sources */,
-                ED0000000000000000000232 /* FormTextField.swift in Sources */,
-                ED0000000000000000000231 /* LectureSearch.swift in Sources */,
-                ED0000000000000000000230 /* LectureGrouping.swift in Sources */,
-                ED000000000000000000022F /* QuickPickRow.swift in Sources */,
-                ED000000000000000000022E /* DayTimetable.swift in Sources */,
-                ED000000000000000000022D /* StoreFailureView.swift in Sources */,
-                ED000000000000000000022C /* FormatBadge.swift in Sources */,
-                ED000000000000000000022B /* CalendarWeekView.swift in Sources */,
-                ED000000000000000000022A /* WeekGrid.swift in Sources */,
-                ED0000000000000000000229 /* LectureFormat.swift in Sources */,
-                ED0000000000000000000228 /* ModelContext+Inference.swift in Sources */,
-                ED0000000000000000000227 /* SettingsView.swift in Sources */,
-                ED0000000000000000000226 /* LectureFilesSection.swift in Sources */,
-                ED0000000000000000000225 /* LibraryRoot.swift in Sources */,
-                ED00000000000000000000248 /* LectureReadView.swift in Sources */,
-                ED00000000000000000000247 /* QueryAssistant.swift in Sources */,
-                ED00000000000000000000246 /* SlidePageDetail.swift in Sources */,
-                ED00000000000000000000245 /* SlideSearchView.swift in Sources */,
-                ED00000000000000000000244 /* SlideIndex.swift in Sources */,
-                ED00000000000000000000243 /* StoreBackup.swift in Sources */,
-                ED00000000000000000000242 /* StoreLocation.swift in Sources */,
-                ED0000000000000000000224 /* FileNaming.swift in Sources */,
-                ED0000000000000000000223 /* SlotPicker.swift in Sources */,
-                ED0000000000000000000222 /* LessonSlot.swift in Sources */,
-                ED0000000000000000000221 /* CalendarDayColumn.swift in Sources */,
-                ED0000000000000000000220 /* CalendarMonthView.swift in Sources */,
-                ED000000000000000000021F /* MonthGrid.swift in Sources */,
-                ED000000000000000000021E /* DeleteRecordButton.swift in Sources */,
-                ED000000000000000000021D /* LectureLinkList.swift in Sources */,
-                ED000000000000000000021C /* ColorSwatchPicker.swift in Sources */,
-                ED000000000000000000021B /* NameListColumn.swift in Sources */,
-                ED000000000000000000021A /* TagDetailView.swift in Sources */,
-                ED0000000000000000000219 /* CommitteeDetailView.swift in Sources */,
-                ED0000000000000000000218 /* InstructorDetailView.swift in Sources */,
-                ED0000000000000000000217 /* CourseDetailView.swift in Sources */,
-                ED0000000000000000000216 /* RelatedColumns.swift in Sources */,
-                ED0000000000000000000215 /* SidebarView.swift in Sources */,
-                ED0000000000000000000214 /* Palette.swift in Sources */,
-                ED000000000000000000020B /* AppNavigation.swift in Sources */,
-                ED0000000000000000000213 /* Course.swift in Sources */,
-                ED0000000000000000000202 /* Lecture.swift in Sources */,
-                ED0000000000000000000203 /* Instructor.swift in Sources */,
-                ED0000000000000000000204 /* Committee.swift in Sources */,
-                ED0000000000000000000205 /* Tag.swift in Sources */,
-                ED0000000000000000000206 /* LectureFile.swift in Sources */,
-                ED0000000000000000000207 /* TimeOfDay.swift in Sources */,
-                ED0000000000000000000208 /* Color+Hex.swift in Sources */,
-                ED0000000000000000000201 /* MEDApp.swift in Sources */,
-                ED0000000000000000000209 /* ContentView.swift in Sources */,
-                ED000000000000000000020A /* LectureListView.swift in Sources */,
-                ED000000000000000000020C /* SearchText.swift in Sources */,
-                ED000000000000000000020D /* ModelContext+FindOrCreate.swift in Sources */,
-                ED000000000000000000020E /* NameSuggestField.swift in Sources */,
-                ED000000000000000000020F /* Chip.swift in Sources */,
-                ED0000000000000000000210 /* LectureEditor.swift in Sources */,
-                ED0000000000000000000211 /* LectureDetailView.swift in Sources */,
-                ED0000000000000000000212 /* NewLectureSheet.swift in Sources */,
-            );
-            runOnlyForDeploymentPostprocessing = 0;
-        };
+		ED0000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED0000000000000000000201 /* MEDApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-        ED000000000000000000000A /* Debug */ = {
-            isa = XCBuildConfiguration;
-            buildSettings = {
-                ALWAYS_SEARCH_USER_PATHS = NO;
-                CLANG_ANALYZER_NONNULL = YES;
-                CLANG_ENABLE_MODULES = YES;
-                CLANG_ENABLE_OBJC_ARC = YES;
-                COPY_PHASE_STRIP = NO;
-                DEBUG_INFORMATION_FORMAT = dwarf;
-                ENABLE_STRICT_OBJC_MSGSEND = YES;
-                ENABLE_TESTABILITY = YES;
-                GCC_C_LANGUAGE_STANDARD = gnu17;
-                GCC_DYNAMIC_NO_PIC = NO;
-                GCC_NO_COMMON_BLOCKS = YES;
-                GCC_OPTIMIZATION_LEVEL = 0;
-                GCC_PREPROCESSOR_DEFINITIONS = (
-                    "DEBUG=1",
-                    "$(inherited)",
-                );
-                MACOSX_DEPLOYMENT_TARGET = 14.0;
-                MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-                MTL_FAST_MATH = YES;
-                ONLY_ACTIVE_ARCH = YES;
-                SDKROOT = macosx;
-                SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-                SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-            };
-            name = Debug;
-        };
-        ED000000000000000000000B /* Release */ = {
-            isa = XCBuildConfiguration;
-            buildSettings = {
-                ALWAYS_SEARCH_USER_PATHS = NO;
-                CLANG_ANALYZER_NONNULL = YES;
-                CLANG_ENABLE_MODULES = YES;
-                CLANG_ENABLE_OBJC_ARC = YES;
-                COPY_PHASE_STRIP = NO;
-                DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-                ENABLE_NS_ASSERTIONS = NO;
-                ENABLE_STRICT_OBJC_MSGSEND = YES;
-                GCC_C_LANGUAGE_STANDARD = gnu17;
-                GCC_NO_COMMON_BLOCKS = YES;
-                MACOSX_DEPLOYMENT_TARGET = 14.0;
-                MTL_ENABLE_DEBUG_INFO = NO;
-                MTL_FAST_MATH = YES;
-                SDKROOT = macosx;
-                SWIFT_COMPILATION_MODE = wholemodule;
-                SWIFT_OPTIMIZATION_LEVEL = "-O";
-            };
-            name = Release;
-        };
-        ED000000000000000000000D /* Debug */ = {
-            isa = XCBuildConfiguration;
-            buildSettings = {
-                CODE_SIGN_IDENTITY = "-";
-                CODE_SIGN_STYLE = Manual;
-                COMBINE_HIDPI_IMAGES = YES;
-                CURRENT_PROJECT_VERSION = 1;
-                DEVELOPMENT_TEAM = "";
-                ENABLE_HARDENED_RUNTIME = NO;
-                ENABLE_PREVIEWS = YES;
-                GENERATE_INFOPLIST_FILE = YES;
-                INFOPLIST_KEY_NSHumanReadableCopyright = "";
-                LD_RUNPATH_SEARCH_PATHS = (
-                    "$(inherited)",
-                    "@executable_path/../Frameworks",
-                );
-                MACOSX_DEPLOYMENT_TARGET = 14.0;
-                MARKETING_VERSION = 1.0;
-                PRODUCT_BUNDLE_IDENTIFIER = com.turkeer.MED;
-                PRODUCT_NAME = "$(TARGET_NAME)";
-                PROVISIONING_PROFILE_SPECIFIER = "";
-                SWIFT_EMIT_LOC_STRINGS = YES;
-                SWIFT_VERSION = 5.0;
-            };
-            name = Debug;
-        };
-        ED000000000000000000000E /* Release */ = {
-            isa = XCBuildConfiguration;
-            buildSettings = {
-                CODE_SIGN_IDENTITY = "-";
-                CODE_SIGN_STYLE = Manual;
-                COMBINE_HIDPI_IMAGES = YES;
-                CURRENT_PROJECT_VERSION = 1;
-                DEVELOPMENT_TEAM = "";
-                ENABLE_HARDENED_RUNTIME = NO;
-                ENABLE_PREVIEWS = YES;
-                GENERATE_INFOPLIST_FILE = YES;
-                INFOPLIST_KEY_NSHumanReadableCopyright = "";
-                LD_RUNPATH_SEARCH_PATHS = (
-                    "$(inherited)",
-                    "@executable_path/../Frameworks",
-                );
-                MACOSX_DEPLOYMENT_TARGET = 14.0;
-                MARKETING_VERSION = 1.0;
-                PRODUCT_BUNDLE_IDENTIFIER = com.turkeer.MED;
-                PRODUCT_NAME = "$(TARGET_NAME)";
-                PROVISIONING_PROFILE_SPECIFIER = "";
-                SWIFT_EMIT_LOC_STRINGS = YES;
-                SWIFT_VERSION = 5.0;
-            };
-            name = Release;
-        };
+		ED000000000000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ED000000000000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		ED000000000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.turkeer.MED;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ED000000000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.turkeer.MED;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-        ED0000000000000000000009 /* Build configuration list for PBXProject "MED" */ = {
-            isa = XCConfigurationList;
-            buildConfigurations = (
-                ED000000000000000000000A /* Debug */,
-                ED000000000000000000000B /* Release */,
-            );
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-        };
-        ED000000000000000000000C /* Build configuration list for PBXNativeTarget "MED" */ = {
-            isa = XCConfigurationList;
-            buildConfigurations = (
-                ED000000000000000000000D /* Debug */,
-                ED000000000000000000000E /* Release */,
-            );
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-        };
+		ED0000000000000000000009 /* Build configuration list for PBXProject "MED" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED000000000000000000000A /* Debug */,
+				ED000000000000000000000B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ED000000000000000000000C /* Build configuration list for PBXNativeTarget "MED" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED000000000000000000000D /* Debug */,
+				ED000000000000000000000E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
-    };
-    rootObject = ED0000000000000000000001 /* Project object */;
+	};
+	rootObject = ED0000000000000000000001 /* Project object */;
 }
