@@ -163,8 +163,10 @@ struct CalendarWeekView: View {
     // MARK: The grid
 
     private func dayColumn(_ day: Date) -> some View {
-        // Computed once per day, not once per cell.
-        let parts = LectureGrouping.partNumbers(for: dayLectures(on: day))
+        // Over the whole archive, not just this day: a topic linked to another
+        // day keeps its sibling off this column, and its (1/2) number has to
+        // come out right here anyway.
+        let parts = LectureGrouping.partNumbers(for: lectures)
 
         return VStack(spacing: rowSpacing) {
             ForEach(DayTimetable.segments(for: timetabled(on: day))) { segment in

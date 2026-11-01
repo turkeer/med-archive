@@ -36,6 +36,32 @@ final class Lecture {
     var notes: String = ""
     var createdAt: Date = Date()
 
+    /// Explicit cross-day topic link. Lectures that share a non-nil value are
+    /// parts of one topic — one subject taught over several days — whatever
+    /// their dates, and share their slides accordingly. `nil` means the
+    /// derived same-day rule in `LectureGrouping` decides grouping instead.
+    ///
+    /// Optional on purpose: SwiftData reads a newly added optional as NULL for
+    /// rows that predate it, so existing archives open unchanged with no link.
+    /// (A `UUID?` is safe here where a non-optional Codable enum would crash —
+    /// see `formatRaw`.) Setting it is an explicit act in the editor, never
+    /// guessed: two lessons that merely share a generic title on different
+    /// days are no evidence of one subject.
+    var topicLinkID: UUID?
+
+    /// When this topic was marked studied, or `nil` for not studied yet.
+    ///
+    /// Touched only from the Çalışma alanı (workspace): the other screens are
+    /// the archive and stay free of study marks, by the user's choice. Like the
+    /// slides, it is topic-wide — marking stamps every part of a topic, so a
+    /// subject taught over several periods or days is one thing to study, not
+    /// three separate ticks (see `LectureGrouping.setStudied`).
+    ///
+    /// Optional for the same migration reason as `topicLinkID`: SwiftData reads
+    /// a newly added optional as NULL for rows that predate it, so existing
+    /// archives open unchanged with nothing marked.
+    var studiedAt: Date?
+
     // MARK: Relationships
 
     /// The recurring course this session belongs to (see `Course.lectures`).

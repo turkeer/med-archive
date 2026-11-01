@@ -26,9 +26,11 @@ struct LectureEditor: View {
     @Query(sort: \Instructor.name) private var instructors: [Instructor]
     @Query(sort: \Committee.startDate) private var committees: [Committee]
     @Query(sort: \Tag.name) private var allTags: [Tag]
+    @Query private var allLectures: [Lecture]
 
     @State private var isAddingInstructor = false
     @State private var newInstructorName = ""
+    @State private var isLinkingTopic = false
 
     var body: some View {
         Form {
@@ -93,6 +95,57 @@ struct LectureEditor: View {
                             displayedComponents: .hourAndMinute
                         )
                     }
+                }
+            }
+
+            // A subject taught over two periods of one day groups itself; this
+            // is for the other case — the same subject continued on another
+            // day — which can only be said by hand. Only when editing a stored
+            // lecture (the new-lecture sheet has no record to link to yet).
+            if showsFiles {
+                Section {
+                    ForEach(otherDays, id: \.day) { entry in
+                        HStack(spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.lectures.first?.displayTitle ?? L.untitled)
+                                Text(dayLine(for: entry))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Button {
+                                if let member = entry.lectures.first {
+                                    LectureGrouping.detachDay(of: member, among: allLectures)
+                                }
+                            } label: {
+                                Image(systemName: "link.badge.minus")
+                            }
+                            .buttonStyle(.borderless)
+                            .help(L.pick("Bu günü konudan ayır", "Remove this day from the topic"))
+                        }
+                    }
+
+                    Button {
+                        isLinkingTopic = true
+                    } label: {
+                        Label(
+                            otherDays.isEmpty
+                                ? L.pick("Başka bir güne bağla…", "Link across days…")
+                                : L.pick("Başka gün ekle…", "Add another day…"),
+                            systemImage: "link"
+                        )
+                    }
+                } header: {
+                    Text(L.pick("Konu devamlılığı", "Topic continuity"))
+                } footer: {
+                    Text(L.pick(
+                        "Farklı günlere yayılan tek bir konuyu birleştir: tüm dersler birlikte numaralanır ve slaytları ortak olur.",
+                        "Join one subject spread over several days: the lessons are numbered together and share their slides."
+                    ))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -208,10 +261,40 @@ struct LectureEditor: View {
                 newInstructorName = ""
             }
         }
+        .sheet(isPresented: $isLinkingTopic) {
+            TopicLinkSheet(lecture: lecture)
+        }
     }
 
     private var sortedTags: [Tag] {
         lecture.tags.sorted { $0.name < $1.name }
+    }
+
+    // MARK: Topic continuity
+
+    /// One day of the topic other than this lecture's own: its lessons, grouped
+    /// so a day is added or removed as a unit.
+    private struct TopicDay {
+        let day: Date
+        let lectures: [Lecture]
+    }
+
+    /// The topic's other days, earliest first. This lecture's own day is left
+    /// out: it is where you are, not something to add or detach.
+    private var otherDays: [TopicDay] {
+        let ownDay = Calendar.current.startOfDay(for: lecture.date)
+        let grouped = Dictionary(grouping: LectureGrouping.parts(of: lecture, among: allLectures)) {
+            Calendar.current.startOfDay(for: $0.date)
+        }
+        return grouped
+            .filter { $0.key != ownDay }
+            .map { TopicDay(day: $0.key, lectures: $0.value) }
+            .sorted { $0.day < $1.day }
+    }
+
+    private func dayLine(for entry: TopicDay) -> String {
+        let day = L.format(entry.day, Date.FormatStyle.dateTime.weekday(.abbreviated).day().month())
+        return "\(day) · \(LectureGrouping.slotLabel(for: entry.lectures))"
     }
 
     // MARK: Choosing

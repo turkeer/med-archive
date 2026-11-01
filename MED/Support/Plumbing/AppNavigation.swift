@@ -4,6 +4,7 @@ import SwiftData
 
 /// The sections of the permanent sidebar.
 enum SidebarSection: String, CaseIterable, Identifiable {
+    case workspace
     case calendar
     case lectures
     case search
@@ -16,6 +17,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .workspace:   return L.workspace
         case .calendar:    return L.calendar
         case .lectures:    return L.topics
         case .search:      return L.pick("Slaytlarda ara", "Search slides")
@@ -28,6 +30,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
     var symbolName: String {
         switch self {
+        case .workspace:   return "square.grid.2x2"
         case .calendar:    return "calendar"
         case .lectures:    return "list.bullet.rectangle"
         case .search:      return "text.page.badge.magnifyingglass"
@@ -59,7 +62,7 @@ enum CalendarMode: String, CaseIterable, Identifiable {
 /// sidebar to Konular and selects it, rather than opening a dead end.
 @Observable
 final class AppNavigation {
-    var section: SidebarSection? = .lectures
+    var section: SidebarSection? = .workspace
 
     var calendarMode: CalendarMode = .week
 

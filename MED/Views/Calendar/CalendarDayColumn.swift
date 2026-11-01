@@ -31,8 +31,11 @@ struct CalendarDayColumn: View {
     private func content(for day: Date) -> some View {
         // Computed once for the day rather than once per row.
         let all = dayLectures(on: day)
-        let parts = LectureGrouping.partNumbers(for: all)
-        let topicsWithoutFiles = LectureGrouping.lacksFiles(among: all)
+        // Over the whole archive, not just this day: a topic linked across
+        // days keeps its other part elsewhere, and its part number and its
+        // "no files on the topic" status must still come out right here.
+        let parts = LectureGrouping.partNumbers(for: lectures)
+        let topicsWithoutFiles = LectureGrouping.lacksFiles(among: lectures)
 
         return Form {
             if calendar.isDateInWeekend(day) {

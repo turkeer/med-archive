@@ -15,7 +15,8 @@ import UniformTypeIdentifiers
 /// the app that wrote it.
 struct ArchiveSnapshot: Codable {
     /// Bumped when the shape changes, so a later reader knows what it has.
-    var schema = 1
+    /// 2 added `topicLinkID` on lectures. 3 added `studiedAt`.
+    var schema = 3
 
     var exportedAt = Date()
 
@@ -89,6 +90,13 @@ struct LectureRecord: Codable {
     var format: String
     var notes: String
     var createdAt: Date
+
+    /// Shared by the lectures that are parts of one topic across days; absent
+    /// when the lecture stands alone or groups only by the same-day rule.
+    var topicLinkID: String?
+
+    /// When this topic was marked studied in the workspace; absent when not.
+    var studiedAt: Date?
 
     var courseID: String?
     var instructorID: String?
@@ -175,6 +183,8 @@ enum ArchiveExport {
                 format: lecture.format.rawValue,
                 notes: lecture.notes,
                 createdAt: lecture.createdAt,
+                topicLinkID: lecture.topicLinkID?.uuidString,
+                studiedAt: lecture.studiedAt,
                 courseID: lecture.course.flatMap { courseIDs[$0.persistentModelID] },
                 instructorID: lecture.instructor.flatMap { instructorIDs[$0.persistentModelID] },
                 committeeID: lecture.committee.flatMap { committeeIDs[$0.persistentModelID] },

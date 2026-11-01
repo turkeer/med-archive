@@ -71,6 +71,20 @@ struct LectureReadView: View {
                 }
             }
 
+            // The topic in words. The detail opens from the calendar too,
+            // where nothing in the sidebar is selected to say which lesson
+            // this is, so the title has to stand on the screen itself. Shown
+            // only when there is a topic of its own — otherwise displayTitle
+            // would just repeat the course named right above.
+            if lecture.hasTopic {
+                LabeledContent(L.topic) {
+                    Text(lecture.displayTitle)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+
             LabeledContent(L.pick("Tarih", "Date")) {
                 VStack(alignment: .trailing, spacing: 1) {
                     Text(L.format(lecture.date, Date.FormatStyle.dateTime.weekday(.wide).day().month(.wide).year()))
@@ -100,7 +114,7 @@ struct LectureReadView: View {
             // to the other half shows up here.
             if parts.count > 1 {
                 LabeledContent(L.pick("Bu konu", "This topic")) {
-                    Text(L.lessonCount(parts.count) + " · " + LectureGrouping.slotLabel(for: parts))
+                    Text(L.lessonCount(LectureGrouping.lessonCount(of: parts)) + " · " + LectureGrouping.slotLabel(for: parts))
                 }
             }
         }

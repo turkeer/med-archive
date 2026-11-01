@@ -311,9 +311,11 @@ struct LectureLinkList: View {
     /// name is two words and the line is otherwise empty.
     @ViewBuilder
     private func meta(for group: LectureGroup, showCourse: Bool) -> some View {
+        let lessons = LectureGrouping.lessonCount(of: group.lectures)
+
         if showsCourseName(group, showCourse: showCourse)
             || group.first.format != .theoretical
-            || group.count > 1 {
+            || lessons > 1 {
             HStack(spacing: 5) {
                 if showsCourseName(group, showCourse: showCourse), let course = group.first.course {
                     Text(course.name)
@@ -323,8 +325,10 @@ struct LectureLinkList: View {
 
                 FormatBadge(format: group.first.format)
 
-                if group.count > 1 {
-                    Text(L.lessonCount(group.count))
+                // Counted in lessons (periods), so a two-period block reads as
+                // "2 ders" and a topic carried across days adds up across them.
+                if lessons > 1 {
+                    Text(L.lessonCount(lessons))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 5)
@@ -348,8 +352,9 @@ struct LectureLinkList: View {
     private func helpText(for group: LectureGroup) -> String {
         var parts = [group.first.displayTitle]
 
-        if group.count > 1 {
-            parts.append(L.lessonCount(group.count) + ", \(LectureGrouping.slotLabel(for: group.lectures))")
+        let lessons = LectureGrouping.lessonCount(of: group.lectures)
+        if lessons > 1 {
+            parts.append(L.lessonCount(lessons) + ", \(LectureGrouping.slotLabel(for: group.lectures))")
         }
 
         let fileCount = group.lectures.reduce(0) { $0 + $1.files.count }

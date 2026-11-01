@@ -46,6 +46,8 @@ struct ContentView: View {
     @ViewBuilder
     private var contentColumn: some View {
         switch nav.section {
+        case .workspace:
+            WorkspaceView()
         case .calendar:
             CalendarMonthView(
                 visibleMonth: $nav.visibleMonth,
@@ -88,6 +90,11 @@ struct ContentView: View {
     @ViewBuilder
     private var detailColumn: some View {
         switch nav.section {
+        case .workspace:
+            SelectionPlaceholder(text: L.pick(
+                "Çalışma alanı: bugünkü dersler ve aktif komitenin durumu solda. Bir satıra tıklamak seni o konuya götürür.",
+                "Workspace: today's lessons and the active committee are on the left. Clicking a row takes you to that topic."
+            ))
         case .calendar:
             calendarDetail
         case .lectures:
