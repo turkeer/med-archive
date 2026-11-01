@@ -1,8 +1,9 @@
 import SwiftData
 import SwiftUI
 
-/// The home screen: what is on today, how far the committee in progress has got,
-/// and the one thing no other screen tracks — what you have actually studied.
+/// The home screen: a readiness headline for the committee in progress, what is
+/// on today, a little momentum, and — the point of it all — a triage list that
+/// shows only what you are behind on.
 ///
 /// It is the cockpit, not the archive. The Komiteler screen answers "are the
 /// slides here?"; this one adds a second axis the rest of the app never stores —
@@ -11,22 +12,83 @@ import SwiftUI
 ///
 /// Its rows are its own (`WorkspaceTopicRow`) rather than the shared
 /// `LectureLinkList`, precisely so the study tick lives here and nowhere else.
-/// Today's lessons are the day's marking surface; the committee breakdown is
-/// where you tick off the topics you catch up on later.
 struct WorkspaceView: View {
     @Query private var allLectures: [Lecture]
     @Query private var committees: [Committee]
+
+    /// The triage list defaults to what needs doing — that is the whole reason
+    /// the screen exists. "Hepsi" is there when you want the full picture.
+    @State private var scope: TriageScope = .behind
 
     private let calendar = Calendar.current
 
     var body: some View {
         Form {
+            readinessHero
+
             today
+
+            momentum
 
             activeCommitteeSummary
         }
         .formStyle(.grouped)
         .navigationTitle(L.workspace)
+    }
+
+    // MARK: Readiness headline
+
+    /// The one prominent line: which committee, how long to its end, and how
+    /// much of it is still unstudied or missing slides. The summary of the
+    /// summary, so opening the app answers "how ready am I?" before any scroll.
+    @ViewBuilder
+    private var readinessHero: some View {
+        if let committee = activeCommittee {
+            let tally = progress(of: committee)
+
+            Section {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(committee.fullLabel.isEmpty ? L.unnamed : committee.fullLabel)
+                            .font(.headline)
+
+                        Spacer()
+
+                        Text(status(of: committee))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text(readinessLine(tally))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    /// "18 konu çalışılmadı · 3 konu slaytsız", or a clean-slate line when there
+    /// is nothing behind. Only taught topics are in the figures.
+    private func readinessLine(_ tally: Tally) -> String {
+        guard tally.due > 0 else {
+            return L.pick("Henüz işlenen konu yok.", "No topics taught yet.")
+        }
+
+        let unstudied = tally.due - tally.studied
+        let missing = tally.due - tally.slides
+
+        var parts: [String] = []
+        if unstudied > 0 {
+            parts.append(L.pick("\(unstudied) konu çalışılmadı", "\(unstudied) topics not studied"))
+        } else {
+            parts.append(L.pick("işlenen her konu çalışıldı", "every taught topic studied"))
+        }
+        if missing > 0 {
+            parts.append(L.pick("\(missing) konu slaytsız", "\(missing) without slides"))
+        }
+
+        return parts.joined(separator: " · ")
     }
 
     // MARK: Today
@@ -85,44 +147,88 @@ struct WorkspaceView: View {
         LectureGrouping.slotLabel(for: group.lectures)
     }
 
-    // MARK: Active committee
+    // MARK: Momentum
+
+    /// A light line of encouragement off the study marks — simple, and the one
+    /// use of the `studiedAt` dates beyond the tick itself.
+    private var momentum: some View {
+        Section {
+            Text(momentumLine)
+                .font(.callout)
+        } header: {
+            Text(L.pick("Momentum", "Momentum"))
+        }
+    }
+
+    private var momentumLine: String {
+        let startOfToday = calendar.startOfDay(for: Date())
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? startOfToday
+
+        let week = studiedCount(since: startOfWeek)
+        guard week > 0 else {
+            return L.pick("Bu hafta henüz konu çalışmadın.", "No topics studied this week yet.")
+        }
+
+        let todayCount = studiedCount(since: startOfToday)
+        return L.pick(
+            "Bu hafta \(week) konu · bugün \(todayCount) konu çalıştın.",
+            "\(week) topics this week · \(todayCount) today."
+        )
+    }
+
+    /// How many topics were last marked studied on or after `date`.
+    private func studiedCount(since date: Date) -> Int {
+        LectureGrouping.groups(of: allLectures).filter { group in
+            guard let last = group.lectures.compactMap(\.studiedAt).max() else { return false }
+            return last >= date
+        }
+        .count
+    }
+
+    // MARK: Active committee — triage
 
     @ViewBuilder
     private var activeCommitteeSummary: some View {
         if let committee = activeCommittee {
+            let tally = progress(of: committee)
+            let runs = courseRuns(of: committee)
+
             Section {
-                LabeledContent(committee.fullLabel.isEmpty ? L.unnamed : committee.fullLabel) {
-                    Text(status(of: committee))
-                        .foregroundStyle(.secondary)
-                }
-
-                Text(committee.dateRangeText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                let tally = progress(of: committee)
                 if tally.due > 0 {
                     WorkspaceProgressRow(label: L.pick("Slayt", "Slides"), done: tally.slides, total: tally.due)
                     WorkspaceProgressRow(label: L.pick("Çalışıldı", "Studied"), done: tally.studied, total: tally.due)
                 }
+
+                Picker(L.pick("Göster", "Show"), selection: $scope) {
+                    ForEach(TriageScope.allCases) { option in
+                        Text(option.title).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
             } header: {
                 Text(L.pick("Aktif komite", "Active committee"))
             } footer: {
                 Text(L.pick(
-                    "Slayt: dosyası olan konular. Çalışıldı: işaretlediğin konular. Yalnızca günü gelmiş konular sayılır.",
-                    "Slides: topics with a file. Studied: the ones you've ticked. Only topics already taught are counted."
+                    "Geride kalanlar: günü gelmiş ama çalışılmamış ya da slaytı eksik konular.",
+                    "Behind: taught topics that are unstudied or missing slides."
                 ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            // The marking surface for the whole committee: grouped by course,
-            // every topic tickable — this is where you tick off the ones you
-            // study after their day has passed.
-            ForEach(courseRuns(of: committee)) { run in
-                Section(run.name) {
-                    ForEach(run.groups) { group in
-                        WorkspaceTopicRow(group: group, leading: date(of: group), showCourse: false)
+            if runs.isEmpty {
+                Section {
+                    Text(scope == .behind
+                        ? L.pick("Geride kalan konu yok. 🎉", "Nothing behind. 🎉")
+                        : L.pick("Bu komitede oturum yok.", "No sessions in this committee."))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                ForEach(runs) { run in
+                    Section(run.name) {
+                        ForEach(run.groups) { group in
+                            WorkspaceTopicRow(group: group, leading: date(of: group), showCourse: false)
+                        }
                     }
                 }
             }
@@ -174,6 +280,17 @@ struct WorkspaceView: View {
         return tally
     }
 
+    /// Whether a topic is behind: its day has come and it is still unstudied or
+    /// still has no slides. Topics ahead are never behind.
+    private func isBehind(_ group: LectureGroup) -> Bool {
+        let today = calendar.startOfDay(for: Date())
+        guard calendar.startOfDay(for: group.first.date) <= today else { return false }
+
+        let studied = LectureGrouping.isStudied(group.lectures)
+        let hasSlides = group.lectures.contains { !$0.files.isEmpty }
+        return !studied || !hasSlides
+    }
+
     private struct CourseRun: Identifiable {
         let name: String
         let groups: [LectureGroup]
@@ -182,6 +299,7 @@ struct WorkspaceView: View {
 
     private func courseRuns(of committee: Committee) -> [CourseRun] {
         let groups = LectureGrouping.groups(of: committee.lectures, sort: .oldestFirst)
+            .filter { scope == .all || isBehind($0) }
 
         return Dictionary(grouping: groups) {
             $0.first.course?.name ?? L.pick("Dersi belirtilmemiş", "No course set")
@@ -211,6 +329,21 @@ struct WorkspaceView: View {
 
         let days = calendar.dateComponents([.day], from: today, to: end).day ?? 0
         return L.pick("bitişe \(days) gün", "\(days) days left")
+    }
+}
+
+/// Whether the triage list shows only what is behind, or everything.
+private enum TriageScope: String, CaseIterable, Identifiable {
+    case behind
+    case all
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .behind: return L.pick("Geride kalanlar", "Behind")
+        case .all:    return L.pick("Hepsi", "All")
+        }
     }
 }
 
