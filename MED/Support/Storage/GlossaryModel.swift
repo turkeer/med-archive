@@ -53,8 +53,15 @@ final class GlossaryModel {
     private struct Cache: Codable, Sendable {
         /// Bumped when the prompt changes, so old verdicts are discarded and
         /// the candidates are judged again. 2 kept the term verbatim; 3 feeds
-        /// the model the surrounding slide lines; 4 added rejection reasons.
-        var version = 4
+        /// the model the surrounding slide lines; 4 added rejection reasons;
+        /// 5 keeps the candidate's clean term (the model's term is discarded)
+        /// and drops citation/all-caps-title candidates at extraction; 6 lets
+        /// the model extract the term itself for sentence candidates (with a
+        /// "term appears in the passage" guard), instead of confirming a regex
+        /// guess; 7 names the term after "is called …" (not the subject),
+        /// strips the "… is called <term>" tail from the definition, and
+        /// rejects fragment definitions.
+        var version = 7
         var verdicts: [String: Verdict] = [:]
     }
 
@@ -164,17 +171,24 @@ final class GlossaryModel {
         if #available(macOS 26, *) {
             var working = verdicts
 
-            // Phase one: is each candidate a definition?
+            // Phase one: is each candidate a definition? A colon candidate is
+            // confirmed on its given term; a sentence candidate's term is a
+            // regex guess, so the model extracts the real term itself.
             pendingCount = todo.count
             reviewedCount = 0
-            var start = 0
-            while start < todo.count {
-                let batch = Array(todo[start ..< min(start + Self.batchSize, todo.count)])
-                for (id, verdict) in await judge(batch) { working[id] = verdict }
-                reviewedCount += batch.count
-                verdicts = working
-                if reviewedCount % 40 == 0 { Self.write(Cache(verdicts: working)) }
-                start += Self.batchSize
+
+            for source in [SlideDefinition.Source.colon, .sentence] {
+                let group = todo.filter { $0.source == source }
+                var start = 0
+                while start < group.count {
+                    let batch = Array(group[start ..< min(start + Self.batchSize, group.count)])
+                    let verdicts = source == .colon ? await judge(batch) : await extract(batch)
+                    for (id, verdict) in verdicts { working[id] = verdict }
+                    reviewedCount += batch.count
+                    self.verdicts = working
+                    if reviewedCount % 40 == 0 { Self.write(Cache(verdicts: working)) }
+                    start += Self.batchSize
+                }
             }
             Self.write(Cache(verdicts: working))
 
@@ -184,7 +198,7 @@ final class GlossaryModel {
                 isClassifying = true
                 pendingCount = rejects.count
                 reviewedCount = 0
-                start = 0
+                var start = 0
                 while start < rejects.count {
                     let batch = Array(rejects[start ..< min(start + Self.batchSize, rejects.count)])
                     let reasons = await classify(batch)
@@ -238,6 +252,44 @@ final class GlossaryModel {
         }
     }
 
+    // MARK: Model — extracting (sentence candidates)
+
+    /// For a sentence candidate the regex term is a throwaway, so the model is
+    /// handed only the passage and asked to name the term *and* its definition
+    /// itself. This is what stops the "binding"/"environment" fragments: the
+    /// model is no longer led by a wrong term to confirm.
+    @available(macOS 26, *)
+    private func extract(_ batch: [SlideDefinition]) async -> [String: Verdict] {
+        var result: [String: Verdict] = [:]
+
+        do {
+            let session = LanguageModelSession(instructions: Self.extractInstructions)
+            let answer = try await session.respond(to: Self.passageBatchPrompt(batch)).content
+            result = Self.parseExtracted(answer, batch: batch)
+        } catch {
+            // Whole-batch failure falls through to the per-item path below.
+        }
+
+        for candidate in batch where result[candidate.id] == nil {
+            result[candidate.id] = await extractOne(candidate)
+        }
+
+        return result
+    }
+
+    @available(macOS 26, *)
+    private func extractOne(_ candidate: SlideDefinition) async -> Verdict {
+        do {
+            let session = LanguageModelSession(instructions: Self.extractInstructions)
+            let answer = try await session.respond(to: Self.passagePrompt(candidate)).content
+            return Self.parseExtractedLine(Self.firstLine(answer), fallback: candidate)
+        } catch {
+            // A sentence candidate the model never reached stays out: its regex
+            // term is not trustworthy enough to accept on its own.
+            return Verdict(accepted: false, term: candidate.term, definition: candidate.definition, reason: nil)
+        }
+    }
+
     // MARK: Model — classifying rejects
 
     @available(macOS 26, *)
@@ -285,6 +337,20 @@ final class GlossaryModel {
             .joined(separator: "\n\n")
     }
 
+    /// For extraction the model is given only the passage — no term, because
+    /// finding the term is its job.
+    private static func passagePrompt(_ candidate: SlideDefinition) -> String {
+        "PASSAGE:\n\(candidate.context)"
+    }
+
+    private static func passageBatchPrompt(_ batch: [SlideDefinition]) -> String {
+        batch.enumerated()
+            .map { index, candidate in
+                "ITEM \(index + 1)\nPASSAGE:\n\(candidate.context)"
+            }
+            .joined(separator: "\n\n")
+    }
+
     private static let judgeInstructions = """
     You are given numbered items from medical lecture slides. Each has a TERM \
     and the LINES around it on the slide.
@@ -297,6 +363,28 @@ final class GlossaryModel {
     exactly as given — never generalise it or drop qualifiers. Fix obvious OCR \
     typos, but add NO facts, examples, numbers, or formulas beyond the LINES.
     - If the LINES do not define the term, write: NO
+
+    Each line looks like `1) Term :: definition` or `2) NO`. One line per item, \
+    in order, nothing else.
+    """
+
+    private static let extractInstructions = """
+    You are given numbered passages from medical lecture slides.
+
+    For each passage, reply on its own line starting with the item number and \
+    a ')'. Then:
+
+    - If the passage states the definition of a single term, write that term, \
+    then ' :: ', then its definition. The term must be the exact word or \
+    phrase the passage defines — a noun or noun phrase that actually appears in \
+    the passage, not a whole sentence and not something you supply yourself. \
+    When the passage says that something IS CALLED / IS KNOWN AS / IS TERMED / \
+    IS REFERRED TO AS some name, that name is the term — never the subject in \
+    front of it. Assemble the definition from the passage as one clean, \
+    self-contained sentence, using ONLY what the passage says: add no facts, \
+    numbers, examples, or formulas of your own, and never end it with "is \
+    called …" or otherwise repeat the term. Fix obvious OCR typos only.
+    - If the passage does not define a term, write: NO
 
     Each line looks like `1) Term :: definition` or `2) NO`. One line per item, \
     in order, nothing else.
@@ -353,12 +441,15 @@ final class GlossaryModel {
 
     static func parseJudgedLine(_ line: String, fallback: SlideDefinition) -> Verdict {
         if let range = line.range(of: "::") {
-            let trim = CharacterSet(charactersIn: " -•·*\"'“”`")
-            let term = String(line[..<range.lowerBound]).trimmingCharacters(in: trim)
-            let definition = String(line[range.upperBound...]).trimmingCharacters(in: trim)
+            let definition = cleanDefinition(String(line[range.upperBound...]), term: fallback.term)
 
-            if term.count >= 2, definition.count >= 15 {
-                return Verdict(accepted: true, term: term, definition: definition, reason: nil)
+            if definition.count >= 15 {
+                // The term is never the model's to rewrite. Left to it, it
+                // echoes the slide's list numbering ("1) Cohesion"), repeats
+                // the headword ("Neuron: Neuron: …"), or drags a trailing
+                // colon along. The pattern matcher already handed us a clean
+                // term, so keep that and take only the model's definition.
+                return Verdict(accepted: true, term: fallback.term, definition: definition, reason: nil)
             }
         }
 
@@ -367,6 +458,122 @@ final class GlossaryModel {
         }
 
         return Verdict(accepted: fallback.confidence == .high, term: fallback.term, definition: fallback.definition, reason: nil)
+    }
+
+    static func parseExtracted(_ answer: String, batch: [SlideDefinition]) -> [String: Verdict] {
+        var result: [String: Verdict] = [:]
+        for (number, rest) in numbered(answer, count: batch.count) {
+            result[batch[number - 1].id] = parseExtractedLine(rest, fallback: batch[number - 1])
+        }
+        return result
+    }
+
+    /// Here the term *is* the model's to choose — but only when it actually
+    /// occurs in the passage, so it assembled it from the slide rather than
+    /// inventing it. Anything else is rejected, fragment term and all.
+    static func parseExtractedLine(_ line: String, fallback: SlideDefinition) -> Verdict {
+        // Tolerate a stray leading "N)" on the per-item path, where `numbered`
+        // has not already stripped it.
+        var body = line.trimmingCharacters(in: .whitespaces)
+        if body.first?.isNumber == true {
+            body = String(body.drop { $0.isNumber }.drop { ").: ".contains($0) })
+        }
+
+        if let range = body.range(of: "::") {
+            let trim = CharacterSet(charactersIn: " -•·*\"'“”`")
+            let term = String(body[..<range.lowerBound]).trimmingCharacters(in: trim)
+            let definition = cleanDefinition(String(body[range.upperBound...]), term: term)
+
+            if term.count >= 2, definition.count >= 15,
+               isSelfContained(definition, term: term),
+               termAppears(term, in: fallback.context) {
+                return Verdict(accepted: true, term: term, definition: definition, reason: nil)
+            }
+        }
+
+        return Verdict(accepted: false, term: fallback.term, definition: fallback.definition, reason: nil)
+    }
+
+    /// Words a definition never starts on: a relative or conjunction lead means
+    /// the model handed back a clause torn out of its sentence ("that are mirror
+    /// images of each other."), not a standalone explanation. Also rejects a
+    /// definition of two or three words ("repeating units.") and one that just
+    /// restates the term.
+    private static let fragmentLeads: Set<String> = [
+        "that", "which", "who", "whom", "whose", "and", "or", "but", "so",
+        "because", "when", "while", "where", "as", "if", "then", "thus",
+        "hence", "therefore", "of", "to",
+    ]
+
+    static func isSelfContained(_ definition: String, term: String) -> Bool {
+        let words = definition.split(separator: " ")
+        guard words.count >= 4 else { return false }
+        if let first = words.first, fragmentLeads.contains(SearchText.fold(String(first))) {
+            return false
+        }
+        return SearchText.fold(definition) != SearchText.fold(term)
+    }
+
+    /// True when the term's substantive words all occur in the passage — the
+    /// guard that keeps the model from naming a term the slide never used.
+    static func termAppears(_ term: String, in context: String) -> Bool {
+        let haystack = SearchText.fold(context)
+        let words = SearchText.fold(term).split(separator: " ").filter { $0.count >= 4 }
+        if words.isEmpty {
+            // A short term or acronym: require the whole thing to appear.
+            return haystack.contains(SearchText.fold(term))
+        }
+        return words.allSatisfy { haystack.contains($0) }
+    }
+
+    /// Tidies the model's definition: strips wrapping bullets/quotes and a
+    /// leading "<term>:" the model copied from the slide, so the definition
+    /// reads as its own sentence instead of repeating the headword.
+    static func cleanDefinition(_ raw: String, term: String) -> String {
+        let edge = CharacterSet(charactersIn: " -•·*▪‣:\"'“”`\t")
+        var def = raw.trimmingCharacters(in: edge)
+
+        if let colon = def.firstIndex(of: ":"),
+           SearchText.fold(String(def[..<colon])) == SearchText.fold(term) {
+            def = String(def[def.index(after: colon)...])
+        }
+
+        def = stripNamingTail(def, term: term)
+
+        return def.trimmingCharacters(in: edge)
+    }
+
+    private static let namingTails: [String] = [
+        " is called as ", " are called as ", " is called ", " are called ",
+        " also called ", " is known as ", " are known as ", " also known as ",
+        " is termed ", " are termed ", " is referred to as ",
+        " are referred to as ", " referred to as ",
+    ]
+
+    /// Drops a trailing "… is called <term>" clause that merely restates the
+    /// headword, so "solutions … are called buffer systems" collapses to the
+    /// genus phrase "solutions …". Only fires when the clause actually names
+    /// the term, so an unrelated "called upon" is left alone.
+    static func stripNamingTail(_ definition: String, term: String) -> String {
+        let foldedTerm = SearchText.fold(term)
+        guard !foldedTerm.isEmpty else { return definition }
+
+        var cut: String.Index?
+        for marker in namingTails {
+            guard let range = definition.range(of: marker, options: .caseInsensitive) else { continue }
+            let tail = SearchText.fold(String(definition[range.upperBound...]))
+            guard tail.contains(foldedTerm) else { continue }
+            if cut == nil || range.lowerBound < cut! { cut = range.lowerBound }
+        }
+        guard let cut else { return definition }
+
+        var head = String(definition[..<cut])
+        // Drop a connector left dangling by the cut ("…another, and" → "…another").
+        if let tail = head.range(of: #"[\s,;]+(and|or|which|that)$"#,
+                                 options: [.regularExpression, .caseInsensitive]) {
+            head = String(head[..<tail.lowerBound])
+        }
+        return head.trimmingCharacters(in: CharacterSet(charactersIn: " ,;:-•·*"))
     }
 
     static func parseClassified(_ answer: String, batch: [SlideDefinition]) -> [String: Rejection] {

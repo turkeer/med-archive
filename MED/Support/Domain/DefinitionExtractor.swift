@@ -16,8 +16,19 @@ struct SlideDefinition: Identifiable, Hashable {
         case uncertain
     }
 
+    /// Where the candidate came from, which decides how the model treats it.
+    /// `colon` candidates carry a term the slide's own "Term: …" structure
+    /// gave us, so the model only confirms them. `sentence` candidates carry a
+    /// term a regex guessed from running text — unreliable — so the model is
+    /// asked to extract the real term itself rather than confirm the guess.
+    enum Source {
+        case colon
+        case sentence
+    }
+
     let term: String
     let definition: String
+    let source: Source
 
     /// The slide lines around this candidate — one before, and the rest of its
     /// block after — so the model can assemble the whole definition faithfully
@@ -37,7 +48,19 @@ struct SlideDefinition: Identifiable, Hashable {
 
     let confidence: Confidence
 
-    var id: String { "\(path)#\(page)#\(term.lowercased())" }
+    /// Stable across launches so the user's keep/hide marks survive a
+    /// re-review. A colon candidate keys on its (reliable) term; a sentence
+    /// candidate keys on its passage instead, because its regex term is a
+    /// throwaway the model will replace — and two sentences on one page must
+    /// not collide on the same fragment term.
+    var id: String {
+        switch source {
+        case .colon:
+            return "\(path)#\(page)#\(term.lowercased())"
+        case .sentence:
+            return "\(path)#\(page)#s:\(SearchText.fold(definition).prefix(48))"
+        }
+    }
 }
 
 /// Pulls candidate definitions out of slide text with nothing but patterns —
@@ -57,7 +80,8 @@ enum DefinitionExtractor {
         "references", "reference", "summary", "introduction", "objective",
         "objectives", "outline", "contents", "content", "aim", "aims", "figure",
         "table", "total", "mcq", "source", "sources", "question", "questions",
-        "case", "cases", "example", "examples", "locations",
+        "case", "cases", "example", "examples", "locations", "textbook",
+        "slide", "slides", "topic", "topics", "chapter",
     ]
 
     /// Heads beginning like a heading or a fragment, not a term.
@@ -85,51 +109,188 @@ enum DefinitionExtractor {
         var result: [SlideDefinition] = []
 
         for i in lines.indices {
-            let line = lines[i]
-            guard let colon = line.firstIndex(of: ":") else { continue }
-
-            let head = String(line[line.startIndex..<colon]).trimmingCharacters(in: .whitespaces)
-            guard let term = plausibleTerm(head) else { continue }
-
-            let rest = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
-            let raw: String
-
-            if !rest.isEmpty {
-                // "Term: definition" on one line; borrow the next line when the
-                // inline part is too short to be the whole explanation.
-                var text = rest
-                if text.count < 40, i + 1 < lines.count,
-                   !lines[i + 1].isEmpty, !lines[i + 1].contains(":") {
-                    text += " " + lines[i + 1]
-                }
-                raw = text
-            } else {
-                // "Term:" then the explanation on the lines below, up to a
-                // blank line or the next colon head.
-                var accumulated: [String] = []
-                var j = i + 1
-                while j < lines.count, !lines[j].isEmpty, !lines[j].contains(":"),
-                      accumulated.joined(separator: " ").count < 300 {
-                    accumulated.append(lines[j])
-                    j += 1
-                }
-                raw = accumulated.joined(separator: " ")
+            // The colon pattern is the strongest signal, so it is tried first;
+            // only when a line has no "term: explanation" shape do we look for
+            // a definition written as a sentence ("… is called X", "X refers
+            // to …").
+            if let colon = colonCandidate(lines: lines, at: i, path: path, page: page, isRecognised: isRecognised, vocabulary: vocabulary) {
+                result.append(colon)
+            } else if let sentence = sentenceCandidate(lines: lines, at: i, path: path, page: page, isRecognised: isRecognised, vocabulary: vocabulary) {
+                result.append(sentence)
             }
-
-            guard let definition = plausibleDefinition(raw) else { continue }
-
-            result.append(SlideDefinition(
-                term: term,
-                definition: definition,
-                context: context(of: lines, at: i),
-                path: path,
-                page: page,
-                isRecognised: isRecognised,
-                confidence: confidence(term: term, definition: definition, isRecognised: isRecognised, vocabulary: vocabulary)
-            ))
         }
 
         return result
+    }
+
+    /// The classic "Term: explanation" line (inline, or the term on its own
+    /// with the explanation on the lines below). This is where most real
+    /// definitions live on a slide.
+    private static func colonCandidate(
+        lines: [String], at i: Int, path: String, page: Int, isRecognised: Bool, vocabulary: Set<String>
+    ) -> SlideDefinition? {
+        let line = lines[i]
+        guard let colon = line.firstIndex(of: ":") else { return nil }
+
+        let head = String(line[line.startIndex..<colon]).trimmingCharacters(in: .whitespaces)
+        guard let term = plausibleTerm(head) else { return nil }
+
+        let rest = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
+        let raw: String
+
+        if !rest.isEmpty {
+            // "Term: definition" on one line; borrow the next line when the
+            // inline part is too short to be the whole explanation.
+            var text = rest
+            if text.count < 40, i + 1 < lines.count,
+               !lines[i + 1].isEmpty, !lines[i + 1].contains(":") {
+                text += " " + lines[i + 1]
+            }
+            raw = text
+        } else {
+            // "Term:" then the explanation on the lines below, up to a
+            // blank line or the next colon head.
+            var accumulated: [String] = []
+            var j = i + 1
+            while j < lines.count, !lines[j].isEmpty, !lines[j].contains(":"),
+                  accumulated.joined(separator: " ").count < 300 {
+                accumulated.append(lines[j])
+                j += 1
+            }
+            raw = accumulated.joined(separator: " ")
+        }
+
+        guard let definition = plausibleDefinition(raw) else { return nil }
+
+        return SlideDefinition(
+            term: term,
+            definition: definition,
+            source: .colon,
+            context: context(of: lines, at: i),
+            path: path,
+            page: page,
+            isRecognised: isRecognised,
+            confidence: confidence(term: term, definition: definition, isRecognised: isRecognised, vocabulary: vocabulary)
+        )
+    }
+
+    /// A definition written as a sentence rather than with a colon. Two shapes,
+    /// both high-signal:
+    ///
+    /// - **naming** — "… is called X", "… known as X", "… termed X": the term
+    ///   is the short phrase *after* the marker.
+    /// - **subject** — "X is defined as …", "X refers to …", and the cautious
+    ///   copula "X is a/an …": the term is the phrase *before* the marker.
+    ///
+    /// The whole line is the definition; the model gets the surrounding lines
+    /// as context, exactly as for the colon pass, so it can assemble and judge.
+    /// The copula is the noisy one, so it only fires when the subject is a term
+    /// the slides already use elsewhere (in `vocabulary`).
+    private static func sentenceCandidate(
+        lines: [String], at i: Int, path: String, page: Int, isRecognised: Bool, vocabulary: Set<String>
+    ) -> SlideDefinition? {
+        let line = lines[i]
+        guard line.count >= 25, line.contains(" ") else { return nil }
+
+        var term: String?
+
+        // The marker is matched on the line itself, case-insensitively, so the
+        // range it returns indexes straight into `line`. (Matching on a
+        // lowercased copy and mapping the offset back crashes: lowercasing can
+        // change the character count — Turkish "İ" → "i̇" — so the offset
+        // overran the line.)
+
+        // Naming markers: the thing being named follows the marker.
+        for marker in Self.namingMarkers {
+            guard let range = line.range(of: marker, options: .caseInsensitive) else { continue }
+            term = namedTerm(String(line[range.upperBound...]))
+            if term != nil { break }
+        }
+
+        // Subject markers: the term is what the sentence is about, before the
+        // marker.
+        if term == nil {
+            for marker in Self.subjectMarkers {
+                guard let range = line.range(of: marker, options: .caseInsensitive) else { continue }
+                term = subjectTerm(String(line[line.startIndex..<range.lowerBound]), vocabulary: vocabulary, requireKnown: Self.copulaMarkers.contains(marker))
+                if term != nil { break }
+            }
+        }
+
+        guard let term, let definition = plausibleDefinition(line) else { return nil }
+
+        return SlideDefinition(
+            term: term,
+            definition: definition,
+            source: .sentence,
+            context: context(of: lines, at: i),
+            path: path,
+            page: page,
+            isRecognised: isRecognised,
+            // A sentence match is a weaker signal than a colon, so it starts
+            // uncertain and leans on the model to confirm.
+            confidence: .uncertain
+        )
+    }
+
+    /// Markers after which the named term appears ("… is called X").
+    private static let namingMarkers: [String] = [
+        " is called ", " are called ", " also called ", " is known as ",
+        " are known as ", " also known as ", " is termed ", " are termed ",
+        " referred to as ",
+    ]
+
+    /// Markers whose subject (before the marker) is the term. The plain plural
+    /// copula " are " is left out on purpose: it fires on almost any sentence
+    /// about a plural noun ("proteins are amphiphilic") and buried the real
+    /// definitions under noise. " is a "/" is an " survive because they are
+    /// gated to a known term below.
+    private static let subjectMarkers: [String] = [
+        " is defined as ", " are defined as ", " is described as ",
+        " refers to ", " refer to ", " is a ", " is an ",
+    ]
+
+    /// The subset of `subjectMarkers` that is the plain copula — common and
+    /// mostly not definitional, so it fires only for a known slide term.
+    private static let copulaMarkers: Set<String> = [" is a ", " is an "]
+
+    /// Function words that are never the head of a term, so a candidate that
+    /// begins or ends on one is a sentence fragment, not a term.
+    private static let functionWords: Set<String> = [
+        "the", "a", "an", "of", "and", "or", "to", "in", "on", "as", "is",
+        "are", "was", "were", "be", "been", "that", "which", "this", "these",
+        "those", "there", "it", "they", "with", "by", "for", "used", "its",
+    ]
+
+    /// The words naming the term, taken from just after a naming marker: up to
+    /// four, stopped at the first clause break, with trailing function words
+    /// ("axis of" → "axis", "transverse diffusion and" → "transverse
+    /// diffusion") pared off so the term does not trail into the sentence.
+    private static func namedTerm(_ raw: String) -> String? {
+        let head = raw.prefix { ![",", ".", ";", "(", ":"].contains($0) }
+        var words = Array(head.split(separator: " ").prefix(5)).map(String.init)
+        while let first = words.first, functionWords.contains(first.lowercased()) {
+            words.removeFirst()
+        }
+        words = Array(words.prefix(4))
+        while let last = words.last, functionWords.contains(last.lowercased()) {
+            words.removeLast()
+        }
+        guard !words.isEmpty else { return nil }
+        return plausibleTerm(words.joined(separator: " "))
+    }
+
+    /// The subject phrase before a subject marker: the last few words, with a
+    /// leading article dropped. For the plain copula it must be a term the
+    /// slides already use, so stray "This is a…" sentences do not slip in; and
+    /// a subject that begins on a function word is a fragment, not a term.
+    private static func subjectTerm(_ raw: String, vocabulary: Set<String>, requireKnown: Bool) -> String? {
+        let words = raw.split(separator: " ")
+        guard (1...5).contains(words.count) else { return nil }
+        if let first = words.first, functionWords.contains(first.lowercased()) { return nil }
+        guard let term = plausibleTerm(words.joined(separator: " ")) else { return nil }
+        if requireKnown, !vocabulary.contains(SearchText.fold(term)) { return nil }
+        return term
     }
 
     /// The block around the candidate line: one line before for context, then
@@ -149,7 +310,25 @@ enum DefinitionExtractor {
     }
 
     private static func plausibleTerm(_ raw: String) -> String? {
-        let term = raw.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*\t"))
+        var term = raw.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*▪‣\t"))
+        // A lone "o" is these slides' bullet glyph ("o Cyclin…"); drop it so the
+        // term is the word itself, not the bullet plus the word.
+        if term.hasPrefix("o "), term.dropFirst(2).first?.isUppercase == true {
+            term = String(term.dropFirst(2)).trimmingCharacters(in: .whitespaces)
+        }
+        // A lowercase leading article is noise ("the mitochondrion" →
+        // "mitochondrion"). Only lowercase, so anatomy's "A band" / "I band"
+        // keep their capital letter.
+        for article in ["the ", "a ", "an "] where term.hasPrefix(article) {
+            term = String(term.dropFirst(article.count)).trimmingCharacters(in: .whitespaces)
+            break
+        }
+        // Trim stray edge punctuation, then a lone unbalanced parenthesis the
+        // pattern caught at the start or end — a balanced "(Cdk)" is left be.
+        term = term.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*▪‣\t.,;"))
+        if term.hasPrefix("("), !term.contains(")") { term.removeFirst() }
+        if term.hasSuffix(")"), !term.contains("(") { term.removeLast() }
+        term = term.trimmingCharacters(in: .whitespaces)
         guard !term.isEmpty else { return nil }
 
         let low = term.lowercased()
@@ -164,6 +343,9 @@ enum DefinitionExtractor {
         if furniture.contains(low) { return nil }
         if rejectPrefixes.contains(where: { low.hasPrefix($0) }) { return nil }
         if term.unicodeScalars.contains(where: { !allowedTermScalars.contains($0) }) { return nil }
+        // Multi-word all-caps heads are slide titles ("CELL MEMBRANE
+        // COMPONENTS"), not terms. Short acronyms are one word, so they pass.
+        if words.count >= 2, term == term.uppercased(with: L.locale) { return nil }
 
         return term
     }
@@ -179,6 +361,11 @@ enum DefinitionExtractor {
         guard definition.count >= 25 else { return nil }
         guard definition.contains(" ") else { return nil }
         guard definition.filter(\.isLetter).count >= definition.count / 2 else { return nil }
+
+        // A definition that is really a web address is a citation, not an
+        // explanation.
+        let low = definition.lowercased()
+        if low.contains("http") || low.contains("www.") { return nil }
 
         return definition
     }
