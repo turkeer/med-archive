@@ -232,6 +232,51 @@ final class SlideIndex {
         return built
     }
 
+    // MARK: Definitions
+
+    private var cachedDefinitions: [SlideDefinition]?
+
+    /// Every term-and-explanation the slides spell out, for the Sözlük screen.
+    ///
+    /// Built on first use and cached, like `vocabulary`: it is a pass over the
+    /// whole archive and only a screen that is not always open needs it. Thrown
+    /// away whenever the index is adopted again, so adding slides refreshes it.
+    var definitions: [SlideDefinition] {
+        if let cachedDefinitions { return cachedDefinitions }
+
+        let built = buildDefinitions()
+        cachedDefinitions = built
+        return built
+    }
+
+    private func buildDefinitions() -> [SlideDefinition] {
+        let allowed = vocabulary.allowed
+
+        var all: [SlideDefinition] = []
+        for (path, entry) in entries {
+            let recognised = Set(entry.ocrPages)
+            for (index, page) in entry.pages.enumerated() {
+                all += DefinitionExtractor.definitions(
+                    path: path,
+                    page: index + 1,
+                    text: page,
+                    isRecognised: recognised.contains(index),
+                    vocabulary: allowed
+                )
+            }
+        }
+
+        // Drop exact repeats — the same wording lifted off two slides — but
+        // keep a term that is genuinely defined in more than one place.
+        var seen: Set<String> = []
+        let unique = all.filter { definition in
+            let key = SearchText.fold(definition.term) + "|" + SearchText.fold(definition.definition)
+            return seen.insert(key).inserted
+        }
+
+        return unique.sorted { $0.term.localizedStandardCompare($1.term) == .orderedAscending }
+    }
+
     private func buildVocabulary() -> Vocabulary {
         let pages = foldedPages.values.flatMap { $0 }
         guard !pages.isEmpty else { return Vocabulary(terms: [], allowed: []) }
@@ -553,6 +598,7 @@ final class SlideIndex {
         foldedPages = cache.entries.mapValues { $0.pages.map(SearchText.fold) }
 
         cachedVocabulary = nil
+        cachedDefinitions = nil
 
         fileCount = cache.entries.count
         pageCount = cache.entries.values.reduce(0) { $0 + $1.pages.count }

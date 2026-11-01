@@ -115,6 +115,7 @@ enum L {
     // MARK: The things the archive is made of
 
     static var workspace: String { pick("Çalışma alanı", "Workspace") }
+    static var glossary: String { pick("Sözlük", "Glossary") }
     static var calendar: String { pick("Takvim", "Calendar") }
     static var topics: String { pick("Konular", "Topics") }
     static var courses: String { pick("Dersler", "Courses") }

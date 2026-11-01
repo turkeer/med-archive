@@ -8,6 +8,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case calendar
     case lectures
     case search
+    case glossary
     case courses
     case instructors
     case committees
@@ -21,6 +22,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .calendar:    return L.calendar
         case .lectures:    return L.topics
         case .search:      return L.pick("Slaytlarda ara", "Search slides")
+        case .glossary:    return L.glossary
         case .courses:     return L.courses
         case .instructors: return L.instructors
         case .committees:  return L.committees
@@ -34,6 +36,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .calendar:    return "calendar"
         case .lectures:    return "list.bullet.rectangle"
         case .search:      return "text.page.badge.magnifyingglass"
+        case .glossary:    return "character.book.closed"
         case .courses:     return "books.vertical"
         case .instructors: return "person.2"
         case .committees:  return "square.stack.3d.up"
@@ -77,6 +80,12 @@ final class AppNavigation {
     /// written to disk: a question you asked once is not a setting.
     var slideQuery = ""
     var slidePage: SlidePageSelection?
+
+    /// The Sözlük screen's search and which slide a chosen definition points
+    /// at. Kept apart from the Ara screen's own `slidePage` so the two screens
+    /// do not clobber each other's selection when you switch between them.
+    var glossaryQuery = ""
+    var glossaryPage: SlidePageSelection?
 
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?

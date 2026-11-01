@@ -58,6 +58,8 @@ struct ContentView: View {
             LectureListView(selection: $nav.lectureID)
         case .search:
             SlideSearchView(query: $nav.slideQuery, selection: $nav.slidePage)
+        case .glossary:
+            GlossaryView(query: $nav.glossaryQuery, selection: $nav.glossaryPage)
         case .courses:
             CourseListColumn(selection: $nav.courseID)
         case .instructors:
@@ -101,6 +103,8 @@ struct ContentView: View {
             LectureDetailColumn(lectureID: nav.lectureID)
         case .search:
             SlidePageDetail(selection: nav.slidePage)
+        case .glossary:
+            SlidePageDetail(selection: nav.glossaryPage)
         case .courses:
             CourseDetailColumn(courseID: nav.courseID)
         case .instructors:
