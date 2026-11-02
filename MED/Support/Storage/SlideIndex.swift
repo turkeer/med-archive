@@ -113,6 +113,47 @@ final class SlideIndex {
         return hits
     }
 
+    /// Where a folded phrase turns up, as path → first matching page (1-based).
+    ///
+    /// Matched on whole-word boundaries, so "ion" does not fire inside
+    /// "information" and "base" does not fire inside "database". Folded like the
+    /// rest of the index, so it is case- and diacritic-insensitive. This is what
+    /// the crossover view needs and `search` cannot give: `search` splits a
+    /// multi-word query into any-of terms, so "amino acids" would match a page
+    /// that only says "acids". Here the phrase is matched whole.
+    func phraseLocations(_ phrase: String) -> [String: Int] {
+        let needle = SearchText.fold(phrase)
+        guard needle.count >= 3 else { return [:] }
+
+        var result: [String: Int] = [:]
+        for (path, pages) in foldedPages {
+            for (index, page) in pages.enumerated() where Self.containsWord(needle, in: page) {
+                result[path] = index + 1
+                break
+            }
+        }
+        return result
+    }
+
+    /// True when `needle` occurs in `haystack` not flanked by a letter or digit
+    /// on either side — a whole-word (whole-phrase) match. Both are already
+    /// folded by the caller.
+    private static func containsWord(_ needle: String, in haystack: String) -> Bool {
+        guard !needle.isEmpty else { return false }
+        var from = haystack.startIndex
+        while let range = haystack.range(of: needle, range: from ..< haystack.endIndex) {
+            let beforeOK = range.lowerBound == haystack.startIndex
+                || !isWordChar(haystack[haystack.index(before: range.lowerBound)])
+            let afterOK = range.upperBound == haystack.endIndex
+                || !isWordChar(haystack[range.upperBound])
+            if beforeOK && afterOK { return true }
+            from = haystack.index(after: range.lowerBound)
+        }
+        return false
+    }
+
+    private static func isWordChar(_ c: Character) -> Bool { c.isLetter || c.isNumber }
+
     /// One page that answers a search.
     struct PageHit: Identifiable, Hashable {
         /// One-based, as printed on the page and as a reader counts.

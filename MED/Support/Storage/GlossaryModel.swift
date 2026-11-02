@@ -137,6 +137,51 @@ final class GlossaryModel {
     func isHidden(_ id: String) -> Bool { hiddenIDs.contains(id) }
     func isKept(_ id: String) -> Bool { keptIDs.contains(id) }
 
+    /// One term the clean glossary shows, with where it came from. The id is
+    /// dropped — a feature built on these cares about the term and its slide,
+    /// not the candidate's bookkeeping key.
+    struct CuratedTerm {
+        let term: String
+        let path: String
+        let page: Int
+    }
+
+    /// The definitions the clean glossary would show: accepted by the model
+    /// (or high-confidence when there is no model), plus the ones you kept,
+    /// minus the ones you hid. The uncertain / unreviewed tiers are left out on
+    /// purpose — this is the curated set other features build on, so it stays
+    /// clean. Mirrors `GlossaryView.shownEntries`, without its display toggle.
+    ///
+    /// Lives here, beside the verdicts and marks it reads, so the committee
+    /// intersections (and anything later) share one definition of "the glossary"
+    /// rather than each re-deriving it and drifting apart.
+    func curatedTerms(from candidates: [SlideDefinition]) -> [CuratedTerm] {
+        var items: [CuratedTerm] = []
+        for candidate in candidates {
+            if isKept(candidate.id) {
+                let verdict = verdict(for: candidate.id)
+                items.append(CuratedTerm(term: verdict?.term ?? candidate.term,
+                                         path: candidate.path, page: candidate.page))
+                continue
+            }
+            if isHidden(candidate.id) { continue }
+
+            if isAvailable {
+                // With a model, only what it confirmed counts. Unreviewed and
+                // rejected candidates stay out so the set does not fill with noise.
+                if let verdict = verdict(for: candidate.id), verdict.accepted {
+                    items.append(CuratedTerm(term: verdict.term,
+                                             path: candidate.path, page: candidate.page))
+                }
+            } else if candidate.confidence == .high {
+                // No model: fall back to the heuristic's high-confidence tier.
+                items.append(CuratedTerm(term: candidate.term,
+                                         path: candidate.path, page: candidate.page))
+            }
+        }
+        return items
+    }
+
     // MARK: Your marks
 
     /// Hide a definition you do not want (or clear that). Hiding also clears a

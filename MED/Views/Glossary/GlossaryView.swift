@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 /// A glossary built from your own slides: every term they define, with the
@@ -19,17 +20,29 @@ struct GlossaryView: View {
     @Environment(SlideIndex.self) private var slideIndex
     @Environment(GlossaryModel.self) private var glossaryModel
 
+    /// Needed to place a slide under its lecture — and so its course and
+    /// committee — for the crossover mode. The same `relativePath → Lecture`
+    /// map that `SlideSearchView` builds.
+    @Query private var files: [LectureFile]
+
     @AppStorage("glossaryShowsUncertain") private var showsUncertain = false
     @State private var mode: Mode = .glossary
+
+    /// Crossover points are heavier to compute (they scan the slide text), so
+    /// they are built once into here and refreshed when the index changes or
+    /// the tab is opened — not on every keystroke in the search box.
+    @State private var crossovers: [CommitteeIntersection.Point] = []
 
     private enum Mode: String, CaseIterable, Identifiable {
         case glossary
         case review
+        case crossovers
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .glossary: return L.pick("Sözlük", "Glossary")
-            case .review:   return L.pick("Gözden geçir", "Review")
+            case .glossary:   return L.pick("Sözlük", "Glossary")
+            case .review:     return L.pick("Gözden geçir", "Review")
+            case .crossovers: return L.pick("Kesişimler", "Crossovers")
             }
         }
     }
@@ -60,14 +73,19 @@ struct GlossaryView: View {
             }
 
             switch mode {
-            case .glossary: glossaryContent
-            case .review:   reviewContent
+            case .glossary:   glossaryContent
+            case .review:     reviewContent
+            case .crossovers: crossoverContent
             }
         }
         .searchable(text: $query, prompt: L.pick("Terim ara", "Search a term"))
         .navigationTitle(L.glossary)
         .task(id: slideIndex.lastBuilt) {
             glossaryModel.review(slideIndex.definitions)
+            rebuildCrossovers()
+        }
+        .onChange(of: mode) { _, newMode in
+            if newMode == .crossovers, crossovers.isEmpty { rebuildCrossovers() }
         }
         .toolbar {
             ToolbarItem {
@@ -239,6 +257,128 @@ struct GlossaryView: View {
         case .person:     return L.pick("Kişi", "Person")
         case .citation:   return L.pick("Kaynak", "Citation")
         case .other:      return L.pick("Diğer", "Other")
+        }
+    }
+
+    // MARK: Crossover mode
+
+    /// Slide path → its lecture, the same map `SlideSearchView` builds, so a
+    /// definition can be placed under its course and committee.
+    private var lecturesByPath: [String: Lecture] {
+        Dictionary(
+            files.compactMap { file -> (String, Lecture)? in
+                guard let lecture = file.lecture else { return nil }
+                return (file.relativePath, lecture)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+    }
+
+    /// Rebuilds the crossover points from the curated glossary and the slide
+    /// text. Call it when the index changes or the tab opens, not per keystroke.
+    private func rebuildCrossovers() {
+        crossovers = CommitteeIntersection.points(
+            from: glossaryModel.curatedTerms(from: slideIndex.definitions),
+            lecturesByPath: lecturesByPath,
+            locate: { slideIndex.phraseLocations($0) }
+        )
+    }
+
+    /// The points left after the search box: a point stays if its term matches.
+    private var shownCrossovers: [CommitteeIntersection.Point] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard needle.count >= 2 else { return crossovers }
+        return crossovers.filter { SearchText.contains($0.term, query: needle) }
+    }
+
+    @ViewBuilder
+    private var crossoverContent: some View {
+        let points = shownCrossovers
+
+        if points.isEmpty {
+            crossoverEmptyState
+        } else {
+            crossoverSummary(points)
+
+            ForEach(points) { point in
+                Section {
+                    ForEach(point.occurrences) { occurrence in
+                        crossoverRow(occurrence)
+                    }
+                } header: {
+                    crossoverHeader(point)
+                }
+            }
+        }
+    }
+
+    private func crossoverHeader(_ point: CommitteeIntersection.Point) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(point.term).font(.headline).textCase(nil)
+            HStack(spacing: 6) {
+                Circle().fill(Color(hex: point.committeeColorHex)).frame(width: 7, height: 7)
+                Text(point.committeeLabel.isEmpty ? point.committeeName : point.committeeLabel)
+                Text("·")
+                Text(L.pick("\(point.courseCount) ders", "\(point.courseCount) courses"))
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .textCase(nil)
+        }
+    }
+
+    private func crossoverRow(_ occurrence: CommitteeIntersection.Occurrence) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(occurrence.courseColorHex.map { Color(hex: $0) } ?? Color.secondary)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(occurrence.courseName.isEmpty
+                         ? L.pick("Ders yok", "No course")
+                         : occurrence.courseName)
+                        .font(.callout.weight(.medium))
+                    badge(occurrence.isDefinition
+                          ? L.pick("tanım", "defined")
+                          : L.pick("geçiyor", "mentioned"))
+                }
+                Text(crossoverSource(occurrence)).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+        .tag(SlidePageSelection(path: occurrence.path, page: occurrence.page, query: occurrence.term))
+    }
+
+    private func crossoverSource(_ occurrence: CommitteeIntersection.Occurrence) -> String {
+        let name = (occurrence.path as NSString).lastPathComponent
+        let stem = (name as NSString).deletingPathExtension
+        let where_ = occurrence.lectureTitle.isEmpty ? stem : "\(occurrence.lectureTitle) · \(stem)"
+        return "\(where_) · " + L.pick("s.\(occurrence.page)", "p.\(occurrence.page)")
+    }
+
+    private func crossoverSummary(_ points: [CommitteeIntersection.Point]) -> some View {
+        Text(L.pick("\(points.count) kesişen terim",
+                    "\(points.count) crossover terms"))
+            .font(.caption).foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder
+    private var crossoverEmptyState: some View {
+        if slideIndex.isWorking {
+            Text(L.pick("Slaytlar hâlâ okunuyor, birazdan tekrar bak.",
+                        "The slides are still being read; check back in a moment."))
+                .foregroundStyle(.secondary)
+        } else if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text(L.pick("“\(query)” ile eşleşen kesişim yok.",
+                        "No crossover matches “\(query)”."))
+                .foregroundStyle(.secondary)
+        } else {
+            Text(L.pick(
+                "Henüz kesişim yok. Bir terim, aynı komitede birden fazla farklı derste geçtiğinde burada belirir — derslerin komite ve derse bağlı, slaytları okunmuş olmalı.",
+                "No crossovers yet. A term shows up here when it appears in more than one course of the same committee — your lectures need a committee and course, and their slides need to be read."
+            ))
+                .foregroundStyle(.secondary)
         }
     }
 
