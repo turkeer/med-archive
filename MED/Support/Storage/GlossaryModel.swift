@@ -78,6 +78,10 @@ final class GlossaryModel {
     private struct Marks: Codable, Sendable {
         var hidden: [String] = []
         var kept: [String] = []
+        /// Crossover points you dismissed, by `CommitteeIntersection.Point.id`.
+        /// A newly added optional field, so an older marks file decodes with it
+        /// empty.
+        var hiddenCrossovers: [String]? = nil
     }
 
     /// Small on purpose: with each item carrying its slide lines, a bigger
@@ -96,6 +100,7 @@ final class GlossaryModel {
 
     private var hiddenIDs: Set<String> = []
     private var keptIDs: Set<String> = []
+    private var hiddenCrossoverIDs: Set<String> = []
 
     private(set) var isReviewing = false
     private(set) var isClassifying = false
@@ -128,6 +133,7 @@ final class GlossaryModel {
         let marks = Self.readMarks() ?? Marks()
         hiddenIDs = Set(marks.hidden)
         keptIDs = Set(marks.kept)
+        hiddenCrossoverIDs = Set(marks.hiddenCrossovers ?? [])
     }
 
     // MARK: Queries
@@ -136,6 +142,12 @@ final class GlossaryModel {
 
     func isHidden(_ id: String) -> Bool { hiddenIDs.contains(id) }
     func isKept(_ id: String) -> Bool { keptIDs.contains(id) }
+
+    /// Whether a crossover point was dismissed. The crossover view filters on
+    /// this so the residual noise can be pruned by hand as the glossary grows.
+    func isCrossoverHidden(_ id: String) -> Bool { hiddenCrossoverIDs.contains(id) }
+
+    var hasHiddenCrossovers: Bool { !hiddenCrossoverIDs.isEmpty }
 
     /// One term the clean glossary shows, with where it came from. The id is
     /// dropped — a feature built on these cares about the term and its slide,
@@ -208,8 +220,21 @@ final class GlossaryModel {
         saveMarks()
     }
 
+    /// Dismiss a crossover point (or bring it back). Keyed by the point's id,
+    /// which is stable across rebuilds (same committee + term), so the choice
+    /// survives the slides being re-read.
+    func setCrossoverHidden(_ id: String, _ hidden: Bool) {
+        if hidden {
+            hiddenCrossoverIDs.insert(id)
+        } else {
+            hiddenCrossoverIDs.remove(id)
+        }
+        saveMarks()
+    }
+
     private func saveMarks() {
-        Self.writeMarks(Marks(hidden: Array(hiddenIDs), kept: Array(keptIDs)))
+        Self.writeMarks(Marks(hidden: Array(hiddenIDs), kept: Array(keptIDs),
+                              hiddenCrossovers: Array(hiddenCrossoverIDs)))
     }
 
     // MARK: Reviewing

@@ -26,6 +26,9 @@ struct GlossaryView: View {
     @Query private var files: [LectureFile]
 
     @AppStorage("glossaryShowsUncertain") private var showsUncertain = false
+    /// In the crossover tab: show the ones you dismissed (to bring them back)
+    /// instead of the live list.
+    @AppStorage("glossaryShowsHiddenCrossovers") private var showsHiddenCrossovers = false
     @State private var mode: Mode = .glossary
 
     /// Crossover points are heavier to compute (they scan the slide text), so
@@ -105,6 +108,17 @@ struct GlossaryView: View {
                                 : L.pick("Şüpheliler", "Uncertain"),
                             systemImage: "questionmark.circle"
                         )
+                    }
+                    .toggleStyle(.button)
+                }
+            }
+
+            // Visible while the mode is on too, so after unhiding the last one
+            // you can still flip the toggle back off instead of being stuck.
+            if mode == .crossovers, glossaryModel.hasHiddenCrossovers || showsHiddenCrossovers {
+                ToolbarItem {
+                    Toggle(isOn: $showsHiddenCrossovers) {
+                        Label(L.pick("Gizlenenler", "Hidden"), systemImage: "eye.slash")
                     }
                     .toggleStyle(.button)
                 }
@@ -284,11 +298,17 @@ struct GlossaryView: View {
         )
     }
 
-    /// The points left after the search box: a point stays if its term matches.
+    /// The points to show: the dismissed ones when revealing them, otherwise
+    /// the live ones, then narrowed by the search box.
     private var shownCrossovers: [CommitteeIntersection.Point] {
+        let base = crossovers.filter {
+            showsHiddenCrossovers
+                ? glossaryModel.isCrossoverHidden($0.id)
+                : !glossaryModel.isCrossoverHidden($0.id)
+        }
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard needle.count >= 2 else { return crossovers }
-        return crossovers.filter { SearchText.contains($0.term, query: needle) }
+        guard needle.count >= 2 else { return base }
+        return base.filter { SearchText.contains($0.term, query: needle) }
     }
 
     @ViewBuilder
@@ -324,6 +344,13 @@ struct GlossaryView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .textCase(nil)
+        }
+        .contextMenu {
+            if glossaryModel.isCrossoverHidden(point.id) {
+                Button(L.pick("Geri al", "Unhide")) { glossaryModel.setCrossoverHidden(point.id, false) }
+            } else {
+                Button(L.pick("Gizle", "Hide")) { glossaryModel.setCrossoverHidden(point.id, true) }
+            }
         }
     }
 
@@ -368,6 +395,9 @@ struct GlossaryView: View {
         if slideIndex.isWorking {
             Text(L.pick("Slaytlar hâlâ okunuyor, birazdan tekrar bak.",
                         "The slides are still being read; check back in a moment."))
+                .foregroundStyle(.secondary)
+        } else if showsHiddenCrossovers {
+            Text(L.pick("Gizlenen kesişim yok.", "No hidden crossovers."))
                 .foregroundStyle(.secondary)
         } else if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             Text(L.pick("“\(query)” ile eşleşen kesişim yok.",
