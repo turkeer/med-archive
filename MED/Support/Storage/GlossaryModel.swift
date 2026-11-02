@@ -60,8 +60,16 @@ final class GlossaryModel {
         /// "term appears in the passage" guard), instead of confirming a regex
         /// guess; 7 names the term after "is called …" (not the subject),
         /// strips the "… is called <term>" tail from the definition, and
-        /// rejects fragment definitions.
-        var version = 7
+        /// rejects fragment definitions; 8 re-routes generic label heads
+        /// ("Definition:", "Functions:") so the real term is extracted or the
+        /// block dropped, evens out term casing, and rejects a definition left
+        /// dangling on a copula ("… this group of proteins is"); 9 recognises
+        /// a bulleted/numbered label head ("• Definition:"), routes any prose
+        /// body (not just "X is Y") to extraction, and strips list lettering
+        /// from the term ("b) Apocrine secretion" → "Apocrine secretion");
+        /// 10 settles the sentence-extraction tier by consensus — several
+        /// sampled passes, keeping only a term a majority agree on.
+        var version = 10
         var verdicts: [String: Verdict] = [:]
     }
 
@@ -75,6 +83,14 @@ final class GlossaryModel {
     /// Small on purpose: with each item carrying its slide lines, a bigger
     /// batch makes a long prompt the small model handles less reliably.
     private static let batchSize = 5
+
+    /// Consensus over the sentence-extraction tier: each passage is extracted
+    /// `consensusPasses` times with sampling (`consensusTemperature`), and a
+    /// term is accepted only if at least `consensusQuorum` of those passes land
+    /// on it. Three passes with a quorum of two is the usual majority vote.
+    private static let consensusPasses = 3
+    private static let consensusQuorum = 2
+    private static let consensusTemperature = 0.7
 
     private var verdicts: [String: Verdict] = [:]
 
@@ -260,34 +276,77 @@ final class GlossaryModel {
     /// model is no longer led by a wrong term to confirm.
     @available(macOS 26, *)
     private func extract(_ batch: [SlideDefinition]) async -> [String: Verdict] {
+        // Consensus. The passage is extracted several times with sampling on,
+        // and only a term that recurs across a majority of passes is kept. An
+        // invented or unstable term changes from one pass to the next and never
+        // reaches the quorum, so this is what filters the random mis-extractions
+        // a single greedy pass lets through — the term the slide really defines
+        // is the one the model keeps landing on.
+        var ballots: [String: [Verdict]] = [:]
+        for _ in 0 ..< Self.consensusPasses {
+            let pass = await extractPass(batch, temperature: Self.consensusTemperature)
+            for (id, verdict) in pass where verdict.accepted {
+                ballots[id, default: []].append(verdict)
+            }
+        }
+
         var result: [String: Verdict] = [:]
+        for candidate in batch {
+            result[candidate.id] = Self.consensus(of: ballots[candidate.id] ?? [], fallback: candidate)
+        }
+        return result
+    }
+
+    /// One extraction pass over the batch, falling back to the per-item path
+    /// for any item the batch reply skipped.
+    @available(macOS 26, *)
+    private func extractPass(_ batch: [SlideDefinition], temperature: Double) async -> [String: Verdict] {
+        var result: [String: Verdict] = [:]
+        let options = GenerationOptions(temperature: temperature)
 
         do {
             let session = LanguageModelSession(instructions: Self.extractInstructions)
-            let answer = try await session.respond(to: Self.passageBatchPrompt(batch)).content
+            let answer = try await session.respond(to: Self.passageBatchPrompt(batch), options: options).content
             result = Self.parseExtracted(answer, batch: batch)
         } catch {
             // Whole-batch failure falls through to the per-item path below.
         }
 
         for candidate in batch where result[candidate.id] == nil {
-            result[candidate.id] = await extractOne(candidate)
+            result[candidate.id] = await extractOne(candidate, options: options)
         }
 
         return result
     }
 
     @available(macOS 26, *)
-    private func extractOne(_ candidate: SlideDefinition) async -> Verdict {
+    private func extractOne(_ candidate: SlideDefinition, options: GenerationOptions) async -> Verdict {
         do {
             let session = LanguageModelSession(instructions: Self.extractInstructions)
-            let answer = try await session.respond(to: Self.passagePrompt(candidate)).content
+            let answer = try await session.respond(to: Self.passagePrompt(candidate), options: options).content
             return Self.parseExtractedLine(Self.firstLine(answer), fallback: candidate)
         } catch {
             // A sentence candidate the model never reached stays out: its regex
             // term is not trustworthy enough to accept on its own.
             return Verdict(accepted: false, term: candidate.term, definition: candidate.definition, reason: nil)
         }
+    }
+
+    /// Settles the passes' votes for one candidate: the term the most passes
+    /// agreed on wins, and it must clear the quorum on its own, or the
+    /// candidate is dropped. The fullest definition among the agreeing passes
+    /// is the one kept.
+    static func consensus(of ballots: [Verdict], fallback: SlideDefinition) -> Verdict {
+        let rejected = Verdict(accepted: false, term: fallback.term, definition: fallback.definition, reason: nil)
+        guard ballots.count >= consensusQuorum else { return rejected }
+
+        let byTerm = Dictionary(grouping: ballots) { SearchText.fold($0.term) }
+        guard let winners = byTerm.values.max(by: { $0.count < $1.count }),
+              winners.count >= consensusQuorum,
+              let best = winners.max(by: { $0.definition.count < $1.definition.count })
+        else { return rejected }
+
+        return Verdict(accepted: true, term: best.term, definition: best.definition, reason: nil)
     }
 
     // MARK: Model — classifying rejects
@@ -383,7 +442,8 @@ final class GlossaryModel {
     front of it. Assemble the definition from the passage as one clean, \
     self-contained sentence, using ONLY what the passage says: add no facts, \
     numbers, examples, or formulas of your own, and never end it with "is \
-    called …" or otherwise repeat the term. Fix obvious OCR typos only.
+    called …" or otherwise repeat the term. Do not carry any list lettering or \
+    numbering ("a)", "1.") into the term. Fix obvious OCR typos only.
     - If the passage does not define a term, write: NO
 
     Each line looks like `1) Term :: definition` or `2) NO`. One line per item, \
@@ -449,7 +509,7 @@ final class GlossaryModel {
                 // the headword ("Neuron: Neuron: …"), or drags a trailing
                 // colon along. The pattern matcher already handed us a clean
                 // term, so keep that and take only the model's definition.
-                return Verdict(accepted: true, term: fallback.term, definition: definition, reason: nil)
+                return Verdict(accepted: true, term: normalizeTerm(fallback.term), definition: definition, reason: nil)
             }
         }
 
@@ -487,7 +547,7 @@ final class GlossaryModel {
             if term.count >= 2, definition.count >= 15,
                isSelfContained(definition, term: term),
                termAppears(term, in: fallback.context) {
-                return Verdict(accepted: true, term: term, definition: definition, reason: nil)
+                return Verdict(accepted: true, term: normalizeTerm(term), definition: definition, reason: nil)
             }
         }
 
@@ -505,13 +565,48 @@ final class GlossaryModel {
         "hence", "therefore", "of", "to",
     ]
 
+    /// Words a definition must not end on: a trailing copula or connective
+    /// means the sentence was cut mid-thought — often by the naming-tail strip
+    /// above ("this group of proteins is") — so it is not self-contained.
+    private static let danglingTails: Set<String> = [
+        "is", "are", "was", "were", "a", "an", "the", "of", "and", "or",
+        "to", "that", "which", "as", "in", "on", "with", "by",
+    ]
+
     static func isSelfContained(_ definition: String, term: String) -> Bool {
         let words = definition.split(separator: " ")
         guard words.count >= 4 else { return false }
         if let first = words.first, fragmentLeads.contains(SearchText.fold(String(first))) {
             return false
         }
+        if let last = words.last, danglingTails.contains(SearchText.fold(String(last))) {
+            return false
+        }
         return SearchText.fold(definition) != SearchText.fold(term)
+    }
+
+    /// Evens out a term's casing for display: an all-lowercase head is
+    /// capitalised ("denaturation" → "Denaturation") and a long all-caps head
+    /// is title-cased ("GENOME" → "Genome"), while short acronyms (DNA, IPSP)
+    /// and mixed-case terms (B-DNA, MARs) are left exactly as the slide wrote
+    /// them. The candidate id keys on the untouched term, so marks survive.
+    static func normalizeTerm(_ term: String) -> String {
+        // The model sometimes echoes the slide's list lettering into the term
+        // ("b) Apocrine secretion"); drop it, the same way the colon path does.
+        let trimmed = DefinitionExtractor.stripListMarker(term)
+            .trimmingCharacters(in: .whitespaces)
+        guard let first = trimmed.first else { return trimmed }
+        if trimmed == trimmed.lowercased(with: L.locale) {
+            return String(first).uppercased(with: L.locale) + trimmed.dropFirst()
+        }
+        if trimmed == trimmed.uppercased(with: L.locale),
+           trimmed.count >= 5, trimmed.allSatisfy(\.isLetter) {
+            // A plain all-caps word ("GENOME") is title-cased, but a
+            // hyphenated or punctuated acronym ("B-DNA", "ES-complex") is
+            // left alone — it is not shouting, it is spelled that way.
+            return String(first).uppercased(with: L.locale) + trimmed.dropFirst().lowercased(with: L.locale)
+        }
+        return trimmed
     }
 
     /// True when the term's substantive words all occur in the passage — the

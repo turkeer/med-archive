@@ -91,6 +91,18 @@ enum DefinitionExtractor {
         "for ",
     ]
 
+    /// Generic colon heads that label a block but are never the term
+    /// themselves ("Definition: …", "Functions: …"). A definitional body under
+    /// one is handed to the extraction path so the model names the real term;
+    /// any other body — a bulleted list, a formula — is dropped. Without this,
+    /// the literal word "Definition" became the headword and the real term,
+    /// sitting inside the sentence, was lost.
+    private static let labelHeads: Set<String> = [
+        "definition", "definitions", "function", "functions", "purpose",
+        "study", "aim", "aims", "exp", "identify the following", "identify",
+        "observation", "observations",
+    ]
+
     private static let allowedTermScalars = CharacterSet(charactersIn:
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÇĞİıÖŞÜçğöşü()-/ ,")
 
@@ -133,7 +145,13 @@ enum DefinitionExtractor {
         guard let colon = line.firstIndex(of: ":") else { return nil }
 
         let head = String(line[line.startIndex..<colon]).trimmingCharacters(in: .whitespaces)
-        guard let term = plausibleTerm(head) else { return nil }
+        // Clean the head first, so a bulleted or numbered label ("• Definition:")
+        // is still recognised as a label. A non-label head must itself read as
+        // a term; a label head ("Definition:") is not the term, so that check
+        // is deferred to the body below, where the real term lives.
+        let term = plausibleTerm(head)
+        let isLabel = term.map { labelHeads.contains(SearchText.fold($0)) } ?? false
+        guard term != nil else { return nil }
 
         let rest = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
         let raw: String
@@ -161,6 +179,27 @@ enum DefinitionExtractor {
         }
 
         guard let definition = plausibleDefinition(raw) else { return nil }
+
+        if isLabel {
+            // "Definition:", "Functions:" and the like label a block, not a
+            // term. A prose body is routed to the extraction path so the model
+            // names the real term from it (often the slide title just above,
+            // carried in the context); a bulleted list or a formula under the
+            // label has no single term to name, so it is dropped.
+            guard bodyIsProse(raw) else { return nil }
+            return SlideDefinition(
+                term: head,
+                definition: definition,
+                source: .sentence,
+                context: context(of: lines, at: i),
+                path: path,
+                page: page,
+                isRecognised: isRecognised,
+                confidence: .uncertain
+            )
+        }
+
+        guard let term else { return nil }
 
         return SlideDefinition(
             term: term,
@@ -311,6 +350,11 @@ enum DefinitionExtractor {
 
     private static func plausibleTerm(_ raw: String) -> String? {
         var term = raw.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*▪‣\t"))
+        // A leading list marker ("a) ", "1) ", "iv. ") is the slide numbering
+        // the term, not part of it ("c) Holocrine secretion" → "Holocrine
+        // secretion"). A bare letter with no "./)" ("A band", "I band") is left
+        // alone, so the ")"/"." is required.
+        term = stripListMarker(term)
         // A lone "o" is these slides' bullet glyph ("o Cyclin…"); drop it so the
         // term is the word itself, not the bullet plus the word.
         if term.hasPrefix("o "), term.dropFirst(2).first?.isUppercase == true {
@@ -350,6 +394,16 @@ enum DefinitionExtractor {
         return term
     }
 
+    /// Drops a leading list marker — a letter, a one/two-digit number, or a
+    /// small roman numeral, followed by ")" or "." and a space.
+    static func stripListMarker(_ term: String) -> String {
+        guard let range = term.range(
+            of: #"^\s*([A-Za-z]|\d{1,2}|[ivxIVX]{1,3})[\)\.]\s+"#,
+            options: .regularExpression
+        ) else { return term }
+        return String(term[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+    }
+
     private static func plausibleDefinition(_ raw: String) -> String? {
         let collapsed = raw
             .replacingOccurrences(of: "\u{FFFC}", with: " ")
@@ -368,6 +422,17 @@ enum DefinitionExtractor {
         if low.contains("http") || low.contains("www.") { return nil }
 
         return definition
+    }
+
+    /// True when a label block's body reads as running prose worth handing to
+    /// the model — not a bulleted list and not a formula. The model, not this
+    /// check, decides whether a term is actually defined; here we only keep it
+    /// from wasting a call on an obvious list or equation.
+    private static func bodyIsProse(_ body: String) -> Bool {
+        if body.filter({ "•▪‣".contains($0) }).count >= 2 { return false }
+        guard body.split(separator: " ").count >= 4 else { return false }
+        guard body.filter(\.isLetter).count >= body.count / 2 else { return false }
+        return true
     }
 
     /// High when it reads like a real definition on its own: from the file's
