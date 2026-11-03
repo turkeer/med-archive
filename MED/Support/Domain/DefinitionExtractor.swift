@@ -372,6 +372,24 @@ enum DefinitionExtractor {
         term = term.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*▪‣\t.,;"))
         if term.hasPrefix("("), !term.contains(")") { term.removeFirst() }
         if term.hasSuffix(")"), !term.contains("(") { term.removeLast() }
+        // A term wrapped whole in parentheses ("(Ligamentum nuchae)") is the
+        // slide parenthesising the entire entry, not an acronym suffix like
+        // "Kinase (Cdk)" — unwrap it when the opening paren's match is the very
+        // last character, so the suffix case ("(" not first) is left be.
+        if term.first == "(", term.last == ")" {
+            var depth = 0
+            var wrapsWhole = true
+            for (offset, ch) in term.enumerated() {
+                if ch == "(" { depth += 1 }
+                else if ch == ")" {
+                    depth -= 1
+                    if depth == 0, offset != term.count - 1 { wrapsWhole = false; break }
+                }
+            }
+            if wrapsWhole, depth == 0 {
+                term = String(term.dropFirst().dropLast())
+            }
+        }
         term = term.trimmingCharacters(in: .whitespaces)
         guard !term.isEmpty else { return nil }
 

@@ -23,6 +23,29 @@ final class GlossaryExtractionTests: XCTestCase {
         XCTAssertEqual(DefinitionExtractor.stripListMarker("I band"), "I band")
     }
 
+    func testUnwrapsFullyParenthesisedTerm() {
+        // The slide parenthesised the whole entry; the term must come out
+        // without its wrapping parens ("(Ligamentum nuchae)" → "Ligamentum
+        // nuchae"), the case that slipped through before.
+        let defs = DefinitionExtractor.definitions(
+            path: "Anatomy/Spine.pdf", page: 1,
+            text: "(Ligamentum nuchae): a strong median ligament at the back of the neck",
+            isRecognised: false, vocabulary: []
+        )
+        XCTAssertEqual(defs.first?.term, "Ligamentum nuchae")
+    }
+
+    func testKeepsAcronymSuffixParentheses() {
+        // A trailing acronym in parens is part of the term, not a wrapper, so
+        // it must survive ("… kinases (Cdk)").
+        let defs = DefinitionExtractor.definitions(
+            path: "Biology/Cycle.pdf", page: 1,
+            text: "Cyclin-dependent protein kinases (Cdk): enzymes that drive the cell cycle forward",
+            isRecognised: false, vocabulary: []
+        )
+        XCTAssertEqual(defs.first?.term, "Cyclin-dependent protein kinases (Cdk)")
+    }
+
     func testNormalizeTermCasing() {
         XCTAssertEqual(GlossaryModel.normalizeTerm("denaturation"), "Denaturation")
         XCTAssertEqual(GlossaryModel.normalizeTerm("GENOME"), "Genome")
