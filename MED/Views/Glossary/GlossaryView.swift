@@ -551,12 +551,14 @@ struct GlossaryView: View {
     // MARK: Progress + empty
 
     private var reviewProgress: some View {
-        HStack(spacing: 8) {
-            ProgressView().controlSize(.small)
-            Text((glossaryModel.isClassifying
+        let label = glossaryModel.isVerifying
+            ? L.pick("Tanımlar bir daha gözden geçiriliyor… ", "Re-checking definitions… ")
+            : glossaryModel.isClassifying
                 ? L.pick("Ayrılanlar sınıflandırılıyor… ", "Classifying what was set aside… ")
-                : L.pick("Model tanımları inceliyor… ", "The model is reviewing… "))
-                + "\(glossaryModel.reviewedCount)/\(glossaryModel.pendingCount)")
+                : L.pick("Model tanımları inceliyor… ", "The model is reviewing… ")
+        return HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(label + "\(glossaryModel.reviewedCount)/\(glossaryModel.pendingCount)")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

@@ -32,6 +32,14 @@ final class GlossaryModel {
         /// For a rejected candidate: one word for why, filled by the later
         /// classification pass. `nil` until then. See `Rejection`.
         var reason: String?
+
+        /// Set once the slower third pass has re-checked an *accepted* entry
+        /// against a stricter "is this really a whole definition?" bar. `nil`
+        /// means not deep-checked yet, so that pass still owes it a look;
+        /// `true` means it passed. A failed check flips `accepted` to false.
+        /// Optional with a default, so an older cache decodes unverified and
+        /// gets re-checked rather than being discarded.
+        var verified: Bool? = nil
     }
 
     /// The buckets the classification pass sorts rejects into. `incomplete` is
@@ -49,6 +57,11 @@ final class GlossaryModel {
             self = Rejection(rawValue: keyword.lowercased()) ?? .other
         }
     }
+
+    /// What the strict third pass decided for one entry: keep it, or demote it
+    /// with a reason. `nil` in a result means the model never answered, so the
+    /// caller leaves the entry accepted (but stamps it checked).
+    typealias VerifyOutcome = (keep: Bool, reason: Rejection?)
 
     private struct Cache: Codable, Sendable {
         /// Bumped when the prompt changes, so old verdicts are discarded and
@@ -104,6 +117,9 @@ final class GlossaryModel {
 
     private(set) var isReviewing = false
     private(set) var isClassifying = false
+    /// The third pass: re-checking already-accepted entries against a stricter
+    /// definition bar. Runs while `isReviewing` is still true.
+    private(set) var isVerifying = false
     private(set) var reviewedCount = 0
     private(set) var pendingCount = 0
 
@@ -246,50 +262,102 @@ final class GlossaryModel {
         guard isAvailable, !isReviewing else { return }
 
         let todo = candidates.filter { verdicts[$0.id] == nil }
-        guard !todo.isEmpty else { return }
+        // Accepted entries the slower third pass has not deep-checked yet —
+        // including ones accepted on earlier launches, so the stricter bar is
+        // applied retroactively to a glossary built before it existed.
+        let needsDeepCheck = candidates.contains {
+            guard let verdict = verdicts[$0.id] else { return false }
+            return verdict.accepted && verdict.verified != true
+        }
+        guard !todo.isEmpty || needsDeepCheck else { return }
 
         isReviewing = true
-        Task { await run(todo) }
+        Task { await run(todo, all: candidates) }
     }
 
-    private func run(_ todo: [SlideDefinition]) async {
+    private func run(_ todo: [SlideDefinition], all: [SlideDefinition]) async {
         #if canImport(FoundationModels)
         if #available(macOS 26, *) {
             var working = verdicts
 
-            // Phase one: is each candidate a definition? A colon candidate is
-            // confirmed on its given term; a sentence candidate's term is a
-            // regex guess, so the model extracts the real term itself.
-            pendingCount = todo.count
-            reviewedCount = 0
+            if !todo.isEmpty {
+                // Phase one: is each candidate a definition? A colon candidate
+                // is confirmed on its given term; a sentence candidate's term
+                // is a regex guess, so the model extracts the real term itself.
+                pendingCount = todo.count
+                reviewedCount = 0
 
-            for source in [SlideDefinition.Source.colon, .sentence] {
-                let group = todo.filter { $0.source == source }
-                var start = 0
-                while start < group.count {
-                    let batch = Array(group[start ..< min(start + Self.batchSize, group.count)])
-                    let verdicts = source == .colon ? await judge(batch) : await extract(batch)
-                    for (id, verdict) in verdicts { working[id] = verdict }
-                    reviewedCount += batch.count
-                    self.verdicts = working
-                    if reviewedCount % 40 == 0 { Self.write(Cache(verdicts: working)) }
-                    start += Self.batchSize
+                for source in [SlideDefinition.Source.colon, .sentence] {
+                    let group = todo.filter { $0.source == source }
+                    var start = 0
+                    while start < group.count {
+                        let batch = Array(group[start ..< min(start + Self.batchSize, group.count)])
+                        let verdicts = source == .colon ? await judge(batch) : await extract(batch)
+                        for (id, verdict) in verdicts { working[id] = verdict }
+                        reviewedCount += batch.count
+                        self.verdicts = working
+                        if reviewedCount % 40 == 0 { Self.write(Cache(verdicts: working)) }
+                        start += Self.batchSize
+                    }
+                }
+                Self.write(Cache(verdicts: working))
+
+                // Phase two: why were the rejects rejected?
+                let rejects = todo.filter { working[$0.id]?.accepted == false && working[$0.id]?.reason == nil }
+                if !rejects.isEmpty {
+                    isClassifying = true
+                    pendingCount = rejects.count
+                    reviewedCount = 0
+                    var start = 0
+                    while start < rejects.count {
+                        let batch = Array(rejects[start ..< min(start + Self.batchSize, rejects.count)])
+                        let reasons = await classify(batch)
+                        for candidate in batch {
+                            working[candidate.id]?.reason = (reasons[candidate.id] ?? .other).rawValue
+                        }
+                        reviewedCount += batch.count
+                        verdicts = working
+                        if reviewedCount % 40 == 0 { Self.write(Cache(verdicts: working)) }
+                        start += Self.batchSize
+                    }
+                    Self.write(Cache(verdicts: working))
+                    isClassifying = false
                 }
             }
-            Self.write(Cache(verdicts: working))
 
-            // Phase two: why were the rejects rejected?
-            let rejects = todo.filter { working[$0.id]?.accepted == false && working[$0.id]?.reason == nil }
-            if !rejects.isEmpty {
-                isClassifying = true
-                pendingCount = rejects.count
+            // Phase three: the slow background pass. Every accepted entry not
+            // yet deep-checked is re-judged against a stricter "is this really
+            // a whole definition?" bar, by majority vote so a lone stray "no"
+            // never drops a good one. A failure is demoted to the review pile
+            // with a reason; a pass is stamped so it is never re-checked. This
+            // is what quietly cleans a glossary of titles and half-sentences
+            // the first pass let through, a few at a time, across launches.
+            let toVerify = all.filter { candidate in
+                guard let verdict = working[candidate.id] else { return false }
+                return verdict.accepted && verdict.verified != true
+            }
+            if !toVerify.isEmpty {
+                isVerifying = true
+                pendingCount = toVerify.count
                 reviewedCount = 0
                 var start = 0
-                while start < rejects.count {
-                    let batch = Array(rejects[start ..< min(start + Self.batchSize, rejects.count)])
-                    let reasons = await classify(batch)
-                    for candidate in batch {
-                        working[candidate.id]?.reason = (reasons[candidate.id] ?? .other).rawValue
+                while start < toVerify.count {
+                    let batch = Array(toVerify[start ..< min(start + Self.batchSize, toVerify.count)])
+                    let pairs = batch.compactMap { candidate -> (SlideDefinition, Verdict)? in
+                        working[candidate.id].map { (candidate, $0) }
+                    }
+                    let outcomes = await verify(pairs)
+                    for (candidate, verdict) in pairs {
+                        switch outcomes[candidate.id] {
+                        case .some(let outcome) where !outcome.keep:
+                            working[candidate.id] = Verdict(
+                                accepted: false, term: verdict.term, definition: verdict.definition,
+                                reason: (outcome.reason ?? .other).rawValue, verified: true)
+                        default:
+                            // Kept, or the model never answered: stamp it so the
+                            // pass does not keep coming back to the same entry.
+                            working[candidate.id]?.verified = true
+                        }
                     }
                     reviewedCount += batch.count
                     verdicts = working
@@ -297,7 +365,7 @@ final class GlossaryModel {
                     start += Self.batchSize
                 }
                 Self.write(Cache(verdicts: working))
-                isClassifying = false
+                isVerifying = false
             }
         }
         #endif
@@ -450,6 +518,73 @@ final class GlossaryModel {
             return .other
         }
     }
+
+    // MARK: Model — deep verification (phase three)
+
+    /// Re-judges a batch of accepted entries by majority vote: each is checked
+    /// over several sampled passes, and demoted only when a quorum of them
+    /// agree it is not a definition. Keeping on a tie is deliberate — the bar
+    /// to *remove* something the glossary already shows is higher than the bar
+    /// to let it in.
+    @available(macOS 26, *)
+    private func verify(_ pairs: [(SlideDefinition, Verdict)]) async -> [String: VerifyOutcome] {
+        var noVotes: [String: Int] = [:]
+        var answered: Set<String> = []
+        var reasons: [String: Rejection] = [:]
+
+        for _ in 0 ..< Self.consensusPasses {
+            let pass = await verifyPass(pairs, temperature: Self.consensusTemperature)
+            for (id, outcome) in pass {
+                answered.insert(id)
+                if !outcome.keep {
+                    noVotes[id, default: 0] += 1
+                    if reasons[id] == nil, let reason = outcome.reason { reasons[id] = reason }
+                }
+            }
+        }
+
+        var result: [String: VerifyOutcome] = [:]
+        for (candidate, _) in pairs where answered.contains(candidate.id) {
+            if (noVotes[candidate.id] ?? 0) >= Self.consensusQuorum {
+                result[candidate.id] = (keep: false, reason: reasons[candidate.id] ?? .other)
+            } else {
+                result[candidate.id] = (keep: true, reason: nil)
+            }
+        }
+        return result
+    }
+
+    @available(macOS 26, *)
+    private func verifyPass(_ pairs: [(SlideDefinition, Verdict)], temperature: Double) async -> [String: VerifyOutcome] {
+        var result: [String: VerifyOutcome] = [:]
+        let options = GenerationOptions(temperature: temperature)
+
+        do {
+            let session = LanguageModelSession(instructions: Self.verifyInstructions)
+            let answer = try await session.respond(to: Self.verifyBatchPrompt(pairs), options: options).content
+            result = Self.parseVerified(answer, pairs: pairs)
+        } catch {
+            // Whole-batch failure falls through to the per-item path below.
+        }
+
+        for (candidate, verdict) in pairs where result[candidate.id] == nil {
+            if let outcome = await verifyOne(candidate, verdict, options: options) {
+                result[candidate.id] = outcome
+            }
+        }
+        return result
+    }
+
+    @available(macOS 26, *)
+    private func verifyOne(_ candidate: SlideDefinition, _ verdict: Verdict, options: GenerationOptions) async -> VerifyOutcome? {
+        do {
+            let session = LanguageModelSession(instructions: Self.verifyInstructions)
+            let answer = try await session.respond(to: Self.verifyPrompt(candidate, verdict), options: options).content
+            return Self.parseVerifiedLine(Self.firstLine(answer))
+        } catch {
+            return nil
+        }
+    }
     #endif
 
     // MARK: Prompts
@@ -476,6 +611,21 @@ final class GlossaryModel {
         batch.enumerated()
             .map { index, candidate in
                 "ITEM \(index + 1)\nPASSAGE:\n\(candidate.context)"
+            }
+            .joined(separator: "\n\n")
+    }
+
+    /// For verification the model sees the finished entry — term and the
+    /// definition written for it — plus the slide lines, so it can judge both
+    /// whether it reads as a definition and whether the lines bear it out.
+    private static func verifyPrompt(_ candidate: SlideDefinition, _ verdict: Verdict) -> String {
+        "TERM: \(verdict.term)\nDEFINITION: \(verdict.definition)\nLINES:\n\(candidate.context)"
+    }
+
+    private static func verifyBatchPrompt(_ pairs: [(SlideDefinition, Verdict)]) -> String {
+        pairs.enumerated()
+            .map { index, pair in
+                "ITEM \(index + 1)\nTERM: \(pair.1.term)\nDEFINITION: \(pair.1.definition)\nLINES:\n\(pair.0.context)"
             }
             .joined(separator: "\n\n")
     }
@@ -536,6 +686,23 @@ final class GlossaryModel {
     Example: `1) incomplete`. In order, nothing else.
     """
 
+    private static let verifyInstructions = """
+    You are checking finished entries for a medical glossary. Each item has a \
+    TERM, the DEFINITION written for it, and the slide LINES it was taken from.
+
+    Keep an item only when the DEFINITION is a real, self-contained definition \
+    of the TERM: it says what the term is, reads as a complete sentence, and is \
+    borne out by the LINES. Reject it when it is a title or heading, a bare \
+    list of items or examples, a half sentence or fragment, a person's name, a \
+    citation or reference, or simply not a definition of that term. When in \
+    doubt, keep it.
+
+    For each item reply on its own line: the item number, ')', then YES to keep \
+    it, or NO and ONE word for what it is instead (incomplete, list, title, \
+    person, citation, other). Example: `1) YES` or `2) NO title`. One line per \
+    item, in order, nothing else.
+    """
+
     // MARK: Parsing
 
     private static func firstLine(_ text: String) -> String {
@@ -588,6 +755,29 @@ final class GlossaryModel {
         }
 
         return Verdict(accepted: fallback.confidence == .high, term: fallback.term, definition: fallback.definition, reason: nil)
+    }
+
+    static func parseVerified(_ answer: String, pairs: [(SlideDefinition, Verdict)]) -> [String: VerifyOutcome] {
+        var result: [String: VerifyOutcome] = [:]
+        for (number, rest) in numbered(answer, count: pairs.count) {
+            if let outcome = parseVerifiedLine(rest) {
+                result[pairs[number - 1].0.id] = outcome
+            }
+        }
+        return result
+    }
+
+    /// One verification line: `YES` keeps the entry, `NO <word>` demotes it
+    /// with that reason, anything else is treated as no answer (`nil`).
+    static func parseVerifiedLine(_ line: String) -> VerifyOutcome? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        let upper = trimmed.uppercased()
+        if upper.hasPrefix("YES") { return (keep: true, reason: nil) }
+        if upper.hasPrefix("NO") {
+            let word = firstWord(String(trimmed.dropFirst(2)))
+            return (keep: false, reason: word.isEmpty ? .other : Rejection(keyword: word))
+        }
+        return nil
     }
 
     static func parseExtracted(_ answer: String, batch: [SlideDefinition]) -> [String: Verdict] {

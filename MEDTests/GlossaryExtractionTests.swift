@@ -61,6 +61,29 @@ final class GlossaryExtractionTests: XCTestCase {
         XCTAssertEqual(GlossaryModel.normalizeTerm("b) Apocrine secretion"), "Apocrine secretion")
     }
 
+    // MARK: Deep verification (phase three)
+
+    func testParseVerifiedKeepAndDemote() throws {
+        let yes = try XCTUnwrap(GlossaryModel.parseVerifiedLine("YES"))
+        XCTAssertTrue(yes.keep)
+
+        let demoteTitle = try XCTUnwrap(GlossaryModel.parseVerifiedLine("NO title"))
+        XCTAssertFalse(demoteTitle.keep)
+        XCTAssertEqual(demoteTitle.reason, .title)
+
+        // A bare NO with no reason word still demotes, bucketed as "other".
+        let demoteBare = try XCTUnwrap(GlossaryModel.parseVerifiedLine("NO"))
+        XCTAssertFalse(demoteBare.keep)
+        XCTAssertEqual(demoteBare.reason, .other)
+    }
+
+    func testParseVerifiedTreatsGibberishAsNoAnswer() {
+        // Anything that is neither YES nor NO is "no answer", so the entry is
+        // left accepted rather than silently dropped.
+        XCTAssertNil(GlossaryModel.parseVerifiedLine("maybe"))
+        XCTAssertNil(GlossaryModel.parseVerifiedLine(""))
+    }
+
     // MARK: Definition shape
 
     func testSelfContainedRejectsFragments() {
