@@ -36,6 +36,14 @@ struct GlossaryView: View {
     /// the tab is opened — not on every keystroke in the search box.
     @State private var crossovers: [CommitteeIntersection.Point] = []
 
+    /// The crossover scan runs on the main actor and can take a second or two
+    /// over hundreds of terms × thousands of pages, so it is built lazily —
+    /// once per index build, only when its tab is actually shown, and never
+    /// twice at once. `crossoversBuiltFor` is the `lastBuilt` stamp the current
+    /// `crossovers` were computed against.
+    @State private var isBuildingCrossovers = false
+    @State private var crossoversBuiltFor: Date?
+
     private enum Mode: String, CaseIterable, Identifiable {
         case glossary
         case review
@@ -85,10 +93,15 @@ struct GlossaryView: View {
         .navigationTitle(L.glossary)
         .task(id: slideIndex.lastBuilt) {
             glossaryModel.review(slideIndex.definitions)
-            rebuildCrossovers()
+            // The crossover scan is NOT run here: it is heavy and only shown on
+            // its own tab, so building it on every glossary open froze the view.
+            // The index just changed, so the current build is stale — drop its
+            // stamp and rebuild lazily, right now only if that tab is showing.
+            crossoversBuiltFor = nil
+            if mode == .crossovers { buildCrossoversIfNeeded() }
         }
         .onChange(of: mode) { _, newMode in
-            if newMode == .crossovers, crossovers.isEmpty { rebuildCrossovers() }
+            if newMode == .crossovers { buildCrossoversIfNeeded() }
         }
         .toolbar {
             ToolbarItem {
@@ -288,8 +301,23 @@ struct GlossaryView: View {
         )
     }
 
+    /// Builds the crossover points only when they are stale for the current
+    /// index build, and never two runs at once. The scan blocks the main actor,
+    /// so it is kicked to the next runloop tick: the list paints the "computing"
+    /// row first, then the scan runs. Nothing here fires until the crossovers
+    /// tab is shown, which is what keeps opening the glossary tab instant.
+    private func buildCrossoversIfNeeded() {
+        guard !isBuildingCrossovers, crossoversBuiltFor != slideIndex.lastBuilt else { return }
+        isBuildingCrossovers = true
+        Task { @MainActor in
+            rebuildCrossovers()
+            crossoversBuiltFor = slideIndex.lastBuilt
+            isBuildingCrossovers = false
+        }
+    }
+
     /// Rebuilds the crossover points from the curated glossary and the slide
-    /// text. Call it when the index changes or the tab opens, not per keystroke.
+    /// text. Call it through `buildCrossoversIfNeeded()`, not directly.
     private func rebuildCrossovers() {
         crossovers = CommitteeIntersection.points(
             from: glossaryModel.curatedTerms(from: slideIndex.definitions),
@@ -315,7 +343,9 @@ struct GlossaryView: View {
     private var crossoverContent: some View {
         let points = shownCrossovers
 
-        if points.isEmpty {
+        if isBuildingCrossovers {
+            crossoverBuilding
+        } else if points.isEmpty {
             crossoverEmptyState
         } else {
             crossoverSummary(points)
@@ -388,6 +418,14 @@ struct GlossaryView: View {
         Text(L.pick("\(points.count) kesişen terim",
                     "\(points.count) crossover terms"))
             .font(.caption).foregroundStyle(.secondary)
+    }
+
+    private var crossoverBuilding: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(L.pick("Kesişimler hesaplanıyor…", "Computing crossovers…"))
+                .font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder
