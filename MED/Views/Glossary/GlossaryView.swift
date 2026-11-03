@@ -92,7 +92,12 @@ struct GlossaryView: View {
         .searchable(text: $query, prompt: L.pick("Terim ara", "Search a term"))
         .navigationTitle(L.glossary)
         .task(id: slideIndex.lastBuilt) {
-            glossaryModel.review(slideIndex.definitions)
+            // With the on-device model, the glossary is built by reading every
+            // page (the thorough, resumable pass). Without it, there is nothing
+            // to run — the regex high-confidence tier shows directly.
+            if glossaryModel.isAvailable {
+                glossaryModel.buildGlossary(from: slideIndex.pages)
+            }
             // The crossover scan is NOT run here: it is heavy and only shown on
             // its own tab, so building it on every glossary open froze the view.
             // The index just changed, so the current build is stale — drop its
@@ -162,10 +167,17 @@ struct GlossaryView: View {
         }
     }
 
+    /// The glossary's candidate source: what the model produced by reading the
+    /// pages when it is available, else the regex high-confidence tier. The
+    /// rest of the view reads these the same way either way — a verdict lookup
+    /// decides what shows — so only this one line changes between the two.
+    private var candidates: [SlideDefinition] {
+        glossaryModel.isAvailable ? glossaryModel.candidates : slideIndex.definitions
+    }
+
     /// The definitions worth showing: confirmed (or heuristic) ones minus the
     /// ones you hid, plus any you kept by hand.
     private var shownEntries: [Entry] {
-        let candidates = slideIndex.definitions
         var items: [Entry] = []
 
         for candidate in candidates {
@@ -245,7 +257,7 @@ struct GlossaryView: View {
     private var rejectionBuckets: [Bucket] {
         var byReason: [GlossaryModel.Rejection: [Entry]] = [:]
 
-        for candidate in slideIndex.definitions {
+        for candidate in candidates {
             guard !glossaryModel.isKept(candidate.id), !glossaryModel.isHidden(candidate.id),
                   let verdict = glossaryModel.verdict(for: candidate.id), !verdict.accepted
             else { continue }
@@ -265,7 +277,7 @@ struct GlossaryView: View {
     }
 
     private var hiddenEntries: [Entry] {
-        let items = slideIndex.definitions
+        let items = candidates
             .filter { glossaryModel.isHidden($0.id) }
             .map { candidate -> Entry in
                 let verdict = glossaryModel.verdict(for: candidate.id)
@@ -320,7 +332,7 @@ struct GlossaryView: View {
     /// text. Call it through `buildCrossoversIfNeeded()`, not directly.
     private func rebuildCrossovers() {
         crossovers = CommitteeIntersection.points(
-            from: glossaryModel.curatedTerms(from: slideIndex.definitions),
+            from: glossaryModel.curatedTerms(from: candidates),
             lecturesByPath: lecturesByPath,
             locate: { slideIndex.phraseLocations($0) }
         )
@@ -551,11 +563,13 @@ struct GlossaryView: View {
     // MARK: Progress + empty
 
     private var reviewProgress: some View {
-        let label = glossaryModel.isVerifying
-            ? L.pick("Tanımlar bir daha gözden geçiriliyor… ", "Re-checking definitions… ")
-            : glossaryModel.isClassifying
-                ? L.pick("Ayrılanlar sınıflandırılıyor… ", "Classifying what was set aside… ")
-                : L.pick("Model tanımları inceliyor… ", "The model is reviewing… ")
+        let label = glossaryModel.isBuilding
+            ? L.pick("Slaytlar okunuyor… ", "Reading the slides… ")
+            : glossaryModel.isVerifying
+                ? L.pick("Tanımlar bir daha gözden geçiriliyor… ", "Re-checking definitions… ")
+                : glossaryModel.isClassifying
+                    ? L.pick("Ayrılanlar sınıflandırılıyor… ", "Classifying what was set aside… ")
+                    : L.pick("Model tanımları inceliyor… ", "The model is reviewing… ")
         return HStack(spacing: 8) {
             ProgressView().controlSize(.small)
             Text(label + "\(glossaryModel.reviewedCount)/\(glossaryModel.pendingCount)")
@@ -575,7 +589,7 @@ struct GlossaryView: View {
         if slideIndex.isWorking {
             Text(L.pick("Slaytlar hâlâ okunuyor, birazdan tekrar bak.", "The slides are still being read; check back in a moment."))
                 .foregroundStyle(.secondary)
-        } else if slideIndex.definitions.isEmpty {
+        } else if candidates.isEmpty {
             Text(L.pick(
                 "Slaytlardan henüz tanım çıkmadı. Slaytların kitaplık klasöründe okunur hâlde olduğundan emin ol.",
                 "No definitions came out of the slides yet. Make sure your slides are readable in the library folder."

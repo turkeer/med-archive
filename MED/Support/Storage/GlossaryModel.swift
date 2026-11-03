@@ -86,6 +86,34 @@ final class GlossaryModel {
         var verdicts: [String: Verdict] = [:]
     }
 
+    /// One entry the model-driven pipeline produced for a page: the term it
+    /// found, the definition it wrote, and the verdict the later stages reached.
+    private struct ProducedEntry: Codable, Sendable {
+        var term: String
+        var definition: String
+        var accepted: Bool
+        var reason: String?
+    }
+
+    /// One slide page's extraction state: which page it is, a fingerprint of
+    /// the page text (so an unchanged page is skipped and a changed one re-reads
+    /// itself), the highest stage finished (0…4), and the entries so far.
+    /// Persisted, so the long whole-archive read is resumable across launches.
+    private struct PageRecord: Codable, Sendable {
+        var path: String
+        var page: Int
+        var fingerprint: Int
+        var stage: Int
+        var entries: [ProducedEntry]
+    }
+
+    private struct PageCache: Codable, Sendable {
+        /// Bumped when the pipeline's prompts or stages change shape, so stale
+        /// page records are dropped and the pages are read again.
+        var version = 1
+        var pages: [String: PageRecord] = [:]
+    }
+
     /// Your own decisions. Kept apart from the verdict cache and never tied to
     /// its version, so re-reviewing the slides never throws your curation away.
     private struct Marks: Codable, Sendable {
@@ -111,6 +139,16 @@ final class GlossaryModel {
 
     private var verdicts: [String: Verdict] = [:]
 
+    /// The model-driven pipeline's per-page state, keyed by "path#page".
+    private var pageRecords: [String: PageRecord] = [:]
+
+    /// The candidates the model produced by reading the pages, rebuilt from
+    /// `pageRecords`. When the on-device model is available these replace the
+    /// regex candidates as the glossary's source — the view reads them exactly
+    /// as it read the regex ones, with `verdicts` filled in alongside for the
+    /// ones that reached the final stage.
+    private(set) var candidates: [SlideDefinition] = []
+
     private var hiddenIDs: Set<String> = []
     private var keptIDs: Set<String> = []
     private var hiddenCrossoverIDs: Set<String> = []
@@ -120,6 +158,9 @@ final class GlossaryModel {
     /// The third pass: re-checking already-accepted entries against a stricter
     /// definition bar. Runs while `isReviewing` is still true.
     private(set) var isVerifying = false
+    /// The model-driven whole-page read is running. Also runs under
+    /// `isReviewing`, so the existing progress row shows it.
+    private(set) var isBuilding = false
     private(set) var reviewedCount = 0
     private(set) var pendingCount = 0
 
@@ -140,6 +181,10 @@ final class GlossaryModel {
         indexDirectory.appending(path: "glossary-marks.json")
     }
 
+    private nonisolated static var pagesURL: URL {
+        indexDirectory.appending(path: "glossary-pages.json")
+    }
+
     private nonisolated static var indexDirectory: URL {
         StoreLocation.directory.appending(path: "Index", directoryHint: .isDirectory)
     }
@@ -150,6 +195,8 @@ final class GlossaryModel {
         hiddenIDs = Set(marks.hidden)
         keptIDs = Set(marks.kept)
         hiddenCrossoverIDs = Set(marks.hiddenCrossovers ?? [])
+        pageRecords = Self.readPages()?.pages ?? [:]
+        rebuildFromPages()
     }
 
     // MARK: Queries
@@ -587,6 +634,269 @@ final class GlossaryModel {
     }
     #endif
 
+    // MARK: Model-driven glossary (whole-page reading)
+
+    /// Reads every slide page with the model and builds the glossary the
+    /// thorough way, in four small steps the small model can each do well:
+    /// scan the page for defined terms, extract each definition, check it is a
+    /// whole sentence, then put it to a majority-vote gate. Resumable: a page
+    /// whose text is unchanged and already finished is skipped, so this picks
+    /// up where the last launch left off and only new or changed pages cost
+    /// anything. The first full run is long by design — that is the point.
+    func buildGlossary(from pages: [SlideIndex.Page]) {
+        guard isAvailable, !isReviewing else { return }
+        let todo = pages.filter { page in
+            guard let record = pageRecords[page.id] else { return true }
+            return record.fingerprint != Self.fingerprint(page.text) || record.stage < 4
+        }
+        guard !todo.isEmpty else { return }
+
+        isReviewing = true
+        isBuilding = true
+        Task { await runExtraction(todo) }
+    }
+
+    private func runExtraction(_ pages: [SlideIndex.Page]) async {
+        #if canImport(FoundationModels)
+        if #available(macOS 26, *) {
+            pendingCount = pages.count
+            reviewedCount = 0
+
+            for page in pages {
+                let fingerprint = Self.fingerprint(page.text)
+                var record = pageRecords[page.id]
+                if record == nil || record!.fingerprint != fingerprint {
+                    record = PageRecord(path: page.path, page: page.number,
+                                        fingerprint: fingerprint, stage: 0, entries: [])
+                }
+
+                // Stage 1 — scan: which terms does this page actually define?
+                if record!.stage < 1 {
+                    let terms = await scanPage(page.text)
+                    record!.entries = terms.map {
+                        ProducedEntry(term: $0, definition: "", accepted: false, reason: nil)
+                    }
+                    record!.stage = 1
+                }
+
+                // Stage 2 — extract: the definition sentence for each term.
+                if record!.stage < 2 {
+                    for index in record!.entries.indices {
+                        record!.entries[index].definition = await extractDefinition(
+                            term: record!.entries[index].term, page: page.text) ?? ""
+                    }
+                    record!.entries.removeAll { $0.definition.isEmpty }
+                    record!.stage = 2
+                }
+
+                // Stage 3 — sentence check: tidy it, or drop a non-sentence.
+                if record!.stage < 3 {
+                    for index in record!.entries.indices {
+                        if let clean = await sentenceCheck(
+                            term: record!.entries[index].term,
+                            definition: record!.entries[index].definition) {
+                            record!.entries[index].definition = clean
+                        } else {
+                            record!.entries[index].accepted = false
+                            record!.entries[index].reason = Rejection.incomplete.rawValue
+                        }
+                    }
+                    record!.stage = 3
+                }
+
+                // Stage 4 — gate: is each really a definition? Majority vote.
+                if record!.stage < 4 {
+                    for index in record!.entries.indices where record!.entries[index].reason == nil {
+                        let outcome = await gate(
+                            term: record!.entries[index].term,
+                            definition: record!.entries[index].definition, page: page.text)
+                        record!.entries[index].accepted = outcome.keep
+                        if !outcome.keep {
+                            record!.entries[index].reason = (outcome.reason ?? .other).rawValue
+                        }
+                    }
+                    record!.stage = 4
+                }
+
+                pageRecords[page.id] = record
+                reviewedCount += 1
+                if reviewedCount % 10 == 0 {
+                    rebuildFromPages()
+                    Self.writePages(PageCache(pages: pageRecords))
+                }
+            }
+            rebuildFromPages()
+            Self.writePages(PageCache(pages: pageRecords))
+        }
+        #endif
+
+        isBuilding = false
+        isReviewing = false
+    }
+
+    /// Rebuilds the model candidates (and the verdicts for the finished ones)
+    /// from the saved page records, so a launch shows the glossary as it was
+    /// without reading a thing. An entry carries a verdict only once its page
+    /// reached the gate (stage 4); until then it is provisional and stays out.
+    private func rebuildFromPages() {
+        var produced: [SlideDefinition] = []
+        for record in pageRecords.values {
+            for entry in record.entries where !entry.definition.isEmpty {
+                let candidate = SlideDefinition(
+                    term: entry.term, definition: entry.definition, source: .colon,
+                    context: "", path: record.path, page: record.page,
+                    isRecognised: false, confidence: .high)
+                produced.append(candidate)
+                if record.stage >= 4 {
+                    verdicts[candidate.id] = Verdict(
+                        accepted: entry.accepted, term: entry.term,
+                        definition: entry.definition, reason: entry.reason, verified: true)
+                }
+            }
+        }
+        candidates = produced.sorted {
+            $0.term.localizedStandardCompare($1.term) == .orderedAscending
+        }
+    }
+
+    #if canImport(FoundationModels)
+    @available(macOS 26, *)
+    private func scanPage(_ text: String) async -> [String] {
+        do {
+            let session = LanguageModelSession(instructions: Self.scanInstructions)
+            let answer = try await session.respond(to: "PAGE:\n\(Self.clip(text))").content
+            return Self.parseTerms(answer)
+        } catch {
+            return []
+        }
+    }
+
+    @available(macOS 26, *)
+    private func extractDefinition(term: String, page: String) async -> String? {
+        do {
+            let session = LanguageModelSession(instructions: Self.extractDefInstructions)
+            let answer = try await session.respond(to: "PAGE:\n\(Self.clip(page))\nTERM: \(term)").content
+            return Self.parseDefinition(Self.firstLine(answer), term: term)
+        } catch {
+            return nil
+        }
+    }
+
+    @available(macOS 26, *)
+    private func sentenceCheck(term: String, definition: String) async -> String? {
+        do {
+            let session = LanguageModelSession(instructions: Self.sentenceInstructions)
+            let answer = try await session.respond(to: "TERM: \(term)\nDEFINITION: \(definition)").content
+            return Self.parseSentence(Self.firstLine(answer))
+        } catch {
+            // On a model error keep what we have rather than lose the entry.
+            return definition
+        }
+    }
+
+    /// The final gate: the same strict "is this really a definition?" question
+    /// as the deep-verification pass, asked over several sampled passes and
+    /// settled by majority vote, so a lone stray "no" never drops a good entry.
+    @available(macOS 26, *)
+    private func gate(term: String, definition: String, page: String) async -> VerifyOutcome {
+        var noVotes = 0
+        var answered = 0
+        var reason: Rejection?
+        let options = GenerationOptions(temperature: Self.consensusTemperature)
+        let prompt = "TERM: \(term)\nDEFINITION: \(definition)\nLINES:\n\(Self.clip(page))"
+
+        for _ in 0 ..< Self.consensusPasses {
+            do {
+                let session = LanguageModelSession(instructions: Self.verifyInstructions)
+                let answer = try await session.respond(to: prompt, options: options).content
+                if let outcome = Self.parseVerifiedLine(Self.firstLine(answer)) {
+                    answered += 1
+                    if !outcome.keep {
+                        noVotes += 1
+                        if reason == nil { reason = outcome.reason }
+                    }
+                }
+            } catch {
+                // A failed pass simply does not vote.
+            }
+        }
+
+        if answered == 0 { return (keep: true, reason: nil) }
+        if noVotes >= Self.consensusQuorum { return (keep: false, reason: reason ?? .other) }
+        return (keep: true, reason: nil)
+    }
+    #endif
+
+    // MARK: Model-driven glossary — helpers, prompts, parsing
+
+    /// A page's text, capped so the small model gets a prompt it handles well.
+    /// Slides are short; this only bites on the rare wall-of-text page.
+    private static func clip(_ text: String) -> String { String(text.prefix(1500)) }
+
+    /// A stable (launch-independent) hash of a page's text, so a record can
+    /// tell whether its page changed. Swift's own `Hasher` is salted per run
+    /// and would make every page look changed next launch, so this is a plain
+    /// FNV-1a over the bytes.
+    static func fingerprint(_ text: String) -> Int {
+        var hash: UInt64 = 1469598103934665603
+        for byte in text.utf8 { hash = (hash ^ UInt64(byte)) &* 1099511628211 }
+        return Int(bitPattern: UInt(truncatingIfNeeded: hash))
+    }
+
+    private static let scanInstructions = """
+    You are reading one page of a medical lecture slide. List the terms this \
+    page actually DEFINES — a term the page gives a real explanation for, not \
+    one it only mentions in passing. One term per line, the term only (a word \
+    or short noun phrase), at most six. Do not number them. If the page defines \
+    nothing, reply NONE.
+    """
+
+    private static let extractDefInstructions = """
+    You are given one page of medical lecture slides and a TERM the page \
+    defines. Write the definition of the TERM using ONLY what the page says, \
+    as one clean, self-contained sentence. Add no facts, numbers, examples or \
+    formulas of your own, and do not end by repeating the term ("… is called \
+    X"). Fix obvious OCR typos only. If the page does not actually define the \
+    term, reply NO.
+    """
+
+    private static let sentenceInstructions = """
+    You are given a TERM and a DEFINITION written for it. If the DEFINITION is \
+    a complete, self-contained, grammatical sentence that defines the term, \
+    reply with it — corrected only for OCR or grammar, adding no new facts. If \
+    it is a fragment, a half sentence, a bare list, or not a definition, reply \
+    NO.
+    """
+
+    static func parseTerms(_ answer: String) -> [String] {
+        var seen: Set<String> = []
+        var result: [String] = []
+        for raw in answer.split(separator: "\n") {
+            var line = raw.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, line.uppercased() != "NONE" else { continue }
+            line = DefinitionExtractor.stripListMarker(line)
+                .trimmingCharacters(in: CharacterSet(charactersIn: " -•·*▪‣\t.:"))
+            let key = SearchText.fold(line)
+            guard key.count >= 2, line.count <= 60, seen.insert(key).inserted else { continue }
+            result.append(line)
+            if result.count >= 6 { break }
+        }
+        return result
+    }
+
+    static func parseDefinition(_ line: String, term: String) -> String? {
+        let body = line.trimmingCharacters(in: .whitespaces)
+        guard !body.isEmpty, firstWord(body).uppercased() != "NO" else { return nil }
+        let cleaned = cleanDefinition(body, term: term)
+        return cleaned.count >= 15 ? cleaned : nil
+    }
+
+    static func parseSentence(_ line: String) -> String? {
+        let body = line.trimmingCharacters(in: CharacterSet(charactersIn: " -•·*\"'“”`\t"))
+        guard !body.isEmpty, firstWord(body).uppercased() != "NO" else { return nil }
+        return body.count >= 15 ? body : nil
+    }
+
     // MARK: Prompts
 
     private static func prompt(_ candidate: SlideDefinition) -> String {
@@ -951,6 +1261,18 @@ final class GlossaryModel {
 
     private nonisolated static func write(_ cache: Cache) {
         write(cache, to: cacheURL, what: "sözlük incelemesi")
+    }
+
+    private nonisolated static func readPages() -> PageCache? {
+        guard let data = try? Data(contentsOf: pagesURL),
+              let cache = try? JSONDecoder().decode(PageCache.self, from: data),
+              cache.version == PageCache().version
+        else { return nil }
+        return cache
+    }
+
+    private nonisolated static func writePages(_ cache: PageCache) {
+        write(cache, to: pagesURL, what: "sözlük sayfaları")
     }
 
     private nonisolated static func readMarks() -> Marks? {

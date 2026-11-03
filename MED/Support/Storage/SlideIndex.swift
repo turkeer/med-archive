@@ -277,6 +277,32 @@ final class SlideIndex {
 
     private var cachedDefinitions: [SlideDefinition]?
 
+    /// One slide page's raw text, for a reader (the model) that wants the whole
+    /// page rather than the regex's few flagged lines.
+    struct Page: Identifiable, Sendable {
+        let path: String
+        /// One-based, as a reader counts and as `SlidePageSelection` expects.
+        let number: Int
+        let text: String
+        var id: String { "\(path)#\(number)" }
+    }
+
+    /// Every readable slide page, raw. The model-driven glossary reads these
+    /// one at a time instead of the regex candidates, so a definition written
+    /// without a colon or an English marker is seen too. Pages with almost no
+    /// text are skipped — there is nothing to define on them. Order is stable
+    /// (by path, then page) so a resumable pass walks them the same way twice.
+    var pages: [Page] {
+        var result: [Page] = []
+        for (path, entry) in entries {
+            for (index, text) in entry.pages.enumerated()
+            where text.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 {
+                result.append(Page(path: path, number: index + 1, text: text))
+            }
+        }
+        return result.sorted { $0.path == $1.path ? $0.number < $1.number : $0.path < $1.path }
+    }
+
     /// Every term-and-explanation the slides spell out, for the Sözlük screen.
     ///
     /// Built on first use and cached, like `vocabulary`: it is a pass over the

@@ -84,6 +84,51 @@ final class GlossaryExtractionTests: XCTestCase {
         XCTAssertNil(GlossaryModel.parseVerifiedLine(""))
     }
 
+    // MARK: Model-driven pipeline (whole-page reading)
+
+    func testParseTermsListsTermsAndDropsNoise() {
+        let answer = """
+        Diffusion
+        - Osmosis
+        1) Active transport
+        Diffusion
+        NONE
+        """
+        let terms = GlossaryModel.parseTerms(answer)
+        // Bullets and list numbering stripped, the duplicate folded away, and
+        // a stray NONE line ignored.
+        XCTAssertEqual(terms, ["Diffusion", "Osmosis", "Active transport"])
+    }
+
+    func testParseTermsEmptyOnNone() {
+        XCTAssertTrue(GlossaryModel.parseTerms("NONE").isEmpty)
+        XCTAssertTrue(GlossaryModel.parseTerms("").isEmpty)
+    }
+
+    func testParseDefinitionAcceptsAndRejects() {
+        let good = GlossaryModel.parseDefinition(
+            "the net flow of particles from high to low concentration", term: "Diffusion")
+        XCTAssertEqual(good, "the net flow of particles from high to low concentration")
+
+        XCTAssertNil(GlossaryModel.parseDefinition("NO", term: "Diffusion"))
+        // Too short to be a definition.
+        XCTAssertNil(GlossaryModel.parseDefinition("a flow", term: "Diffusion"))
+    }
+
+    func testParseSentenceRejectsNo() {
+        XCTAssertNil(GlossaryModel.parseSentence("NO"))
+        XCTAssertEqual(
+            GlossaryModel.parseSentence("Osmosis is the diffusion of water across a membrane."),
+            "Osmosis is the diffusion of water across a membrane.")
+    }
+
+    func testFingerprintIsStableAndSensitive() {
+        // Same text → same fingerprint across calls (it must survive launches),
+        // different text → different fingerprint (a changed page re-reads).
+        XCTAssertEqual(GlossaryModel.fingerprint("Hücre zarı"), GlossaryModel.fingerprint("Hücre zarı"))
+        XCTAssertNotEqual(GlossaryModel.fingerprint("Hücre zarı"), GlossaryModel.fingerprint("Hücre zarı "))
+    }
+
     // MARK: Definition shape
 
     func testSelfContainedRejectsFragments() {
