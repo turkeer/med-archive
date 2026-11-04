@@ -167,6 +167,114 @@ final class GlossaryExtractionTests: XCTestCase {
         }
     }
 
+    // MARK: Casing cleanup
+
+    /// A stand-in dictionary: the ordinary words the tests shout, so "ATP" and
+    /// "synthase" (unknown here) can be told from "cell" (known).
+    private static func isWord(_ w: String) -> Bool {
+        ["cell", "action", "potential", "the", "net", "flow", "of",
+         "particles", "energy", "currency", "is", "band"].contains(w)
+    }
+
+    func testCasingKeepsAbbreviationsLowersShouts() {
+        let isWord = Self.isWord
+        // A shouted multi-word term is lowered and sentence-cased…
+        XCTAssertEqual(TermCasing.term("ACTION POTENTIAL", isWord: isWord), "Action potential")
+        // …a real but shouted single word too…
+        XCTAssertEqual(TermCasing.term("CELL", isWord: isWord), "Cell")
+        // …a long non-word all-caps token is treated as a shout (length rule)…
+        XCTAssertEqual(TermCasing.term("ATP SYNTHASE", isWord: isWord), "ATP synthase")
+        // …but a short non-word abbreviation is kept exactly.
+        XCTAssertEqual(TermCasing.term("ATP", isWord: isWord), "ATP")
+        XCTAssertEqual(TermCasing.term("DNA", isWord: isWord), "DNA")
+    }
+
+    func testCasingLeavesMixedCaseAndLoneLetters() {
+        let isWord = Self.isWord
+        XCTAssertEqual(TermCasing.term("mRNA", isWord: isWord), "mRNA")
+        XCTAssertEqual(TermCasing.term("B-DNA", isWord: isWord), "B-DNA")
+        XCTAssertEqual(TermCasing.term("pH", isWord: isWord), "pH")
+        // "A band" / "I band": the lone capital letter is meaningful, kept.
+        XCTAssertEqual(TermCasing.term("A band", isWord: isWord), "A band")
+    }
+
+    func testCasingDefinitionOnlyDeShoutsWhenMostlyCaps() {
+        let isWord = Self.isWord
+        // A shouted definition is lowered to sentence case, abbreviation kept.
+        XCTAssertEqual(
+            TermCasing.definition("ATP IS THE ENERGY CURRENCY", isWord: isWord),
+            "ATP is the energy currency")
+        // A normally-cased definition is untouched (bar the first-letter touch).
+        let normal = "the net flow of particles"
+        XCTAssertEqual(TermCasing.definition(normal, isWord: isWord), "The net flow of particles")
+        // One that already reads correctly is left exactly as it is.
+        let fine = "The net flow of particles"
+        XCTAssertEqual(TermCasing.definition(fine, isWord: isWord), fine)
+    }
+
+    func testIsMostlyUppercase() {
+        XCTAssertTrue(TermCasing.isMostlyUppercase("THE NET FLOW"))
+        XCTAssertFalse(TermCasing.isMostlyUppercase("The net flow of particles"))
+        XCTAssertFalse(TermCasing.isMostlyUppercase("ATP"))  // too few letters for a sentence
+    }
+
+    // MARK: Export
+
+    func testMarkdownGroupsByLetterWithSources() {
+        let items = [
+            GlossaryExport.Item(term: "Axon", definitions: [
+                GlossaryExport.Definition(text: "the nerve fibre of a neuron",
+                                          sources: ["Neuro · p.3"])
+            ]),
+            GlossaryExport.Item(term: "Diffusion", definitions: [
+                GlossaryExport.Definition(text: "net flow down a gradient", sources: [])
+            ]),
+        ]
+        let md = GlossaryExport.markdown(items)
+        XCTAssertTrue(md.hasPrefix("# Sözlük"))
+        XCTAssertTrue(md.contains("**2 terim · 2 tanım**"))
+        XCTAssertTrue(md.contains("## A"))
+        XCTAssertTrue(md.contains("### Axon"))
+        XCTAssertTrue(md.contains("the nerve fibre of a neuron"))
+        XCTAssertTrue(md.contains("_Neuro · p.3_"))
+        XCTAssertTrue(md.contains("## D"))
+        XCTAssertTrue(md.contains("### Diffusion"))
+    }
+
+    func testLetterKeyBucketsNonLetters() {
+        XCTAssertEqual(GlossaryExport.letterKey("Axon"), "A")
+        XCTAssertEqual(GlossaryExport.letterKey("mRNA"), "M")
+        XCTAssertEqual(GlossaryExport.letterKey("3' end"), "#")
+    }
+
+    func testPdfProducesANonEmptyDocument() {
+        let items = [
+            GlossaryExport.Item(term: "Axon", definitions: [
+                GlossaryExport.Definition(text: "the nerve fibre of a neuron", sources: ["Neuro · p.3"])
+            ]),
+        ]
+        let data = GlossaryExport.pdf(items)
+        XCTAssertFalse(data.isEmpty)
+        // A real PDF starts with the "%PDF" signature.
+        XCTAssertTrue(data.starts(with: Array("%PDF".utf8)))
+    }
+
+    func testCasingFixesLowercaseAbbreviationsInTerm() {
+        let isWord = Self.isWord
+        // The reported case: a lower-cased abbreviation inside a term is fixed.
+        XCTAssertEqual(TermCasing.term("alpha satellite dna", isWord: isWord),
+                       "Alpha satellite DNA")
+        // Mixed casing recovered from any input casing.
+        XCTAssertEqual(TermCasing.canonicalAbbreviation("mrna"), "mRNA")
+        XCTAssertEqual(TermCasing.canonicalAbbreviation("MRNA"), "mRNA")
+        XCTAssertEqual(TermCasing.canonicalAbbreviation("DNA"), "DNA")
+        // The "-s" plural keeps the canonical form.
+        XCTAssertEqual(TermCasing.canonicalAbbreviation("rnas"), "RNAs")
+        // An unlisted, ambiguous lowercase name is left alone.
+        XCTAssertNil(TermCasing.canonicalAbbreviation("ras"))
+        XCTAssertNil(TermCasing.canonicalAbbreviation("satellite"))
+    }
+
     // MARK: Definition shape
 
     func testSelfContainedRejectsFragments() {

@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// A glossary built from your own slides: every term they define, with the
 /// slide it came from one tap away.
@@ -88,7 +89,114 @@ struct GlossaryView: View {
         let entries: [Entry]
     }
 
+    private enum ExportKind { case markdown, pdf }
+
+    /// A one-off export payload handed to `.fileExporter`: the bytes and the
+    /// type to save them as.
+    struct GlossaryFile: FileDocument {
+        static var readableContentTypes: [UTType] { [] }
+        static var writableContentTypes: [UTType] { [.plainText, .pdf] }
+        let data: Data
+        let type: UTType
+        init(data: Data, type: UTType) { self.data = data; self.type = type }
+        init(configuration: ReadConfiguration) throws { throw CocoaError(.fileReadUnknown) }
+        func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+            FileWrapper(regularFileWithContents: data)
+        }
+    }
+
+    @State private var exportFile: GlossaryFile?
+    @State private var exportFilename = "Sözlük"
+    @State private var showExporter = false
+
+    /// The last letter the A–Z scrub jumped to, so dragging across the strip
+    /// fires one scroll per letter instead of one per pixel.
+    @State private var lastJumpedLetter: String?
+
     var body: some View {
+        ScrollViewReader { proxy in
+            glossaryList(proxy)
+        }
+    }
+
+    /// The glossary's term groups, shared by the list, the summary, the A–Z
+    /// jump index and export, so they all see one grouping.
+    private var glossaryGroups: [TermGroup] { termGroups(from: shownEntries) }
+
+    /// For each first letter present, the id of the first group under it — the
+    /// jump targets for the A–Z index.
+    private var letterAnchors: [(letter: String, id: String)] {
+        var seen = Set<String>()
+        var anchors: [(String, String)] = []
+        for group in glossaryGroups {
+            let letter = GlossaryExport.letterKey(group.term)
+            if seen.insert(letter).inserted { anchors.append((letter, group.id)) }
+        }
+        return anchors
+    }
+
+    /// Height of one letter in the A–Z strip; the scrub maps a cursor position
+    /// to a letter by dividing by this.
+    private static let letterRowHeight: CGFloat = 14
+
+    /// The thin A–Z strip down the trailing edge. Like the Contacts index on
+    /// iOS: press and drag the cursor along it to sweep through the letters,
+    /// jumping once per letter as you cross it (a plain tap lands on one too).
+    /// Shown only in the glossary tab, and only with more than one letter.
+    @ViewBuilder
+    private func letterIndex(_ proxy: ScrollViewProxy) -> some View {
+        let anchors = letterAnchors
+        if mode == .glossary, anchors.count > 1 {
+            VStack(spacing: 0) {
+                ForEach(anchors, id: \.letter) { anchor in
+                    Text(anchor.letter)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 16, height: Self.letterRowHeight)
+                }
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let index = Int(value.location.y / Self.letterRowHeight)
+                        guard anchors.indices.contains(index) else { return }
+                        let anchor = anchors[index]
+                        guard anchor.letter != lastJumpedLetter else { return }
+                        lastJumpedLetter = anchor.letter
+                        proxy.scrollTo(anchor.id, anchor: .top)
+                    }
+                    .onEnded { _ in lastJumpedLetter = nil }
+            )
+            .padding(.vertical, 6)
+            .padding(.trailing, 2)
+        }
+    }
+
+    /// Builds the chosen document from the glossary as shown (cased, grouped,
+    /// de-duplicated) and opens the save panel.
+    private func requestExport(_ kind: ExportKind) {
+        let items = glossaryGroups.map { group in
+            GlossaryExport.Item(
+                term: group.term,
+                definitions: group.entries.map { entry in
+                    GlossaryExport.Definition(
+                        text: displayDefinition(entry.definition),
+                        sources: entry.sources.map { source($0) })
+                })
+        }
+        switch kind {
+        case .markdown:
+            exportFile = GlossaryFile(data: Data(GlossaryExport.markdown(items).utf8), type: .plainText)
+            exportFilename = "Sözlük.md"
+        case .pdf:
+            exportFile = GlossaryFile(data: GlossaryExport.pdf(items), type: .pdf)
+            exportFilename = "Sözlük"
+        }
+        showExporter = true
+    }
+
+    private func glossaryList(_ proxy: ScrollViewProxy) -> some View {
         List(selection: $selection) {
             if glossaryModel.isReviewing {
                 reviewProgress
@@ -101,6 +209,10 @@ struct GlossaryView: View {
             }
         }
         .searchable(text: $query, prompt: L.pick("Terim ara", "Search a term"))
+        .overlay(alignment: .trailing) { letterIndex(proxy) }
+        .fileExporter(isPresented: $showExporter, document: exportFile,
+                      contentType: exportFile?.type ?? .plainText,
+                      defaultFilename: exportFilename) { _ in }
         .navigationTitle(L.glossary)
         .task(id: slideIndex.lastBuilt) {
             // With the on-device model, the glossary is built by reading every
@@ -140,6 +252,15 @@ struct GlossaryView: View {
                     }
                     .toggleStyle(.button)
                 }
+
+                ToolbarItem {
+                    Menu {
+                        Button("Markdown (.md)") { requestExport(.markdown) }
+                        Button("PDF") { requestExport(.pdf) }
+                    } label: {
+                        Label(L.pick("Dışa aktar", "Export"), systemImage: "square.and.arrow.up")
+                    }
+                }
             }
 
             // Visible while the mode is on too, so after unhiding the last one
@@ -159,7 +280,7 @@ struct GlossaryView: View {
 
     @ViewBuilder
     private var glossaryContent: some View {
-        let groups = termGroups(from: shownEntries)
+        let groups = glossaryGroups
 
         if groups.isEmpty {
             glossaryEmptyState
@@ -174,6 +295,7 @@ struct GlossaryView: View {
                 } header: {
                     Text(group.term).font(.headline).textCase(nil)
                 }
+                .id(group.id)
             }
         }
     }
@@ -628,19 +750,12 @@ struct GlossaryView: View {
 
     // MARK: Capitalisation
 
-    /// Upper-cases the first letter, but only when the first word is plainly
-    /// lower-case — so `cytosol` becomes `Cytosol` while `pKa`, `mRNA`, `SAM`
-    /// and `DNA`, whose casing carries meaning, are left exactly as they are.
-    private func capitalisedFirstWordAware(_ raw: String) -> String {
-        let text = raw.trimmingCharacters(in: .whitespaces)
-        guard let first = text.first, first.isLowercase else { return text }
-        let firstWord = text.prefix { !$0.isWhitespace }
-        guard firstWord.allSatisfy({ $0.isLowercase || !$0.isLetter }) else { return text }
-        return String(first).uppercased(with: L.locale) + text.dropFirst()
-    }
-
-    private func displayTerm(_ raw: String) -> String { capitalisedFirstWordAware(raw) }
-    private func displayDefinition(_ raw: String) -> String { capitalisedFirstWordAware(raw) }
+    /// Casing cleanup at display time only: a shouted term or definition is
+    /// lowered to normal case while real abbreviations (ATP, DNA, mRNA) are
+    /// kept, and the first letter is capitalised when the first word is plainly
+    /// lower-case. Deterministic — see `TermCasing`.
+    private func displayTerm(_ raw: String) -> String { TermCasingLive.term(raw) }
+    private func displayDefinition(_ raw: String) -> String { TermCasingLive.definition(raw) }
 
     // MARK: Progress + empty
 
