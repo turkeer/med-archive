@@ -129,6 +129,40 @@ final class GlossaryExtractionTests: XCTestCase {
         XCTAssertNotEqual(GlossaryModel.fingerprint("Hücre zarı"), GlossaryModel.fingerprint("Hücre zarı "))
     }
 
+    // MARK: Polish pass — term linking
+
+    func testNormalizeStemStripsPlurals() {
+        // English plural variants collapse to the same stem as the singular…
+        XCTAssertEqual(GlossaryModel.normalizeStem("action potentials"),
+                       GlossaryModel.normalizeStem("action potential"))
+        XCTAssertEqual(GlossaryModel.normalizeStem("cells"), GlossaryModel.normalizeStem("cell"))
+        XCTAssertEqual(GlossaryModel.normalizeStem("bodies"), GlossaryModel.normalizeStem("body"))
+        // …Turkish plural too (folded form).
+        XCTAssertEqual(GlossaryModel.normalizeStem("hucreler"), GlossaryModel.normalizeStem("hucre"))
+    }
+
+    func testNormalizeStemLeavesShortAndDoubleS() {
+        // Too short to strip, and "-ss" is not a plural.
+        XCTAssertEqual(GlossaryModel.normalizeStem("gas"), "gas")
+        XCTAssertEqual(GlossaryModel.normalizeStem("mass"), "mass")
+    }
+
+    func testTermPairKeyIsOrderIndependent() {
+        XCTAssertEqual(GlossaryModel.termPairKey("b", "a"), GlossaryModel.termPairKey("a", "b"))
+        XCTAssertEqual(GlossaryModel.termPairKey("a", "b"), "a|b")
+    }
+
+    func testParseLinkedReadsYesNo() {
+        XCTAssertEqual(GlossaryModel.parseLinkedLine("YES"), true)
+        XCTAssertEqual(GlossaryModel.parseLinkedLine("NO"), false)
+        XCTAssertNil(GlossaryModel.parseLinkedLine("maybe"))
+
+        let pairs = [("action potential", "action potentials"), ("base", "bases")]
+        let result = GlossaryModel.parseLinked("1) YES\n2) NO", pairs: pairs)
+        XCTAssertEqual(result[GlossaryModel.termPairKey("action potential", "action potentials")], true)
+        XCTAssertEqual(result[GlossaryModel.termPairKey("base", "bases")], false)
+    }
+
     // MARK: Definition shape
 
     func testSelfContainedRejectsFragments() {

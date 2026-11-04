@@ -491,7 +491,10 @@ struct GlossaryView: View {
     }
 
     private func termGroups(from items: [Entry]) -> [TermGroup] {
-        Dictionary(grouping: items) { SearchText.fold($0.term) }
+        // Group on the canonical key, so a term and its confirmed plural land
+        // together; the heading is then the spelling that appears on the most
+        // slides.
+        Dictionary(grouping: items) { glossaryModel.canonicalKey(for: SearchText.fold($0.term)) }
             .map { key, group in
                 let deduped = mergeDuplicates(group)
                 let ordered = deduped.sorted {
@@ -499,9 +502,24 @@ struct GlossaryView: View {
                         ? $0.primary.page < $1.primary.page
                         : $0.primary.path < $1.primary.path
                 }
-                return TermGroup(id: key, term: displayTerm(ordered[0].term), entries: ordered)
+                return TermGroup(id: key, term: headingTerm(for: deduped), entries: ordered)
             }
             .sorted { $0.term.localizedStandardCompare($1.term) == .orderedAscending }
+    }
+
+    /// The heading for a group: when several spellings are linked together (a
+    /// singular and its plural), the one that appears on the most slides wins,
+    /// ties going to the shorter (usually the singular).
+    private func headingTerm(for entries: [Entry]) -> String {
+        var bySpelling: [String: (term: String, sources: Int)] = [:]
+        for entry in entries {
+            let key = SearchText.fold(entry.term)
+            bySpelling[key] = (entry.term, (bySpelling[key]?.sources ?? 0) + entry.sources.count)
+        }
+        let best = bySpelling.values.max {
+            $0.sources != $1.sources ? $0.sources < $1.sources : $0.term.count > $1.term.count
+        }
+        return displayTerm(best?.term ?? entries.first?.term ?? "")
     }
 
     /// Collapses entries whose definition is word-for-word the same (the same
@@ -629,6 +647,8 @@ struct GlossaryView: View {
     private var reviewProgress: some View {
         let label = glossaryModel.isBuilding
             ? L.pick("Slaytlar okunuyor… ", "Reading the slides… ")
+            : glossaryModel.isLinking
+            ? L.pick("Terimler eşleştiriliyor… ", "Linking terms… ")
             : glossaryModel.isVerifying
                 ? L.pick("Tanımlar bir daha gözden geçiriliyor… ", "Re-checking definitions… ")
                 : glossaryModel.isClassifying
