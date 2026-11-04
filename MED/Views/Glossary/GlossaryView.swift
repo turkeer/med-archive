@@ -58,17 +58,28 @@ struct GlossaryView: View {
         }
     }
 
-    /// One definition of a term, with where it came from and how it got here.
-    private struct Entry: Identifiable {
-        let id: String
-        let term: String
-        let definition: String
+    /// One slide a definition came from — a place to jump to.
+    private struct Source: Identifiable, Hashable {
         let path: String
         let page: Int
+        var id: String { "\(path)#\(page)" }
+    }
+
+    /// One definition of a term. The same wording can be repeated on several
+    /// slides (a lecturer restating it), so a single entry carries *all* the
+    /// slides it appears on rather than showing the duplicate twice; `ids`
+    /// holds every candidate it stands for, so hiding it hides them all.
+    private struct Entry: Identifiable {
+        let id: String
+        let ids: [String]
+        let term: String
+        let definition: String
+        let sources: [Source]
         let isRecognised: Bool
         let pending: Bool
         let uncertain: Bool
         let kept: Bool
+        var primary: Source { sources[0] }
     }
 
     private struct TermGroup: Identifiable {
@@ -465,8 +476,9 @@ struct GlossaryView: View {
     // MARK: Shared row building
 
     private func entry(_ candidate: SlideDefinition, term: String, definition: String, pending: Bool, uncertain: Bool, kept: Bool) -> Entry {
-        Entry(id: candidate.id, term: term, definition: definition, path: candidate.path,
-              page: candidate.page, isRecognised: candidate.isRecognised,
+        Entry(id: candidate.id, ids: [candidate.id], term: term, definition: definition,
+              sources: [Source(path: candidate.path, page: candidate.page)],
+              isRecognised: candidate.isRecognised,
               pending: pending, uncertain: uncertain, kept: kept)
     }
 
@@ -481,10 +493,54 @@ struct GlossaryView: View {
     private func termGroups(from items: [Entry]) -> [TermGroup] {
         Dictionary(grouping: items) { SearchText.fold($0.term) }
             .map { key, group in
-                let ordered = group.sorted { $0.path == $1.path ? $0.page < $1.page : $0.path < $1.path }
+                let deduped = mergeDuplicates(group)
+                let ordered = deduped.sorted {
+                    $0.primary.path == $1.primary.path
+                        ? $0.primary.page < $1.primary.page
+                        : $0.primary.path < $1.primary.path
+                }
                 return TermGroup(id: key, term: displayTerm(ordered[0].term), entries: ordered)
             }
             .sorted { $0.term.localizedStandardCompare($1.term) == .orderedAscending }
+    }
+
+    /// Collapses entries whose definition is word-for-word the same (the same
+    /// wording a lecturer put on more than one slide) into one, keeping every
+    /// slide it came from as a source. The merged entry carries all its
+    /// candidate ids, so hiding or keeping it covers every copy at once.
+    private func mergeDuplicates(_ entries: [Entry]) -> [Entry] {
+        var order: [String] = []
+        var byDefinition: [String: [Entry]] = [:]
+        for entry in entries {
+            let key = SearchText.fold(entry.definition)
+            if byDefinition[key] == nil { order.append(key) }
+            byDefinition[key, default: []].append(entry)
+        }
+
+        return order.map { key in
+            let group = byDefinition[key]!
+            guard group.count > 1 else { return group[0] }
+
+            let sources = group.flatMap(\.sources)
+                .reduce(into: [Source]()) { acc, source in
+                    if !acc.contains(source) { acc.append(source) }
+                }
+                .sorted { $0.path == $1.path ? $0.page < $1.page : $0.path < $1.path }
+            let first = group[0]
+            return Entry(
+                id: first.id,
+                ids: group.flatMap(\.ids),
+                term: first.term,
+                definition: first.definition,
+                sources: sources,
+                // A copy read cleanly from any slide's text is not "from image";
+                // kept/pending stand if they hold for every copy.
+                isRecognised: group.allSatisfy(\.isRecognised),
+                pending: group.allSatisfy(\.pending),
+                uncertain: group.contains { $0.uncertain },
+                kept: group.contains { $0.kept }
+            )
+        }
     }
 
     private func definitionRow(_ entry: Entry, number: Int?) -> some View {
@@ -502,15 +558,23 @@ struct GlossaryView: View {
             }
 
             Text(displayDefinition(entry.definition)).font(.callout).lineLimit(4).foregroundStyle(.primary)
-            Text(source(entry)).font(.caption).foregroundStyle(.secondary)
+            // Every slide this exact definition appears on — one line each, so a
+            // repeated definition reads as a single entry with several sources.
+            ForEach(entry.sources) { source in
+                Text(self.source(source)).font(.caption).foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 2)
-        .tag(SlidePageSelection(path: entry.path, page: entry.page, query: entry.term))
+        .tag(SlidePageSelection(path: entry.primary.path, page: entry.primary.page, query: entry.term))
         .contextMenu {
             if entry.kept {
-                Button(L.pick("Sözlükten çıkar", "Remove from glossary")) { glossaryModel.setKept(entry.id, false) }
+                Button(L.pick("Sözlükten çıkar", "Remove from glossary")) {
+                    entry.ids.forEach { glossaryModel.setKept($0, false) }
+                }
             } else {
-                Button(L.pick("Gizle", "Hide")) { glossaryModel.setHidden(entry.id, true) }
+                Button(L.pick("Gizle", "Hide")) {
+                    entry.ids.forEach { glossaryModel.setHidden($0, true) }
+                }
             }
         }
     }
@@ -519,10 +583,10 @@ struct GlossaryView: View {
         VStack(alignment: .leading, spacing: 3) {
             Text(displayTerm(entry.term)).font(.callout.weight(.medium))
             Text(displayDefinition(entry.definition)).font(.callout).lineLimit(3).foregroundStyle(.secondary)
-            Text(source(entry)).font(.caption).foregroundStyle(.tertiary)
+            Text(source(entry.primary)).font(.caption).foregroundStyle(.tertiary)
         }
         .padding(.vertical, 2)
-        .tag(SlidePageSelection(path: entry.path, page: entry.page, query: entry.term))
+        .tag(SlidePageSelection(path: entry.primary.path, page: entry.primary.page, query: entry.term))
         .contextMenu {
             if glossaryModel.isHidden(entry.id) {
                 Button(L.pick("Geri al", "Unhide")) { glossaryModel.setHidden(entry.id, false) }
@@ -538,10 +602,10 @@ struct GlossaryView: View {
             .background(Color.secondary.opacity(0.14), in: Capsule())
     }
 
-    private func source(_ entry: Entry) -> String {
-        let name = (entry.path as NSString).lastPathComponent
+    private func source(_ source: Source) -> String {
+        let name = (source.path as NSString).lastPathComponent
         let stem = (name as NSString).deletingPathExtension
-        return "\(stem) · " + L.pick("s.\(entry.page)", "p.\(entry.page)")
+        return "\(stem) · " + L.pick("s.\(source.page)", "p.\(source.page)")
     }
 
     // MARK: Capitalisation
