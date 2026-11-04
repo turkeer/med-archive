@@ -129,38 +129,42 @@ final class GlossaryExtractionTests: XCTestCase {
         XCTAssertNotEqual(GlossaryModel.fingerprint("Hücre zarı"), GlossaryModel.fingerprint("Hücre zarı "))
     }
 
-    // MARK: Polish pass — term linking
+    // MARK: Term grouping — singular/plural and irregular variants
 
-    func testNormalizeStemStripsPlurals() {
-        // English plural variants collapse to the same stem as the singular…
-        XCTAssertEqual(GlossaryModel.normalizeStem("action potentials"),
-                       GlossaryModel.normalizeStem("action potential"))
-        XCTAssertEqual(GlossaryModel.normalizeStem("cells"), GlossaryModel.normalizeStem("cell"))
-        XCTAssertEqual(GlossaryModel.normalizeStem("bodies"), GlossaryModel.normalizeStem("body"))
-        // …Turkish plural too (folded form).
-        XCTAssertEqual(GlossaryModel.normalizeStem("hucreler"), GlossaryModel.normalizeStem("hucre"))
+    func testRegularPluralPairMatchesSuffixes() {
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("acid", "acids"))
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("base", "bases"))
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("bone", "bones"))
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("body", "bodies"))
+        // Order of the two does not matter.
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("acids", "acid"))
+        // Multi-word: only the last word pluralises.
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair(
+            "nuclear pore complex", "nuclear pore complexes"))
+        // Turkish plural.
+        XCTAssertTrue(GlossaryModel.isRegularPluralPair("hucre", "hucreler"))
     }
 
-    func testNormalizeStemLeavesShortAndDoubleS() {
-        // Too short to strip, and "-ss" is not a plural.
-        XCTAssertEqual(GlossaryModel.normalizeStem("gas"), "gas")
-        XCTAssertEqual(GlossaryModel.normalizeStem("mass"), "mass")
+    func testRegularPluralPairRejectsNonPlurals() {
+        // Different words that merely share a prefix.
+        XCTAssertFalse(GlossaryModel.isRegularPluralPair("base", "basic"))
+        XCTAssertFalse(GlossaryModel.isRegularPluralPair("cell", "cellular"))
+        // An irregular pair is not a regular-suffix difference (handled by the
+        // explicit list instead).
+        XCTAssertFalse(GlossaryModel.isRegularPluralPair("nucleus", "nuclei"))
+        // Identical, or too short to be a plural of something smaller.
+        XCTAssertFalse(GlossaryModel.isRegularPluralPair("acid", "acid"))
+        XCTAssertFalse(GlossaryModel.isRegularPluralPair("ab", "abs"))
     }
 
-    func testTermPairKeyIsOrderIndependent() {
-        XCTAssertEqual(GlossaryModel.termPairKey("b", "a"), GlossaryModel.termPairKey("a", "b"))
-        XCTAssertEqual(GlossaryModel.termPairKey("a", "b"), "a|b")
-    }
-
-    func testParseLinkedReadsYesNo() {
-        XCTAssertEqual(GlossaryModel.parseLinkedLine("YES"), true)
-        XCTAssertEqual(GlossaryModel.parseLinkedLine("NO"), false)
-        XCTAssertNil(GlossaryModel.parseLinkedLine("maybe"))
-
-        let pairs = [("action potential", "action potentials"), ("base", "bases")]
-        let result = GlossaryModel.parseLinked("1) YES\n2) NO", pairs: pairs)
-        XCTAssertEqual(result[GlossaryModel.termPairKey("action potential", "action potentials")], true)
-        XCTAssertEqual(result[GlossaryModel.termPairKey("base", "bases")], false)
+    func testIrregularPluralsAreGenuinelyIrregular() {
+        // Each listed pair is a real singular/plural and NOT also a regular
+        // suffix match, so the two mechanisms never fight over the same pair.
+        for (singular, plural) in GlossaryModel.irregularPlurals {
+            XCTAssertNotEqual(singular, plural)
+            XCTAssertFalse(GlossaryModel.isRegularPluralPair(singular, plural),
+                           "\(singular)/\(plural) should be irregular, not a regular plural")
+        }
     }
 
     // MARK: Definition shape

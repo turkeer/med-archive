@@ -114,13 +114,6 @@ final class GlossaryModel {
         var pages: [String: PageRecord] = [:]
     }
 
-    /// The polish pass's confirmed term-pair decisions. Kept in its own file so
-    /// re-reading the slides never throws them away.
-    private struct AliasCache: Codable, Sendable {
-        var version = 1
-        var links: [String: Bool] = [:]
-    }
-
     /// Your own decisions. Kept apart from the verdict cache and never tied to
     /// its version, so re-reviewing the slides never throws your curation away.
     private struct Marks: Codable, Sendable {
@@ -156,16 +149,12 @@ final class GlossaryModel {
     /// ones that reached the final stage.
     private(set) var candidates: [SlideDefinition] = []
 
-    /// The polish pass's confirmed decisions, keyed by a sorted "foldA|foldB"
-    /// term pair → whether the model judged the two the same term (one the
-    /// plural or a spelling variant of the other). Persisted so a pair is never
-    /// re-asked.
-    private var termLinks: [String: Bool] = [:]
-
-    /// Derived from the confirmed-true links: each folded term → the canonical
-    /// key of its equivalence class, so the view groups "action potential" and
-    /// "action potentials" under one heading. A term with no link maps to
-    /// itself (left out here), so the lookup falls back to the term's own fold.
+    /// Each folded term → the canonical key of its equivalence class, so the
+    /// view groups "action potential" and "action potentials" (and known
+    /// irregular pairs like "nucleus"/"nuclei") under one heading. Built
+    /// deterministically from the terms themselves — see `rebuildAliases`. A
+    /// term with no variant maps to itself (left out here), so the lookup falls
+    /// back to the term's own fold.
     private(set) var termAliases: [String: String] = [:]
 
     private var hiddenIDs: Set<String> = []
@@ -180,9 +169,6 @@ final class GlossaryModel {
     /// The model-driven whole-page read is running. Also runs under
     /// `isReviewing`, so the existing progress row shows it.
     private(set) var isBuilding = false
-    /// The polish pass is running: confirming singular/plural term pairs. Also
-    /// under `isReviewing`, and it follows the page read.
-    private(set) var isLinking = false
     private(set) var reviewedCount = 0
     private(set) var pendingCount = 0
 
@@ -207,10 +193,6 @@ final class GlossaryModel {
         indexDirectory.appending(path: "glossary-pages.json")
     }
 
-    private nonisolated static var aliasesURL: URL {
-        indexDirectory.appending(path: "glossary-aliases.json")
-    }
-
     private nonisolated static var indexDirectory: URL {
         StoreLocation.directory.appending(path: "Index", directoryHint: .isDirectory)
     }
@@ -222,9 +204,7 @@ final class GlossaryModel {
         keptIDs = Set(marks.kept)
         hiddenCrossoverIDs = Set(marks.hiddenCrossovers ?? [])
         pageRecords = Self.readPages()?.pages ?? [:]
-        termLinks = Self.readAliases()?.links ?? [:]
         rebuildFromPages()
-        rebuildAliases()
     }
 
     // MARK: Queries
@@ -677,17 +657,16 @@ final class GlossaryModel {
             guard let record = pageRecords[page.id] else { return true }
             return record.fingerprint != Self.fingerprint(page.text) || record.stage < 4
         }
-        // The polish pass also has work if the current terms have singular/plural
-        // pairs no one has judged yet. So a launch with nothing new to read can
-        // still run the (tiny) term-linking pass over the glossary it already has.
-        let hasLinkWork = !pendingTermPairs().isEmpty
-        guard !pageTodo.isEmpty || hasLinkWork else { return }
+        // Term grouping (singular/plural and known irregular variants) is
+        // deterministic and rebuilt from the terms every time the glossary is
+        // (re)built, so there is no separate pass to run — a launch with nothing
+        // new to read already shows the grouped glossary from `init`.
+        guard !pageTodo.isEmpty else { return }
 
         isReviewing = true
-        isBuilding = !pageTodo.isEmpty
+        isBuilding = true
         Task {
-            if !pageTodo.isEmpty { await runExtraction(pageTodo) }
-            await runLinking()
+            await runExtraction(pageTodo)
             isReviewing = false
         }
     }
@@ -792,75 +771,63 @@ final class GlossaryModel {
         candidates = produced.sorted {
             $0.term.localizedStandardCompare($1.term) == .orderedAscending
         }
+        rebuildAliases()
     }
 
-    // MARK: Polish pass — singular/plural term linking
+    // MARK: Term grouping — singular/plural and irregular variants
 
     /// The canonical grouping key for a folded term: its equivalence-class
-    /// representative when the model has linked it to a variant, else itself.
-    /// The view groups on this so "action potential" and "action potentials"
-    /// fall under one heading.
+    /// representative when it has a variant in the glossary, else itself. The
+    /// view groups on this so "action potential" and "action potentials" fall
+    /// under one heading.
     func canonicalKey(for folded: String) -> String { termAliases[folded] ?? folded }
 
-    /// The displayed terms, folded → a real spelling. Only what the glossary
-    /// actually shows (accepted or kept, not hidden) is linked.
-    private func displayedTermForms() -> [String: String] {
-        var forms: [String: String] = [:]
-        for candidate in candidates {
-            guard !isHidden(candidate.id) else { continue }
-            let shown = isKept(candidate.id) || (verdict(for: candidate.id)?.accepted ?? false)
-            guard shown else { continue }
-            let folded = SearchText.fold(candidate.term)
-            if forms[folded] == nil { forms[folded] = candidate.term }
-        }
-        return forms
-    }
-
-    /// The pairs the polish pass still owes a judgement: displayed terms whose
-    /// plural-stripped stem collides, minus the pairs already decided. The AI
-    /// confirms each, so this side can be generous without risking a wrong
-    /// merge — a false candidate is simply judged NO.
-    private func pendingTermPairs() -> [(String, String)] {
-        guard isAvailable else { return [] }
-        let folded = Array(displayedTermForms().keys)
-        var byStem: [String: [String]] = [:]
-        for term in folded { byStem[Self.normalizeStem(term), default: []].append(term) }
-
-        var pairs: [(String, String)] = []
-        for group in byStem.values where group.count >= 2 {
-            let sorted = group.sorted()
-            for i in sorted.indices {
-                for j in sorted.index(after: i) ..< sorted.endIndex {
-                    let key = Self.termPairKey(sorted[i], sorted[j])
-                    if termLinks[key] == nil { pairs.append((sorted[i], sorted[j])) }
-                }
-            }
-        }
-        return pairs
-    }
-
-    /// Rebuilds `termAliases` from the confirmed-same links with a small
-    /// union-find, so every term in a class maps to the class's canonical key
-    /// (its lexicographically smallest folded form).
+    /// Rebuilds `termAliases` from the current terms with a small union-find.
+    /// Two terms are linked only when one is a regular plural of the other
+    /// (identical but for a trailing -s/-es/-ies, or Turkish -ler/-lar) or they
+    /// are a known irregular singular/plural pair. Purely deterministic on
+    /// purpose: "acid"/"acids" differ by one suffix and are self-evidently the
+    /// same term, so there is nothing for a model to second-guess — and asked,
+    /// the on-device model got some of these plainly wrong.
     private func rebuildAliases() {
         var parent: [String: String] = [:]
+        func ensure(_ x: String) { if parent[x] == nil { parent[x] = x } }
         func find(_ x: String) -> String {
             var root = x
             while let next = parent[root], next != root { root = next }
             return root
         }
         func union(_ a: String, _ b: String) {
+            ensure(a); ensure(b)
             let ra = find(a), rb = find(b)
             guard ra != rb else { return }
             if ra < rb { parent[rb] = ra } else { parent[ra] = rb }
         }
 
-        for (key, same) in termLinks where same {
-            let parts = key.split(separator: "|", maxSplits: 1).map(String.init)
-            guard parts.count == 2 else { continue }
-            if parent[parts[0]] == nil { parent[parts[0]] = parts[0] }
-            if parent[parts[1]] == nil { parent[parts[1]] = parts[1] }
-            union(parts[0], parts[1])
+        var folded: Set<String> = []
+        for candidate in candidates { folded.insert(SearchText.fold(candidate.term)) }
+
+        // Regular plurals: the singular is always a prefix of its plural for
+        // these suffixes, so a 3-character prefix bucket keeps the pairwise
+        // check to a handful of neighbours instead of every term against every
+        // other.
+        var byPrefix: [String: [String]] = [:]
+        for term in folded { byPrefix[String(term.prefix(3)), default: []].append(term) }
+        for group in byPrefix.values where group.count >= 2 {
+            let sorted = group.sorted()
+            for i in sorted.indices {
+                for j in sorted.index(after: i) ..< sorted.endIndex
+                where Self.isRegularPluralPair(sorted[i], sorted[j]) {
+                    union(sorted[i], sorted[j])
+                }
+            }
+        }
+
+        // Irregular Latin/Greek plurals, which share no regular suffix, linked
+        // only when both forms are actually present.
+        for (singular, plural) in Self.irregularPlurals
+        where folded.contains(singular) && folded.contains(plural) {
+            union(singular, plural)
         }
 
         var aliases: [String: String] = [:]
@@ -868,120 +835,33 @@ final class GlossaryModel {
         termAliases = aliases
     }
 
-    /// Strips a plural suffix for the candidate-collision test — Turkish
-    /// `-ler/-lar` and English `-ies/-es/-s` — guarded by a minimum stem length
-    /// so short words are not mangled. Over-stripping is safe: the AI gate has
-    /// the final say on whether a resulting collision is a real variant.
-    static func normalizeStem(_ folded: String) -> String {
-        var stem = folded
-        for suffix in ["ler", "lar"] where stem.hasSuffix(suffix) && stem.count - suffix.count >= 4 {
-            stem = String(stem.dropLast(suffix.count))
-            break
-        }
-        if stem.hasSuffix("ies"), stem.count - 3 >= 3 {
-            stem = String(stem.dropLast(3)) + "y"
-        } else if stem.hasSuffix("es"), stem.count - 2 >= 4 {
-            stem = String(stem.dropLast(2))
-        } else if stem.hasSuffix("s"), !stem.hasSuffix("ss"), stem.count - 1 >= 4 {
-            stem = String(stem.dropLast(1))
-        }
-        return stem
+    /// Whether `a` and `b` are the same term differing only by a regular plural
+    /// suffix — English -s/-es/-ies or Turkish -ler/-lar. Length-guarded so a
+    /// tiny word is not taken for a plural of a smaller one.
+    static func isRegularPluralPair(_ a: String, _ b: String) -> Bool {
+        let short = a.count <= b.count ? a : b
+        let long = a.count <= b.count ? b : a
+        guard short.count >= 3, short != long else { return false }
+        if long == short + "s" { return true }
+        if long == short + "es" { return true }
+        if short.hasSuffix("y"), long == short.dropLast() + "ies" { return true }
+        if long == short + "ler" || long == short + "lar" { return true }
+        return false
     }
 
-    static func termPairKey(_ a: String, _ b: String) -> String {
-        a < b ? "\(a)|\(b)" : "\(b)|\(a)"
-    }
-
-    private func runLinking() async {
-        #if canImport(FoundationModels)
-        if #available(macOS 26, *) {
-            let pairs = pendingTermPairs()
-            guard !pairs.isEmpty else { return }
-
-            isLinking = true
-            pendingCount = pairs.count
-            reviewedCount = 0
-            var start = 0
-            while start < pairs.count {
-                let batch = Array(pairs[start ..< min(start + Self.batchSize, pairs.count)])
-                let results = await confirmPairs(batch)
-                for (key, same) in results { termLinks[key] = same }
-                reviewedCount += batch.count
-                rebuildAliases()
-                Self.writeAliases(AliasCache(links: termLinks))
-                start += Self.batchSize
-            }
-            isLinking = false
-        }
-        #endif
-    }
-
-    static func parseLinked(_ answer: String, pairs: [(String, String)]) -> [String: Bool] {
-        var result: [String: Bool] = [:]
-        for (number, rest) in numbered(answer, count: pairs.count) {
-            if let same = parseLinkedLine(rest) {
-                let pair = pairs[number - 1]
-                result[termPairKey(pair.0, pair.1)] = same
-            }
-        }
-        return result
-    }
-
-    static func parseLinkedLine(_ line: String) -> Bool? {
-        let upper = line.trimmingCharacters(in: .whitespaces).uppercased()
-        if upper.hasPrefix("YES") { return true }
-        if upper.hasPrefix("NO") { return false }
-        return nil
-    }
-
-    private static let linkInstructions = """
-    You are given numbered pairs of medical terms. For each pair, decide \
-    whether the two are the SAME term — one merely the plural, or a spelling or \
-    casing variant, of the other (for example "cell" / "cells", or "nucleus" / \
-    "nuclei") — rather than two different concepts. Reply one line per item: \
-    the item number, ')', then YES if they are the same term, or NO. In order, \
-    nothing else.
-    """
-
-    private static func linkBatchPrompt(_ pairs: [(String, String)]) -> String {
-        pairs.enumerated()
-            .map { index, pair in "ITEM \(index + 1)\n\(pair.0) | \(pair.1)" }
-            .joined(separator: "\n\n")
-    }
-
-    #if canImport(FoundationModels)
-    @available(macOS 26, *)
-    private func confirmPairs(_ pairs: [(String, String)]) async -> [String: Bool] {
-        var result: [String: Bool] = [:]
-        do {
-            let session = LanguageModelSession(instructions: Self.linkInstructions)
-            let answer = try await session.respond(to: Self.linkBatchPrompt(pairs)).content
-            result = Self.parseLinked(answer, pairs: pairs)
-        } catch {
-            // Whole-batch failure falls through to the per-item path below.
-        }
-        for pair in pairs where result[Self.termPairKey(pair.0, pair.1)] == nil {
-            // Only record a pair the model actually answered; an unanswered one
-            // is left undecided so it is retried on a later run, never merged by
-            // default.
-            if let decided = await confirmOne(pair) {
-                result[Self.termPairKey(pair.0, pair.1)] = decided
-            }
-        }
-        return result
-    }
-
-    @available(macOS 26, *)
-    private func confirmOne(_ pair: (String, String)) async -> Bool? {
-        do {
-            let session = LanguageModelSession(instructions: Self.linkInstructions)
-            let answer = try await session.respond(to: "1) \(pair.0) | \(pair.1)").content
-            return Self.parseLinkedLine(Self.firstLine(answer))
-        } catch {
-            return nil
-        }
-    }
-    #endif
+    /// Known irregular singular/plural pairs (folded), the Latin/Greek ones
+    /// that turn up in these slides. A pair here merges only when both forms
+    /// are present; extend as needed.
+    static let irregularPlurals: [(String, String)] = [
+        ("nucleus", "nuclei"), ("nucleolus", "nucleoli"), ("mitochondrion", "mitochondria"),
+        ("matrix", "matrices"), ("cortex", "cortices"), ("appendix", "appendices"),
+        ("villus", "villi"), ("alveolus", "alveoli"), ("bacterium", "bacteria"),
+        ("ganglion", "ganglia"), ("stimulus", "stimuli"), ("lamella", "lamellae"),
+        ("vertebra", "vertebrae"), ("bronchus", "bronchi"), ("fungus", "fungi"),
+        ("ovum", "ova"), ("septum", "septa"), ("spectrum", "spectra"),
+        ("flagellum", "flagella"), ("cilium", "cilia"), ("phenomenon", "phenomena"),
+        ("criterion", "criteria"), ("axis", "axes"), ("crista", "cristae"),
+    ]
 
     #if canImport(FoundationModels)
     @available(macOS 26, *)
@@ -1497,18 +1377,6 @@ final class GlossaryModel {
 
     private nonisolated static func writePages(_ cache: PageCache) {
         write(cache, to: pagesURL, what: "sözlük sayfaları")
-    }
-
-    private nonisolated static func readAliases() -> AliasCache? {
-        guard let data = try? Data(contentsOf: aliasesURL),
-              let cache = try? JSONDecoder().decode(AliasCache.self, from: data),
-              cache.version == AliasCache().version
-        else { return nil }
-        return cache
-    }
-
-    private nonisolated static func writeAliases(_ cache: AliasCache) {
-        write(cache, to: aliasesURL, what: "sözlük terim eşleşmeleri")
     }
 
     private nonisolated static func readMarks() -> Marks? {

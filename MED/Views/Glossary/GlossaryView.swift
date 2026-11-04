@@ -647,8 +647,6 @@ struct GlossaryView: View {
     private var reviewProgress: some View {
         let label = glossaryModel.isBuilding
             ? L.pick("Slaytlar okunuyor… ", "Reading the slides… ")
-            : glossaryModel.isLinking
-            ? L.pick("Terimler eşleştiriliyor… ", "Linking terms… ")
             : glossaryModel.isVerifying
                 ? L.pick("Tanımlar bir daha gözden geçiriliyor… ", "Re-checking definitions… ")
                 : glossaryModel.isClassifying
