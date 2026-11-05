@@ -16,6 +16,7 @@ struct MEDApp: App {
     @State private var slideIndex = SlideIndex()
     @State private var queryAssistant = QueryAssistant()
     @State private var glossaryModel = GlossaryModel()
+    @State private var referenceLibrary = ReferenceLibrary()
 
     init() {
         do {
@@ -49,6 +50,7 @@ struct MEDApp: App {
                     .environment(slideIndex)
                     .environment(queryAssistant)
                     .environment(glossaryModel)
+                    .environment(referenceLibrary)
                     .modelContainer(modelContainer)
                     .task { slideIndex.refresh(root: library.url) }
                     .onChange(of: library.url) { _, root in
@@ -86,6 +88,7 @@ struct MEDApp: App {
             SettingsView(storeURL: modelContainer?.configurations.first?.url)
                 .environment(library)
                 .environment(slideIndex)
+                .environment(referenceLibrary)
         }
     }
 }

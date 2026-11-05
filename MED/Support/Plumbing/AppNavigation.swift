@@ -9,6 +9,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case lectures
     case search
     case glossary
+    case reference
     case courses
     case instructors
     case committees
@@ -23,6 +24,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .lectures:    return L.topics
         case .search:      return L.pick("Slaytlarda ara", "Search slides")
         case .glossary:    return L.glossary
+        case .reference:   return L.pick("Atlas", "Atlas")
         case .courses:     return L.courses
         case .instructors: return L.instructors
         case .committees:  return L.committees
@@ -37,6 +39,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .lectures:    return "list.bullet.rectangle"
         case .search:      return "text.page.badge.magnifyingglass"
         case .glossary:    return "character.book.closed"
+        case .reference:   return "book.pages"
         case .courses:     return "books.vertical"
         case .instructors: return "person.2"
         case .committees:  return "square.stack.3d.up"
@@ -86,6 +89,12 @@ final class AppNavigation {
     /// do not clobber each other's selection when you switch between them.
     var glossaryQuery = ""
     var glossaryPage: SlidePageSelection?
+
+    /// The Atlas screen's search and the page of the reference book it is
+    /// showing. Its own selection, kept apart from the other screens so
+    /// switching sections does not clobber it.
+    var referenceQuery = ""
+    var referencePage: SlidePageSelection?
 
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?

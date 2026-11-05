@@ -92,6 +92,15 @@ private struct PDFPageView: NSViewRepresentable {
     let page: Int
     let highlight: String
 
+    /// Remembers the last page/word we navigated to, so an unrelated redraw
+    /// does not yank the view back and fight the reader's own scrolling. Only
+    /// a genuine change of target scrolls.
+    final class Coordinator {
+        var lastKey: String?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeNSView(context: Context) -> PDFView {
         let view = PDFView()
         view.autoScales = true
@@ -106,6 +115,7 @@ private struct PDFPageView: NSViewRepresentable {
         // position every time anything else on screen changes.
         if view.document?.documentURL != url {
             view.document = PDFDocument(url: url)
+            context.coordinator.lastKey = nil
         }
 
         guard let document = view.document,
@@ -122,13 +132,32 @@ private struct PDFPageView: NSViewRepresentable {
         }
         view.highlightedSelections = found.isEmpty ? nil : found
 
-        // Scrolling to the match itself rather than the top of the page: on a
-        // dense slide the word can be anywhere, and "page 37" is only half an
-        // answer.
-        if let onPage = found.first(where: { $0.pages.contains(target) }) {
-            view.go(to: onPage)
-        } else {
-            view.go(to: target)
+        // Scroll only when the target actually changed.
+        let key = "\(url.path(percentEncoded: false))#\(page)#\(needle)"
+        guard context.coordinator.lastKey != key else { return }
+        context.coordinator.lastKey = key
+
+        let onPage = found.first(where: { $0.pages.contains(target) })
+
+        // Centre the match (or the page) in the view rather than pinning it to
+        // the top. A destination point maps to the top of the visible area, so
+        // placing it half a screen above the match leaves the match in the
+        // middle — no more scrolling up by hand to read it. Done on the next
+        // run-loop tick so the view is laid out and its scale is known.
+        DispatchQueue.main.async {
+            let pageBounds = target.bounds(for: .mediaBox)
+            let scale = view.scaleFactor > 0 ? view.scaleFactor : 1
+            let halfView = (view.bounds.height / scale) / 2
+
+            let anchorY: CGFloat
+            if let onPage {
+                let bounds = onPage.bounds(for: target)
+                anchorY = min(pageBounds.maxY, bounds.midY + halfView)
+            } else {
+                anchorY = pageBounds.maxY
+            }
+
+            view.go(to: PDFDestination(page: target, at: CGPoint(x: pageBounds.minX, y: anchorY)))
         }
     }
 }

@@ -11,6 +11,7 @@ struct SettingsView: View {
 
     @Environment(LibraryRoot.self) private var library
     @Environment(SlideIndex.self) private var slideIndex
+    @Environment(ReferenceLibrary.self) private var reference
 
     @State private var isChoosingFolder = false
 
@@ -175,6 +176,65 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Section {
+                switch reference.phase {
+                case .absent:
+                    Button(L.pick("Atlası indir", "Download the atlas")) {
+                        reference.startDownload()
+                    }
+
+                case .downloading(let fraction):
+                    VStack(alignment: .leading, spacing: 6) {
+                        ProgressView(value: fraction)
+                        HStack {
+                            Text("\(Int(fraction * 100))%")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button(L.pick("Duraklat", "Pause")) { reference.pauseDownload() }
+                        }
+                    }
+
+                case .indexing:
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text(L.pick("okunuyor…", "reading…")).foregroundStyle(.secondary)
+                    }
+
+                case .ready:
+                    LabeledContent(L.pick("Atlas", "Atlas")) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.pick(
+                                "Hazır · \(reference.pageCount) sayfa",
+                                "Ready · \(reference.pageCount) pages"
+                            ))
+                            Button(L.remove) { reference.removeDownload() }
+                                .buttonStyle(.link)
+                        }
+                    }
+
+                case .failed(let message):
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(message, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Button(L.pick("Tekrar dene", "Try again")) { reference.startDownload() }
+                    }
+                }
+            } header: {
+                Text(L.pick("Atlas (ek kaynak)", "Atlas (reference)"))
+            } footer: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L.pick(
+                        "OpenStax Anatomy and Physiology 2e, slaytlarınla çalışırken ek kaynak olarak kullanılır — kendi arşivine karışmaz, bir derse bağlanmaz. Yaklaşık 476 MB; OpenStax'ten bir kez indirilir, metni bu bilgisayarda okunur ve sonrası çevrimdışı çalışır.",
+                        "OpenStax Anatomy and Physiology 2e, used as a reference while you study your slides — it stays out of your own archive and is never attached to a lecture. About 476 MB; downloaded once from OpenStax, its text is read on this computer, and it works offline afterwards."
+                    ))
+                    Text(ReferenceLibrary.attribution)
+                    Link(L.pick("Kaynak sayfası", "Source page"), destination: ReferenceLibrary.sourcePageURL)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .fileImporter(
@@ -185,6 +245,6 @@ struct SettingsView: View {
                 library.set(url)
             }
         }
-        .frame(width: 560, height: 540)
+        .frame(width: 560, height: 640)
     }
 }
