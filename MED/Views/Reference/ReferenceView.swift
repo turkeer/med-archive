@@ -22,21 +22,11 @@ struct ReferenceView: View {
     @Binding var selection: SlidePageSelection?
 
     @Environment(ReferenceLibrary.self) private var reference
+    @Environment(AppNavigation.self) private var nav
 
-    enum Mode: String, CaseIterable, Identifiable {
-        case contents, glossary, figures, search
-        var id: String { rawValue }
-        var title: String {
-            switch self {
-            case .contents: return L.pick("İçindekiler", "Contents")
-            case .glossary: return L.pick("Sözlük", "Glossary")
-            case .figures:  return L.pick("Figürler", "Figures")
-            case .search:   return L.pick("Ara", "Search")
-            }
-        }
-    }
-
-    @AppStorage("referenceMode") private var mode: Mode = .contents
+    /// The current mode lives in navigation so a crossover ("open in the
+    /// atlas") can set it from another screen.
+    private var mode: ReferenceSectionMode { nav.referenceMode }
 
     @State private var sectionResults: [ReferenceLibrary.Section] = []
     @State private var termResults: [ReferenceLibrary.Term] = []
@@ -57,7 +47,7 @@ struct ReferenceView: View {
 
     private struct Question: Equatable {
         let query: String
-        let mode: Mode
+        let mode: ReferenceSectionMode
         let ready: Bool
     }
 
@@ -76,8 +66,8 @@ struct ReferenceView: View {
 
     private var ready: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $mode) {
-                ForEach(Mode.allCases) { Text($0.title).tag($0) }
+            Picker("", selection: Binding(get: { nav.referenceMode }, set: { nav.referenceMode = $0 })) {
+                ForEach(ReferenceSectionMode.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()

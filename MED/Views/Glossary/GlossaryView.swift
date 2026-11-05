@@ -20,6 +20,7 @@ struct GlossaryView: View {
 
     @Environment(SlideIndex.self) private var slideIndex
     @Environment(GlossaryModel.self) private var glossaryModel
+    @Environment(AppNavigation.self) private var nav
 
     /// Needed to place a slide under its lecture — and so its course and
     /// committee — for the crossover mode. The same `relativePath → Lecture`
@@ -521,6 +522,8 @@ struct GlossaryView: View {
             .textCase(nil)
         }
         .contextMenu {
+            Button(L.pick("Atlas'ta aç", "Open in atlas")) { nav.openInAtlas(point.term) }
+            Divider()
             if glossaryModel.isCrossoverHidden(point.id) {
                 Button(L.pick("Geri al", "Unhide")) { glossaryModel.setCrossoverHidden(point.id, false) }
             } else {
@@ -707,6 +710,8 @@ struct GlossaryView: View {
         .padding(.vertical, 2)
         .tag(SlidePageSelection(path: entry.primary.path, page: entry.primary.page, query: entry.term))
         .contextMenu {
+            Button(L.pick("Atlas'ta aç", "Open in atlas")) { nav.openInAtlas(entry.term) }
+            Divider()
             if entry.kept {
                 Button(L.pick("Sözlükten çıkar", "Remove from glossary")) {
                     entry.ids.forEach { glossaryModel.setKept($0, false) }
@@ -728,6 +733,8 @@ struct GlossaryView: View {
         .padding(.vertical, 2)
         .tag(SlidePageSelection(path: entry.primary.path, page: entry.primary.page, query: entry.term))
         .contextMenu {
+            Button(L.pick("Atlas'ta aç", "Open in atlas")) { nav.openInAtlas(entry.term) }
+            Divider()
             if glossaryModel.isHidden(entry.id) {
                 Button(L.pick("Geri al", "Unhide")) { glossaryModel.setHidden(entry.id, false) }
             } else {

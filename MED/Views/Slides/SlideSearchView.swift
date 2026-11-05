@@ -35,6 +35,7 @@ struct SlideSearchView: View {
 
     @Environment(SlideIndex.self) private var slideIndex
     @Environment(QueryAssistant.self) private var assistant
+    @Environment(AppNavigation.self) private var nav
 
     /// Files, to put a lecture's name on a hit. Every PDF under the root is
     /// indexed, including ones not attached to anything, so this is a lookup
@@ -132,6 +133,19 @@ struct SlideSearchView: View {
                         "Turns your question into English search terms. They go into the search box, where you can edit them."
                     ))
                 }
+            }
+
+            ToolbarItem {
+                Button {
+                    nav.openInAtlas(query)
+                } label: {
+                    Label(L.pick("Atlas'ta aç", "Open in atlas"), systemImage: "book.pages")
+                }
+                .disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
+                .help(L.pick(
+                    "Bu aramayı OpenStax atlasında aç.",
+                    "Open this search in the OpenStax atlas."
+                ))
             }
 
             ToolbarItem {

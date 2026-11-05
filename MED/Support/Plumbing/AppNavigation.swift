@@ -63,6 +63,22 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     }
 }
 
+/// The four ways the Atlas screen can be read. Held in navigation rather than
+/// the view so a "look this up in the atlas" action from another screen can
+/// drop you straight into search.
+enum ReferenceSectionMode: String, CaseIterable, Identifiable {
+    case contents, glossary, figures, search
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .contents: return L.pick("İçindekiler", "Contents")
+        case .glossary: return L.pick("Sözlük", "Glossary")
+        case .figures:  return L.pick("Figürler", "Figures")
+        case .search:   return L.pick("Ara", "Search")
+        }
+    }
+}
+
 /// What is selected, in one place, so that the related screens can hand you
 /// off to a lecture: clicking a lecture under an instructor switches the
 /// sidebar to Konular and selects it, rather than opening a dead end.
@@ -95,6 +111,7 @@ final class AppNavigation {
     /// switching sections does not clobber it.
     var referenceQuery = ""
     var referencePage: SlidePageSelection?
+    var referenceMode: ReferenceSectionMode = .contents
 
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?
@@ -105,6 +122,18 @@ final class AppNavigation {
     func show(_ lecture: Lecture) {
         section = .lectures
         lectureID = lecture.persistentModelID
+    }
+
+    /// Jump to the Atlas and search it for `term` — the crossover from a slide
+    /// hit or a glossary entry to the reference book. Lands in full-text search
+    /// because that finds the term anywhere in the book, figures included.
+    func openInAtlas(_ term: String) {
+        let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        referenceQuery = trimmed
+        referenceMode = .search
+        referencePage = nil
+        section = .reference
     }
 }
 
