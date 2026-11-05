@@ -226,7 +226,7 @@ struct LectureLinkList: View {
                 entry.upcoming += 1
             } else {
                 entry.due += 1
-                if hasFiles(group) { entry.covered += 1 }
+                if LectureGrouping.slidesAccountedFor(group.lectures) { entry.covered += 1 }
             }
 
             result[name] = entry

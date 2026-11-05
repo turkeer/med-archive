@@ -113,6 +113,28 @@ final class AppNavigation {
     var referencePage: SlidePageSelection?
     var referenceMode: ReferenceSectionMode = .contents
 
+    /// A slide opened for reading inside the app's own PDF viewer — where you
+    /// can select a term and look it up — rather than in Quick Look. Lives here
+    /// so the lecture detail column can swap to the reader and back. Cleared
+    /// when another lecture is picked.
+    var readingSlide: SlidePageSelection?
+
+    /// A slide shown filling the whole window for distraction-free study, still
+    /// in the app's own viewer so term lookup keeps working — the difference
+    /// from Quick Look. Independent of `readingSlide`: you can go full screen
+    /// straight from the lesson, or expand the inline reader.
+    var fullScreenSlide: SlidePageSelection?
+
+    /// Open `path` in the in-app reader, from its first page.
+    func readSlide(path: String) {
+        readingSlide = SlidePageSelection(path: path, page: 1, query: "")
+    }
+
+    /// Show `path` full-screen in the in-app viewer, from its first page.
+    func readSlideFullScreen(path: String) {
+        fullScreenSlide = SlidePageSelection(path: path, page: 1, query: "")
+    }
+
     var lectureID: PersistentIdentifier?
     var courseID: PersistentIdentifier?
     var instructorID: PersistentIdentifier?
@@ -134,6 +156,9 @@ final class AppNavigation {
         referenceMode = .search
         referencePage = nil
         section = .reference
+        // Leave any slide reader so the atlas is actually what you see.
+        readingSlide = nil
+        fullScreenSlide = nil
     }
 }
 

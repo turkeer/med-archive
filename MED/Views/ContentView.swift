@@ -25,6 +25,18 @@ struct ContentView: View {
         } detail: {
             detailColumn
         }
+        .overlay {
+            // Full-screen reading sits above the whole split view rather than
+            // in the detail column, so the sidebar and list get out of the way.
+            // Still inside this window, so it shares `nav` and the lookup's
+            // "open in atlas" hand-off keeps working.
+            if let slide = nav.fullScreenSlide {
+                SlideFullScreenReader(selection: slide)
+                    .environment(nav)
+                    .environment(\.locale, L.locale)
+                    .transition(.opacity)
+            }
+        }
         .environment(nav)
         // Dates and months follow the chosen language, so a week heading does
         // not read "5 – 11 Eki" in an otherwise English window. Set here
@@ -128,13 +140,112 @@ struct ContentView: View {
 struct LectureDetailColumn: View {
     let lectureID: PersistentIdentifier?
 
+    @Environment(AppNavigation.self) private var nav
     @Query private var lectures: [Lecture]
 
     var body: some View {
-        if let lecture = lectures.first(where: { $0.persistentModelID == lectureID }) {
-            LectureDetailView(lecture: lecture)
-        } else {
-            SelectionPlaceholder(text: L.pick("Ortadaki listeden bir oturum seç.", "Pick a session from the middle list."))
+        Group {
+            if let reading = nav.readingSlide {
+                SlideReaderColumn(selection: reading)
+            } else if let lecture = lectures.first(where: { $0.persistentModelID == lectureID }) {
+                LectureDetailView(lecture: lecture)
+            } else {
+                SelectionPlaceholder(text: L.pick("Ortadaki listeden bir oturum seç.", "Pick a session from the middle list."))
+            }
         }
+        // Picking another lesson leaves the reader; a slide you opened to read
+        // belongs to the lesson you opened it from, not the next one.
+        .onChange(of: lectureID) { _, _ in nav.readingSlide = nil }
+    }
+}
+
+/// A slide read inside the app, with a way back to the lesson. The viewer
+/// itself is the same one search and the atlas use, so selecting a term and
+/// looking it up works here too — which is the whole point of reading in the
+/// app rather than Quick Look.
+struct SlideReaderColumn: View {
+    let selection: SlidePageSelection
+
+    @Environment(AppNavigation.self) private var nav
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Button {
+                    nav.readingSlide = nil
+                } label: {
+                    Label(L.pick("Derse dön", "Back to the lesson"), systemImage: "chevron.left")
+                }
+                .buttonStyle(.link)
+
+                Spacer(minLength: 8)
+
+                Label(
+                    L.pick("Bir kelimeyi seç, sonra “Ara” ya da sağ tık", "Select a word, then “Look up” or right-click"),
+                    systemImage: "character.cursor.ibeam"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .labelStyle(.titleAndIcon)
+
+                Spacer(minLength: 8)
+
+                Button {
+                    nav.fullScreenSlide = selection
+                } label: {
+                    Label(L.pick("Tam ekran", "Full screen"), systemImage: "arrow.up.left.and.arrow.down.right")
+                }
+                .buttonStyle(.link)
+                .help(L.pick("Slaytı tüm pencereyi kaplayacak şekilde oku", "Read the slide filling the whole window"))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+
+            Divider()
+
+            SlidePageDetail(selection: selection)
+        }
+    }
+}
+
+/// The same in-app viewer filling the whole window, for reading a slide without
+/// the sidebar and list around it. Esc or the button leaves it; the term lookup
+/// works here exactly as in the columned reader.
+struct SlideFullScreenReader: View {
+    let selection: SlidePageSelection
+
+    @Environment(AppNavigation.self) private var nav
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Button {
+                    nav.fullScreenSlide = nil
+                } label: {
+                    Label(L.pick("Küçült", "Exit full screen"), systemImage: "arrow.down.right.and.arrow.up.left")
+                }
+                .buttonStyle(.link)
+                .keyboardShortcut(.cancelAction)
+
+                Spacer(minLength: 8)
+
+                Label(
+                    L.pick("Bir kelimeyi seç, sonra “Ara” ya da sağ tık", "Select a word, then “Look up” or right-click"),
+                    systemImage: "character.cursor.ibeam"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .labelStyle(.titleAndIcon)
+
+                Spacer(minLength: 8)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+
+            Divider()
+
+            SlidePageDetail(selection: selection)
+        }
+        .background(.background)
     }
 }

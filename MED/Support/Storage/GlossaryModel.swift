@@ -265,6 +265,60 @@ final class GlossaryModel {
         return items
     }
 
+    /// One curated definition with its text, for the in-slide term lookup.
+    struct CuratedDefinition: Identifiable {
+        let term: String
+        let definition: String
+        let path: String
+        let page: Int
+        var id: String { "\(path)#\(page)#\(term)" }
+    }
+
+    /// Curated definitions whose term matches `query` — what the "look this up"
+    /// popover shows from our own slide glossary. Same accepted/kept/hidden rule
+    /// as `curatedTerms`, so it cannot drift from what the glossary screen shows,
+    /// but it carries the definition text and filters by the term. Near
+    /// duplicates (same term and opening) are collapsed.
+    func definitions(matching query: String, in candidates: [SlideDefinition]) -> [CuratedDefinition] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !needle.isEmpty else { return [] }
+
+        var items: [CuratedDefinition] = []
+        var seen: Set<String> = []
+
+        for candidate in candidates {
+            let term: String
+            let definition: String
+
+            if isKept(candidate.id) {
+                let verdict = verdict(for: candidate.id)
+                term = verdict?.term ?? candidate.term
+                definition = verdict?.definition ?? candidate.definition
+            } else if isHidden(candidate.id) {
+                continue
+            } else if isAvailable {
+                guard let verdict = verdict(for: candidate.id), verdict.accepted else { continue }
+                term = verdict.term
+                definition = verdict.definition
+            } else if candidate.confidence == .high {
+                term = candidate.term
+                definition = candidate.definition
+            } else {
+                continue
+            }
+
+            guard SearchText.contains(term, query: needle) else { continue }
+
+            let key = "\(SearchText.fold(term))|\(SearchText.fold(definition).prefix(40))"
+            guard seen.insert(key).inserted else { continue }
+
+            items.append(CuratedDefinition(term: term, definition: definition,
+                                           path: candidate.path, page: candidate.page))
+        }
+
+        return items
+    }
+
     // MARK: Your marks
 
     /// Hide a definition you do not want (or clear that). Hiding also clears a

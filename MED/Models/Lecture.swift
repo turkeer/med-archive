@@ -62,6 +62,20 @@ final class Lecture {
     /// archives open unchanged with nothing marked.
     var studiedAt: Date?
 
+    /// When this topic was marked as having no slides to add, or `nil` when it
+    /// is still expected to get some.
+    ///
+    /// Some lessons never come with a handout — a practical where nothing was
+    /// given out, say — so counting them forever as "missing slides" is noise.
+    /// Marking a topic here takes it out of the slide-coverage counts and the
+    /// "slaytı eklenmemiş" flag, without pretending a file exists.
+    ///
+    /// Topic-wide and optional for the same reasons as `studiedAt`: the parts
+    /// of one topic share it, and SwiftData reads a newly added optional as
+    /// NULL for rows that predate it, so existing archives open unchanged with
+    /// nothing waived.
+    var slidesWaivedAt: Date?
+
     // MARK: Relationships
 
     /// The recurring course this session belongs to (see `Course.lectures`).

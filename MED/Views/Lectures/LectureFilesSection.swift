@@ -22,6 +22,7 @@ struct LectureFilesSection: View {
 
     @Environment(\.modelContext) private var context
     @Environment(LibraryRoot.self) private var library
+    @Environment(AppNavigation.self) private var nav
 
     @Query private var allLectures: [Lecture]
 
@@ -31,6 +32,12 @@ struct LectureFilesSection: View {
     /// The lectures that are parts of this topic, this one included.
     private var parts: [Lecture] {
         LectureGrouping.parts(of: lecture, among: allLectures)
+    }
+
+    /// Whether the in-app reader can open it — PDFs only, since that is what
+    /// the viewer draws. Other kinds keep Quick Look and the default app.
+    private func isReadable(_ file: LectureFile) -> Bool {
+        file.fileName.lowercased().hasSuffix(".pdf")
     }
 
     /// Every part's files of one kind, together.
@@ -50,7 +57,9 @@ struct LectureFilesSection: View {
                             url: file.url(root: library.url),
                             preview: { previewURL = $0 },
                             remove: showsControls ? { remove(file) } : nil,
-                            setKind: showsControls ? { file.kind = $0 } : nil
+                            setKind: showsControls ? { file.kind = $0 } : nil,
+                            openInApp: isReadable(file) ? { nav.readSlide(path: file.relativePath) } : nil,
+                            openFullScreen: isReadable(file) ? { nav.readSlideFullScreen(path: file.relativePath) } : nil
                         )
                     }
                 }
@@ -62,6 +71,27 @@ struct LectureFilesSection: View {
                 isImporting = true
             } label: {
                 Label(L.addFile, systemImage: "paperclip")
+            }
+
+            if showsControls {
+                let waived = LectureGrouping.slidesWaived(parts)
+
+                Button {
+                    LectureGrouping.setSlidesWaived(!waived, for: parts)
+                } label: {
+                    if waived {
+                        Label(
+                            L.pick("Slaytı yok olarak işaretlendi — geri al", "Marked as having no slides — undo"),
+                            systemImage: "checkmark.circle.fill"
+                        )
+                    } else {
+                        Label(L.pick("Bu konunun slaytı yok", "This topic has no slides"), systemImage: "nosign")
+                    }
+                }
+                .help(L.pick(
+                    "Slaytı hiç verilmeyen dersler için. İşaretlersen slaytsız sayılmaz, çalışma sayımlarına eksik olarak girmez.",
+                    "For lessons that never came with slides. Marking it keeps the topic out of the missing-slide counts."
+                ))
             }
 
             if library.url == nil {

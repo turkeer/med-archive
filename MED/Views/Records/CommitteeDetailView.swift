@@ -129,7 +129,7 @@ struct CommitteeDetailView: View {
         }
 
         let covered = due.filter { group in
-            group.lectures.contains { !$0.files.isEmpty }
+            LectureGrouping.slidesAccountedFor(group.lectures)
         }.count
 
         // Not "\(due.count) konudan \(covered)'inde": the Turkish suffix

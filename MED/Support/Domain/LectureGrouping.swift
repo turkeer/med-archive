@@ -240,7 +240,8 @@ enum LectureGrouping {
     static func lacksFiles(among lectures: [Lecture]) -> Set<PersistentIdentifier> {
         var result: Set<PersistentIdentifier> = []
 
-        for group in groups(of: lectures) where group.lectures.allSatisfy({ $0.files.isEmpty }) {
+        for group in groups(of: lectures)
+        where group.lectures.allSatisfy({ $0.files.isEmpty }) && !slidesWaived(group.lectures) {
             for lecture in group.lectures {
                 result.insert(lecture.persistentModelID)
             }
@@ -277,6 +278,27 @@ enum LectureGrouping {
     static func setStudied(_ studied: Bool, for lectures: [Lecture]) {
         let stamp: Date? = studied ? Date() : nil
         for lecture in lectures { lecture.studiedAt = stamp }
+    }
+
+    /// Whether a topic has been marked as having no slides to add: set on any
+    /// one of its parts, since the parts share it the way they share slides.
+    static func slidesWaived(_ lectures: [Lecture]) -> Bool {
+        lectures.contains { $0.slidesWaivedAt != nil }
+    }
+
+    /// Marks or unmarks a whole topic as having no slides, stamping every part
+    /// so a subject taught over several periods is one decision, not several.
+    static func setSlidesWaived(_ waived: Bool, for lectures: [Lecture]) {
+        let stamp: Date? = waived ? Date() : nil
+        for lecture in lectures { lecture.slidesWaivedAt = stamp }
+    }
+
+    /// Whether a topic's slides are accounted for: a file is attached to one of
+    /// its parts, or it has been marked as having none to add. This is the test
+    /// behind the coverage counts and the "behind" and "missing slides" flags —
+    /// not the paperclip glyphs, which mean an actual attached file.
+    static func slidesAccountedFor(_ lectures: [Lecture]) -> Bool {
+        lectures.contains { !$0.files.isEmpty } || slidesWaived(lectures)
     }
 
     /// How many lessons (timetable periods) a set of lectures occupies in all.

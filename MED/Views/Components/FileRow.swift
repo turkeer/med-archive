@@ -21,6 +21,15 @@ struct FileRow: View {
     /// A past paper is a past paper.
     var setKind: ((LectureFileKind) -> Void)?
 
+    /// Set for files the app can read itself (PDFs): opens the file in the
+    /// in-app viewer, where a term can be selected and looked up. Left unset
+    /// for anything else, which has nothing but Quick Look and the default app.
+    var openInApp: (() -> Void)?
+
+    /// Opens the same in-app viewer filling the whole window. Set alongside
+    /// `openInApp`.
+    var openFullScreen: (() -> Void)?
+
     private var isOnDisk: Bool {
         guard let url else { return false }
         return FileManager.default.fileExists(atPath: url.path(percentEncoded: false))
@@ -68,36 +77,55 @@ struct FileRow: View {
             .help(isOnDisk ? L.pick("Önizle", "Preview") : L.pick("Dosya bulunamadı", "File not found"))
 
             if let url, isOnDisk {
-                Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([url])
-                } label: {
-                    Image(systemName: "folder")
+                if let openInApp {
+                    Button(action: openInApp) {
+                        Image(systemName: "text.magnifyingglass")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(L.pick("Uygulamada oku (kelime seçip ara)", "Read in the app (select a word to look it up)"))
                 }
-                .buttonStyle(.borderless)
-                .help(L.showInFinder)
 
-                Button {
-                    NSWorkspace.shared.open(url)
-                } label: {
-                    Image(systemName: "arrow.up.forward.app")
-                }
-                .buttonStyle(.borderless)
-                .help(L.pick("Varsayılan uygulamada aç", "Open in default app"))
-            }
-
-            if let remove {
+                // Finder and "open in the default app" are rarely wanted, so
+                // they sit under the menu rather than taking two slots in every
+                // row. Editing adds its own items to the same menu.
                 Menu {
+                    if let openFullScreen {
+                        Button {
+                            openFullScreen()
+                        } label: {
+                            Label(L.pick("Tam ekran oku", "Read full screen"), systemImage: "arrow.up.left.and.arrow.down.right")
+                        }
+
+                        Divider()
+                    }
+
+                    Button {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    } label: {
+                        Label(L.showInFinder, systemImage: "folder")
+                    }
+
+                    Button {
+                        NSWorkspace.shared.open(url)
+                    } label: {
+                        Label(L.pick("Varsayılan uygulamada aç", "Open in default app"), systemImage: "arrow.up.forward.app")
+                    }
+
+                    if setKind != nil || remove != nil {
+                        Divider()
+                    }
+
                     if let setKind {
                         Picker(L.format, selection: kindBinding(setKind)) {
                             ForEach(LectureFileKind.allCases) { kind in
                                 Text(kind.sectionTitle).tag(kind)
                             }
                         }
-
-                        Divider()
                     }
 
-                    Button(L.pick("Listeden kaldır", "Remove from list"), role: .destructive, action: remove)
+                    if let remove {
+                        Button(L.pick("Listeden kaldır", "Remove from list"), role: .destructive, action: remove)
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }

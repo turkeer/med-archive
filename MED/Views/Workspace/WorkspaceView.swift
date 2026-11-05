@@ -273,7 +273,7 @@ struct WorkspaceView: View {
         for group in LectureGrouping.groups(of: committee.lectures) {
             guard calendar.startOfDay(for: group.first.date) <= today else { continue }
             tally.due += 1
-            if group.lectures.contains(where: { !$0.files.isEmpty }) { tally.slides += 1 }
+            if LectureGrouping.slidesAccountedFor(group.lectures) { tally.slides += 1 }
             if LectureGrouping.isStudied(group.lectures) { tally.studied += 1 }
         }
 
@@ -287,7 +287,7 @@ struct WorkspaceView: View {
         guard calendar.startOfDay(for: group.first.date) <= today else { return false }
 
         let studied = LectureGrouping.isStudied(group.lectures)
-        let hasSlides = group.lectures.contains { !$0.files.isEmpty }
+        let hasSlides = LectureGrouping.slidesAccountedFor(group.lectures)
         return !studied || !hasSlides
     }
 
