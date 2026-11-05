@@ -36,7 +36,25 @@ struct ContentView: View {
                     .environment(\.locale, L.locale)
                     .transition(.opacity)
             }
+
+            // The ⌘K palette sits above everything, including the full-screen
+            // reader. Actions are built here because the JSON export needs the
+            // model context, which only exists at this level.
+            if nav.commandPaletteOpen {
+                CommandPaletteView(
+                    actions: CommandPalette.actions(
+                        nav: nav,
+                        context: context,
+                        exportJSON: { ArchiveExport.save(from: context) }
+                    )
+                )
+                .environment(nav)
+                .environment(\.locale, L.locale)
+                .transition(.opacity)
+            }
         }
+        // Publishes this window's navigation to the scene's ⌘K menu command.
+        .focusedSceneValue(\.appNavigation, nav)
         .environment(nav)
         // Dates and months follow the chosen language, so a week heading does
         // not read "5 – 11 Eki" in an otherwise English window. Set here

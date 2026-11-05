@@ -64,6 +64,11 @@ struct MEDApp: App {
         }
         .defaultSize(width: 980, height: 660)
         .commands {
+            // ⌘K — hızlı git. Pencerenin `nav`'ı burada doğrudan görünmez
+            // (menüler pencerelerin üstündedir), o yüzden odaklı değer köprüsü
+            // üzerinden erişilir.
+            QuickOpenCommands()
+
             // Dışa aktarma Dosya menüsünde, çünkü oraya bakılır. Panel ve
             // yazma işi `ArchiveExport`'ta: burada tutulacak bir durum yok,
             // o yüzden görünüm katmanına da ihtiyaç yok.
@@ -89,6 +94,27 @@ struct MEDApp: App {
                 .environment(library)
                 .environment(slideIndex)
                 .environment(referenceLibrary)
+        }
+    }
+}
+
+/// The ⌘K "hızlı git" menu command.
+///
+/// A `Commands` struct of its own because it needs `@FocusedValue`, which can
+/// only live in a `View` or `Commands` type — not inline in `MEDApp.body`. It
+/// reads the frontmost window's navigation, published by `ContentView` through
+/// `.focusedSceneValue`, and flips the palette open. Disabled (and so greyed
+/// out) when no window is focused.
+struct QuickOpenCommands: Commands {
+    @FocusedValue(\.appNavigation) private var nav
+
+    var body: some Commands {
+        CommandGroup(after: .toolbar) {
+            Button(L.pick("Hızlı git…", "Quick open…")) {
+                nav?.commandPaletteOpen = true
+            }
+            .keyboardShortcut("k", modifiers: .command)
+            .disabled(nav == nil)
         }
     }
 }

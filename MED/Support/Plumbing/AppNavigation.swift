@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftData
+import SwiftUI
 
 /// The sections of the permanent sidebar.
 enum SidebarSection: String, CaseIterable, Identifiable {
@@ -119,6 +120,13 @@ final class AppNavigation {
     /// when another lecture is picked.
     var readingSlide: SlidePageSelection?
 
+    /// Whether the ⌘K command palette — a Spotlight-style "quick open" over the
+    /// sections and a few actions — is showing. Lives here, not in a view, so
+    /// the scene-level ⌘K menu command (which cannot reach a view's own state)
+    /// can flip it through the focused-value bridge. Not written to disk: an
+    /// open palette is a momentary thing, not a setting.
+    var commandPaletteOpen = false
+
     /// A slide shown filling the whole window for distraction-free study, still
     /// in the app's own viewer so term lookup keeps working — the difference
     /// from Quick Look. Independent of `readingSlide`: you can go full screen
@@ -159,6 +167,23 @@ final class AppNavigation {
         // Leave any slide reader so the atlas is actually what you see.
         readingSlide = nil
         fullScreenSlide = nil
+    }
+}
+
+/// Carries the window's `AppNavigation` up to the scene's menu commands.
+///
+/// The ⌘K command lives in `MEDApp`'s `.commands`, which sits above any window
+/// and so cannot see a window's `nav` directly. `ContentView` publishes its own
+/// through `.focusedSceneValue`, and the command reads it back here — so ⌘K acts
+/// on whichever window is frontmost.
+struct AppNavigationFocusedKey: FocusedValueKey {
+    typealias Value = AppNavigation
+}
+
+extension FocusedValues {
+    var appNavigation: AppNavigation? {
+        get { self[AppNavigationFocusedKey.self] }
+        set { self[AppNavigationFocusedKey.self] = newValue }
     }
 }
 
