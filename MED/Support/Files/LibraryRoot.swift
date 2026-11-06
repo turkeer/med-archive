@@ -68,6 +68,38 @@ final class LibraryRoot {
         }
     }
 
+    #if os(iOS)
+    /// Finder dosya paylaşımı yalnızca Documents köküne bırakmaya izin verir
+    /// (alt klasör Library'ye değil). Mac'ten göçte kullanıcı arşiv
+    /// klasörlerini/dosyalarını Documents köküne bırakıyor; bunları Library'ye
+    /// taşıyoruz ki kayıtlardaki göreli yollar ("Commitee - I/…") çözülsün.
+    /// Uygulamanın kendi dosyaları (depo, Index, Reference, Backups) kökte
+    /// kalır. Açılışta, fihristlemeden önce çağrılır; idempotent.
+    func organizeDroppedFiles() {
+        guard let library = url else { return }
+        let fm = FileManager.default
+        let docs = URL.documentsDirectory
+
+        let protected: Set<String> = [
+            StoreLocation.storeName,
+            StoreLocation.storeName + "-wal",
+            StoreLocation.storeName + "-shm",
+            "Index", "Reference", "Backups",
+            library.lastPathComponent,            // "Library" — hedef
+            ".DS_Store",
+        ]
+
+        try? fm.createDirectory(at: library, withIntermediateDirectories: true)
+        let entries = (try? fm.contentsOfDirectory(at: docs, includingPropertiesForKeys: nil)) ?? []
+        for entry in entries where !protected.contains(entry.lastPathComponent) {
+            let dest = library.appending(path: entry.lastPathComponent)
+            // Hedefte aynı ad varsa dokunma — üzerine yazma/tekrar taşıma olmasın.
+            if fm.fileExists(atPath: dest.path(percentEncoded: false)) { continue }
+            try? fm.moveItem(at: entry, to: dest)
+        }
+    }
+    #endif
+
     /// Seçilen bir dosyayı kayda hazırlar.
     ///
     /// macOS: dosya olduğu yerde kalır, referans edilir (source geri döner).

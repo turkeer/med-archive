@@ -14,9 +14,16 @@ import Foundation
 ///
 /// So the path is explicit now, and under a folder with this app's name on it.
 enum StoreLocation {
-    /// `~/Library/Application Support/MED`
+    /// macOS: `~/Library/Application Support/MED`.
+    /// iOS: uygulamanın `Documents` klasörü — böylece depo ve Index, dosya
+    /// paylaşımıyla (Finder/Dosyalar) erişilebilir ve Mac'ten göç için buraya
+    /// sürüklenebilir. (Library alt klasörü de burada; slaytlar oraya gider.)
     static var directory: URL {
+        #if os(iOS)
+        URL.documentsDirectory
+        #else
         URL.applicationSupportDirectory.appending(path: "MED", directoryHint: .isDirectory)
+        #endif
     }
 
     /// `~/Library/Application Support/MED/MED.store`

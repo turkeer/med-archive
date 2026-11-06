@@ -53,10 +53,10 @@ struct MEDApp: App {
                     .environment(referenceLibrary)
                     .modelContainer(modelContainer)
                     .task {
-                        // iOS: fihristlemeden önce öksüz (kayda bağlı olmayan)
-                        // konteyner dosyalarını temizle, yoksa silinen derslerin
-                        // dosyaları sözlükte/aramada görünmeye devam eder.
                         #if os(iOS)
+                        // Finder köküne bırakılan göç dosyalarını Library'ye taşı
+                        // (göreli yollar çözülsün), SONRA öksüz temizliği yap.
+                        library.organizeDroppedFiles()
                         ContainerCleanup.removeOrphans(context: modelContainer.mainContext, library: library)
                         #endif
                         slideIndex.refresh(root: library.url)

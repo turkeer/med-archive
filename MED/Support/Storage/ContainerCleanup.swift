@@ -23,6 +23,11 @@ enum ContainerCleanup {
         guard let records = try? context.fetch(FetchDescriptor<LectureFile>()) else { return }
         let referenced = Set(records.map(\.relativePath))
 
+        // GÜVENLİK: hiç kayıt yoksa temizlik yapma. Boş bir depo (henüz göç
+        // edilmemiş, ya da kullanıcı dosyaları sürükledi ama depoyu koymadı)
+        // demektir; bu durumda silmek yeni taşınan tüm dosyaları yok eder.
+        guard !referenced.isEmpty else { return }
+
         let onDisk = (try? FileManager.default.contentsOfDirectory(
             at: root, includingPropertiesForKeys: [.isDirectoryKey]
         )) ?? []

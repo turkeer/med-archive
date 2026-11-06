@@ -21,6 +21,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4B4E5BA3309D823400366930 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ED0000000000000000000005 /* MED.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MED.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED0000000000000000000101 /* MEDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MEDApp.swift; sourceTree = "<group>"; };
 		ED0000000000000000000305 /* MEDTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MEDTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,6 +73,7 @@
 		ED0000000000000000000010 /* MED */ = {
 			isa = PBXGroup;
 			children = (
+				4B4E5BA3309D823400366930 /* Info.plist */,
 				ED0000000000000000000101 /* MEDApp.swift */,
 				ED0000000000000000000011 /* Models */,
 				ED0000000000000000000012 /* Views */,
@@ -270,6 +272,8 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MED/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -300,6 +304,8 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MED/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.6;
 				LD_RUNPATH_SEARCH_PATHS = (
