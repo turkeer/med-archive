@@ -4,6 +4,7 @@ import SwiftUI
 #if canImport(UIKit)
 import UIKit
 import PencilKit
+import Vision
 #endif
 
 // Bu dosyanın tamamı (uygulama içi PDF okuyucu) şimdilik macOS-only: NSView
@@ -619,184 +620,7 @@ private final class LookupPDFView: PDFView {
     }
 }
 
-// MARK: - The lookup popover
-
-/// What our slide glossary and the OpenStax atlas say about a selected term,
-/// shown in place so studying a slide never has to break stride to look a word
-/// up. Reads the same curated glossary the Sözlük screen shows and the same
-/// atlas index the Atlas screen does; the buttons hand off to those screens
-/// when the reader wants the full entry.
-private struct TermLookupPopover: View {
-    let term: String
-    let dismiss: () -> Void
-
-    @Environment(GlossaryModel.self) private var glossary
-    @Environment(SlideIndex.self) private var slideIndex
-    @Environment(ReferenceLibrary.self) private var reference
-    @Environment(AppNavigation.self) private var nav
-
-    /// Results are held rather than computed in `body`: computing them inline
-    /// ran the whole scan on every redraw and, worse, before the popover could
-    /// paint — which read as a lag. Now the box shows at once, the fast slide
-    /// glossary fills with it, and the atlas scan runs after a yield with a
-    /// spinner in its place.
-    @State private var slideDefs: [GlossaryModel.CuratedDefinition] = []
-    @State private var atlasDefs: [ReferenceLibrary.Term] = []
-    @State private var searchingAtlas = false
-    @State private var finished = false
-
-    private var needle: String {
-        term.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// Fills the slide glossary immediately, then yields so the box and those
-    /// results paint before the atlas scan — which is the slower of the two —
-    /// runs behind its spinner.
-    private func search() async {
-        slideDefs = []
-        atlasDefs = []
-        finished = false
-        searchingAtlas = reference.isReady
-
-        let candidates = glossary.isAvailable ? glossary.candidates : slideIndex.definitions
-        slideDefs = Array(glossary.definitions(matching: needle, in: candidates).prefix(6))
-
-        guard reference.isReady else {
-            finished = true
-            return
-        }
-
-        await Task.yield()
-
-        let all = reference.matchingTerms(needle)
-        let byTerm = all.filter { SearchText.contains($0.term, query: needle) }
-        atlasDefs = Array((byTerm.isEmpty ? all : byTerm).prefix(6))
-        searchingAtlas = false
-        finished = true
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(needle)
-                .font(.headline)
-                .textCase(nil)
-                .lineLimit(2)
-                .truncationMode(.tail)
-
-            Divider()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if !slideDefs.isEmpty {
-                        source(L.pick("Slayt sözlüğü", "Slide glossary")) {
-                            ForEach(slideDefs) { entry in
-                                definition(term: entry.term, text: entry.definition)
-                            }
-                        }
-                    }
-
-                    if searchingAtlas {
-                        source(L.pick("Atlas (OpenStax)", "Atlas (OpenStax)")) {
-                            HStack(spacing: 8) {
-                                ProgressView().controlSize(.small)
-                                Text(L.pick("Atlas'ta aranıyor…", "Searching the atlas…"))
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } else if !atlasDefs.isEmpty {
-                        source(L.pick("Atlas (OpenStax)", "Atlas (OpenStax)")) {
-                            ForEach(atlasDefs) { entry in
-                                VStack(alignment: .leading, spacing: 3) {
-                                    definition(term: entry.term, text: entry.definition)
-
-                                    Button(L.pick("Atlas'ta aç", "Open in atlas")) {
-                                        openAtlas(at: entry)
-                                    }
-                                    .buttonStyle(.link)
-                                    .font(.caption)
-                                }
-                            }
-                        }
-                    }
-
-                    if finished && slideDefs.isEmpty && atlasDefs.isEmpty {
-                        Text(reference.isReady
-                            ? L.pick("Bu terim için tanım bulunamadı.", "No definition found for this term.")
-                            : L.pick("Slayt sözlüğünde bulunamadı. Atlas henüz indirilmedi — Ayarlar'dan indirebilirsin.",
-                                     "Not in the slide glossary. The atlas is not downloaded yet — you can get it in Settings."))
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.trailing, 4)
-            }
-            .frame(maxHeight: 340)
-            .task(id: needle) { await search() }
-
-            Divider()
-
-            HStack(spacing: 12) {
-                Button(L.pick("Atlas'ta ara", "Search the atlas")) {
-                    nav.openInAtlas(needle)
-                    dismiss()
-                }
-                .disabled(!reference.isReady)
-
-                Button(L.pick("Slaytlarda ara", "Search the slides")) {
-                    nav.slideQuery = needle
-                    nav.slidePage = nil
-                    nav.section = .search
-                    nav.readingSlide = nil
-                    nav.fullScreenSlide = nil
-                    dismiss()
-                }
-            }
-            .font(.callout)
-        }
-        .padding(14)
-        .frame(width: 360)
-    }
-
-    @ViewBuilder
-    private func source(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(nil)
-
-            content()
-        }
-    }
-
-    private func definition(term: String, text: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(term)
-                .font(.callout.weight(.semibold))
-                .textCase(nil)
-
-            Text(text)
-                .font(.callout)
-                .foregroundStyle(.primary)
-                .textSelection(.enabled)
-        }
-    }
-
-    /// Opens the atlas PDF at the term's Key Terms page, the same jump the Atlas
-    /// screen's glossary row makes.
-    private func openAtlas(at entry: ReferenceLibrary.Term) {
-        nav.referenceQuery = entry.term
-        nav.referenceMode = .glossary
-        nav.referencePage = SlidePageSelection(
-            path: ReferenceLibrary.pdfURL.path(percentEncoded: false),
-            page: entry.page,
-            query: entry.term
-        )
-        nav.section = .reference
-        dismiss()
-    }
-}
+// (TermLookupPopover ayrı dosyaya taşındı — iki platform da kullanıyor.)
 
 #else
 
@@ -808,12 +632,22 @@ private struct TermLookupPopover: View {
 /// tuvali. Her sayfanın çizimi diske yazılıp geri yüklenir; sayfalar ◀▶ ile
 /// çevrilir. (Eşzamanlı parmak-gez + kalem-yaz ergonomisi ve terim arama
 /// popover'ı sonraki adımlarda; şimdilik kalem her zaman çizer.)
+/// Terim arama popover'ına geçilen öğe. `.popover(item:)` ile terim doğrudan
+/// taşınır — `.popover(isPresented:)`'ın ilk açılışta bayat durum yakalaması
+/// (ve aramanın boş sorguyla alfabetik ilk terimleri göstermesi) böyle önlenir.
+private struct LookupItem: Identifiable {
+    let id = UUID()
+    let term: String
+}
+
 struct SlidePageDetail: View {
     let selection: SlidePageSelection?
 
     @Environment(LibraryRoot.self) private var library
     @Environment(AppNavigation.self) private var nav
     @StateObject private var controller = SlideReaderController()
+    @State private var lookupItem: LookupItem?
+    @State private var drawMode = true
 
     var body: some View {
         if let selection, let url = resolve(selection.path) {
@@ -835,8 +669,38 @@ struct SlidePageDetail: View {
                 Text(controller.pageLabel).font(.callout).monospacedDigit()
                 Button { controller.next() } label: { Image(systemName: "chevron.right") }
                     .disabled(!controller.canGoNext)
+
+                // Çiz/Seç modu. Çiz: kalem çizer. Seç: parmakla metin seçip aratırsın.
+                Picker("", selection: $drawMode) {
+                    Image(systemName: "pencil.tip").tag(true)
+                    Image(systemName: "character.cursor.ibeam").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 96)
+                .onChange(of: drawMode) { _, on in controller.setDrawing(on) }
+
+                // Seç modunda bir terim seçince beliren "Ara" düğmesi → sözlük/atlas.
+                if let term = controller.selectedTerm {
+                    Button {
+                        lookupItem = LookupItem(term: term)
+                    } label: {
+                        Label("\u{201C}\(term.prefix(18))\u{201D}", systemImage: "magnifyingglass")
+                            .labelStyle(.titleAndIcon)
+                            .lineLimit(1)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .popover(item: $lookupItem) { item in
+                        TermLookupPopover(term: item.term) { lookupItem = nil }
+                            .frame(minWidth: 320, idealWidth: 380, minHeight: 320, idealHeight: 440)
+                    }
+                }
+
                 Spacer()
-                Label(L.pick("Parmakla gez/zoom · kalemle yaz", "Finger to pan/zoom · Pencil to draw"), systemImage: "applepencil")
+                Label(drawMode
+                      ? L.pick("Kalemle yaz · parmakla gez", "Pencil to draw · finger to pan")
+                      : L.pick("Terimi seç, sonra Ara", "Select a term, then Look up"),
+                      systemImage: drawMode ? "applepencil" : "hand.point.up.left")
                     .font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
             }
             .padding(.horizontal, 14)
@@ -880,8 +744,14 @@ final class SlideReaderController: ObservableObject {
     @Published var pageLabel = ""
     @Published var canGoPrev = false
     @Published var canGoNext = false
+    /// Parmakla seçilen metin (terim arama için). Seçim yoksa nil.
+    @Published var selectedTerm: String?
     func next() { coordinator?.next() }
     func prev() { coordinator?.prev() }
+    func setDrawing(_ on: Bool) {
+        coordinator?.setDrawingEnabled(on)
+        if on { selectedTerm = nil }   // Çiz moduna dönünce seçimi bırak
+    }
 }
 
 /// PDFView (tek sayfa) + üstünde tam-boyut PKCanvasView. Kalem çizer; çizimler
@@ -933,6 +803,30 @@ struct SlidePencilReader: UIViewRepresentable {
             forName: .PDFViewPageChanged, object: pdfView, queue: .main
         ) { [weak coord] _ in coord?.updateState() }
 
+        // Parmakla metin seçilince terimi yukarı bildir (terim arama için).
+        coord.selectionObserver = NotificationCenter.default.addObserver(
+            forName: .PDFViewSelectionChanged, object: pdfView, queue: .main
+        ) { [weak coord, weak pdfView] _ in
+            guard let coord, let pdfView else { return }
+            let raw = pdfView.currentSelection?.string?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            coord.controller?.selectedTerm = raw.isEmpty ? nil : String(raw.prefix(80))
+        }
+
+        // Seç modunda bir kelimeye dokununca: metin katmanı varsa oradan, yoksa
+        // sayfayı OCR'layıp dokunulan kelimeyi bul (görüntü slaytlar için).
+        let tap = UITapGestureRecognizer(target: coord, action: #selector(Coordinator.handleWordTap(_:)))
+        tap.cancelsTouchesInView = false
+        pdfView.addGestureRecognizer(tap)
+
+        // Seç modunda parmakla bölge (kutu) seçimi — çok kelimeli terimler için.
+        // Başlangıçta kapalı (varsayılan Çiz modu); mod geçişinde açılır.
+        let region = UIPanGestureRecognizer(target: coord, action: #selector(Coordinator.handleRegionPan(_:)))
+        region.maximumNumberOfTouches = 1
+        region.isEnabled = false
+        pdfView.addGestureRecognizer(region)
+        coord.regionGesture = region
+
         // Aranan sayfaya git (yerleşim oturduktan sonra). İndeksi belge
         // sınırları içine kıstırıyoruz (sayfa sayısından büyük gelebilir).
         if let doc = pdfView.document, doc.pageCount > 0 {
@@ -974,10 +868,21 @@ struct SlidePencilReader: UIViewRepresentable {
         weak var controller: SlideReaderController?
         let toolPicker = PKToolPicker()
         var pageObserver: NSObjectProtocol?
+        var selectionObserver: NSObjectProtocol?
 
         /// Görünen sayfaların tuvalleri (sayfa indeksiyle). Her sayfanın kendi
         /// tuvali olduğu için sayfalar arası sızma olmaz.
         private var canvases: [Int: PKCanvasView] = [:]
+
+        /// Çiz modu açıkken tuval etkin (kalem çizer). Seç modunda tuval devre
+        /// dışı — parmak PDF'e ulaşıp metin seçebilsin (terim arama için).
+        var drawingEnabled = true
+
+        // Seç modu bölge seçimi (çok kelimeli terimler + görsel kutu).
+        var regionGesture: UIPanGestureRecognizer?
+        private var selectionBox: UIView?
+        private var regionStart: CGPoint = .zero
+        private weak var pdfScroll: UIScrollView?
 
         init(storageKey: String) {
             self.storageKey = storageKey
@@ -999,8 +904,226 @@ struct SlidePencilReader: UIViewRepresentable {
             canvas.tool = PKInkingTool(.pen, color: .systemBlue, width: 5)
             canvas.drawing = load(i)
             canvas.delegate = self
+            canvas.isUserInteractionEnabled = drawingEnabled
             canvases[i] = canvas
             return canvas
+        }
+
+        /// Çiz/Seç modu: Seç'te tuvalleri devre dışı bırak (parmak PDF'te metin
+        /// seçsin), Çiz'de geri etkinleştir + paleti merkezdeki sayfaya getir.
+        func setDrawingEnabled(_ on: Bool) {
+            drawingEnabled = on
+            for canvas in canvases.values {
+                canvas.isUserInteractionEnabled = on
+                if !on {
+                    toolPicker.setVisible(false, forFirstResponder: canvas)
+                    canvas.resignFirstResponder()
+                }
+            }
+            // Seç modunda bölge seçimi açık, PDF kaydırması kapalı (parmak kutu
+            // çizsin, kaydırmasın). Çiz modunda tersi.
+            regionGesture?.isEnabled = !on
+            pdfScrollView()?.isScrollEnabled = on
+            clearBox()
+            if on { updateState() }
+        }
+
+        private func pdfScrollView() -> UIScrollView? {
+            if let s = pdfScroll { return s }
+            func find(_ v: UIView) -> UIScrollView? {
+                for sub in v.subviews {
+                    if let s = sub as? UIScrollView { return s }
+                    if let s = find(sub) { return s }
+                }
+                return nil
+            }
+            pdfScroll = pdfView.flatMap { find($0) }
+            return pdfScroll
+        }
+
+        private func clearBox() {
+            selectionBox?.removeFromSuperview()
+            selectionBox = nil
+        }
+
+        // MARK: Seç modu — kelimeye dokunma (metin katmanı ya da OCR)
+
+        @objc func handleWordTap(_ g: UITapGestureRecognizer) {
+            guard !drawingEnabled, let pdfView else { return }
+            let pt = g.location(in: pdfView)
+            guard let page = pdfView.page(for: pt, nearest: true) else { return }
+            let pagePoint = pdfView.convert(pt, to: page)
+
+            // Önce metin katmanı (metinli slayt): hızlı ve kesin.
+            if let sel = page.selectionForWord(at: pagePoint),
+               let s = sel.string?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
+                pdfView.setCurrentSelection(sel, animate: true)
+                controller?.selectedTerm = String(s.prefix(80))
+                return
+            }
+            // Metin yok (görüntü slayt) → sayfayı OCR'la, dokunulan kelimeyi bul.
+            ocrWord(at: pagePoint, on: page)
+        }
+
+        private func ocrWord(at pagePoint: CGPoint, on page: PDFPage) {
+            let bounds = page.bounds(for: .mediaBox)
+            guard bounds.width > 0, bounds.height > 0 else { return }
+            let scale: CGFloat = 2
+            let image = page.thumbnail(
+                of: CGSize(width: bounds.width * scale, height: bounds.height * scale),
+                for: .mediaBox
+            )
+            guard let cg = image.cgImage else { return }
+
+            // PDF ve Vision ikisi de sol-alt orijinli; noktayı 0–1'e normalize et.
+            let nx = max(0, min(1, pagePoint.x / bounds.width))
+            let ny = max(0, min(1, pagePoint.y / bounds.height))
+
+            let request = VNRecognizeTextRequest { [weak self] req, _ in
+                guard let obs = req.results as? [VNRecognizedTextObservation] else { return }
+                let hit = obs.first {
+                    $0.boundingBox.insetBy(dx: -0.01, dy: -0.01).contains(CGPoint(x: nx, y: ny))
+                }
+                guard let hit, let cand = hit.topCandidates(1).first else { return }
+                let word = (Self.word(in: cand, atNormalizedX: nx) ?? cand.string)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !word.isEmpty else { return }
+                DispatchQueue.main.async { self?.controller?.selectedTerm = String(word.prefix(80)) }
+            }
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? VNImageRequestHandler(cgImage: cg, options: [:]).perform([request])
+            }
+        }
+
+        /// Satır içinde, verilen normalize x'e en yakın (ya da onu içeren) kelime.
+        private static func word(in candidate: VNRecognizedText, atNormalizedX x: CGFloat) -> String? {
+            let text = candidate.string
+            var best: String?
+            var bestDist = CGFloat.greatestFiniteMagnitude
+            var idx = text.startIndex
+            while idx < text.endIndex {
+                while idx < text.endIndex, text[idx] == " " { idx = text.index(after: idx) }
+                guard idx < text.endIndex else { break }
+                var end = idx
+                while end < text.endIndex, text[end] != " " { end = text.index(after: end) }
+                let range = idx..<end
+                let word = String(text[range])
+                if let box = (try? candidate.boundingBox(for: range))??.boundingBox {
+                    if box.minX <= x, x <= box.maxX { return word }
+                    let d = abs(box.midX - x)
+                    if d < bestDist { bestDist = d; best = word }
+                }
+                idx = end
+            }
+            return best
+        }
+
+        // MARK: Seç modu — bölge seçimi (çok kelimeli terim + görsel kutu)
+
+        @objc func handleRegionPan(_ g: UIPanGestureRecognizer) {
+            guard !drawingEnabled, let pdfView else { return }
+            switch g.state {
+            case .began:
+                regionStart = g.location(in: pdfView)
+                clearBox()
+                let box = UIView()
+                box.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.25)
+                box.layer.borderColor = UIColor.systemYellow.cgColor
+                box.layer.borderWidth = 1
+                box.isUserInteractionEnabled = false
+                pdfView.addSubview(box)
+                selectionBox = box
+            case .changed:
+                selectionBox?.frame = boxRect(to: g.location(in: pdfView))
+            case .ended:
+                selectRegion(boxRect(to: g.location(in: pdfView)))
+            default:
+                clearBox()
+            }
+        }
+
+        private func boxRect(to cur: CGPoint) -> CGRect {
+            CGRect(x: min(regionStart.x, cur.x), y: min(regionStart.y, cur.y),
+                   width: abs(cur.x - regionStart.x), height: abs(cur.y - regionStart.y))
+        }
+
+        private func selectRegion(_ rect: CGRect) {
+            guard let pdfView, rect.width > 6, rect.height > 6,
+                  let page = pdfView.page(for: CGPoint(x: rect.midX, y: rect.midY), nearest: true)
+            else { clearBox(); return }
+
+            // Önce metin katmanı: bölgedeki metni seç (metinli slayt, native mavi).
+            let pageRect = pdfView.convert(rect, to: page)
+            if let sel = page.selection(for: pageRect),
+               let s = sel.string?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
+                pdfView.setCurrentSelection(sel, animate: true)
+                controller?.selectedTerm = String(s.prefix(80))
+                clearBox()
+                return
+            }
+            // Metin yok → bölgeyi OCR'la, içindeki kelimeleri birleştir. Kutu kalır.
+            ocrRegion(pageRect, on: page)
+        }
+
+        private func ocrRegion(_ pageRect: CGRect, on page: PDFPage) {
+            let bounds = page.bounds(for: .mediaBox)
+            guard bounds.width > 0, bounds.height > 0 else { clearBox(); return }
+            let sel = CGRect(
+                x: pageRect.minX / bounds.width, y: pageRect.minY / bounds.height,
+                width: pageRect.width / bounds.width, height: pageRect.height / bounds.height
+            )
+            let scale: CGFloat = 2
+            let image = page.thumbnail(
+                of: CGSize(width: bounds.width * scale, height: bounds.height * scale), for: .mediaBox
+            )
+            guard let cg = image.cgImage else { clearBox(); return }
+
+            let request = VNRecognizeTextRequest { [weak self] req, _ in
+                guard let obs = req.results as? [VNRecognizedTextObservation] else { return }
+                var hits: [(box: CGRect, word: String)] = []
+                for o in obs {
+                    guard let cand = o.topCandidates(1).first else { continue }
+                    for (box, word) in Self.wordsAndBoxes(in: cand) where box.intersects(sel) {
+                        hits.append((box, word))
+                    }
+                }
+                // Okuma sırası: üstten alta (sol-alt orijin → büyük y üstte), sonra soldan sağa.
+                let term = hits
+                    .sorted { a, b in
+                        abs(a.box.midY - b.box.midY) > 0.02 ? a.box.midY > b.box.midY : a.box.minX < b.box.minX
+                    }
+                    .map(\.word)
+                    .joined(separator: " ")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !term.isEmpty else { return }
+                DispatchQueue.main.async { self?.controller?.selectedTerm = String(term.prefix(80)) }
+            }
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? VNImageRequestHandler(cgImage: cg, options: [:]).perform([request])
+            }
+        }
+
+        /// Bir OCR satırındaki her kelimenin (normalize kutu, metin) listesi.
+        private static func wordsAndBoxes(in candidate: VNRecognizedText) -> [(CGRect, String)] {
+            let text = candidate.string
+            var result: [(CGRect, String)] = []
+            var idx = text.startIndex
+            while idx < text.endIndex {
+                while idx < text.endIndex, text[idx] == " " { idx = text.index(after: idx) }
+                guard idx < text.endIndex else { break }
+                var end = idx
+                while end < text.endIndex, text[end] != " " { end = text.index(after: end) }
+                let range = idx..<end
+                if let box = (try? candidate.boundingBox(for: range))??.boundingBox {
+                    result.append((box, String(text[range])))
+                }
+                idx = end
+            }
+            return result
         }
 
         func pdfView(_ pdfView: PDFView, willDisplayOverlayView overlayView: UIView, for page: PDFPage) {
@@ -1063,6 +1186,7 @@ struct SlidePencilReader: UIViewRepresentable {
                 canvas.resignFirstResponder()
             }
             if let o = pageObserver { NotificationCenter.default.removeObserver(o) }
+            if let o = selectionObserver { NotificationCenter.default.removeObserver(o) }
         }
 
         // MARK: Kalıcılık — her (dosya, sayfa) için bir .drawing dosyası.
