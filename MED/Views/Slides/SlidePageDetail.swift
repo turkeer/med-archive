@@ -1,6 +1,10 @@
 import Observation
 import PDFKit
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+import PencilKit
+#endif
 
 // Bu dosyanın tamamı (uygulama içi PDF okuyucu) şimdilik macOS-only: NSView
 // tabanlı `PDFView` sarmalayıcıları, NSMenu ile terim arama vb. iPad'de gerçek
@@ -796,27 +800,256 @@ private struct TermLookupPopover: View {
 
 #else
 
-/// iOS yer tutucu — gerçek uygulama içi okuyucu (PencilKit + terim arama) Faz 5'te
-/// gelecek. Şimdilik aynı imzayla derlenir ki paylaşılan ekranlar iPad'de açılsın.
+// MARK: - iOS uygulama içi okuyucu (PencilKit)
+
+/// iPad'in uygulama içi PDF okuyucusu — spike'ta kanıtlanan yaklaşım.
+///
+/// Tek-sayfa modunda sayfa ekranı doldurur, üstünde tam-boyut bir Apple Pencil
+/// tuvali. Her sayfanın çizimi diske yazılıp geri yüklenir; sayfalar ◀▶ ile
+/// çevrilir. (Eşzamanlı parmak-gez + kalem-yaz ergonomisi ve terim arama
+/// popover'ı sonraki adımlarda; şimdilik kalem her zaman çizer.)
 struct SlidePageDetail: View {
     let selection: SlidePageSelection?
 
+    @Environment(LibraryRoot.self) private var library
+    @StateObject private var controller = SlideReaderController()
+
     var body: some View {
-        if let selection {
-            VStack(spacing: 10) {
-                Image(systemName: "doc.richtext")
-                    .font(.largeTitle)
-                    .foregroundStyle(.secondary)
-                Text(L.pick("Uygulama içi okuyucu iPad'de yakında.", "In-app reader on iPad coming soon."))
-                    .foregroundStyle(.secondary)
-                Text((selection.path as NSString).lastPathComponent + " · " + L.pick("sayfa ", "page ") + "\(selection.page)")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+        if let selection, let url = resolve(selection.path) {
+            if FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) {
+                reader(url: url, selection: selection)
+            } else {
+                missing(url)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding()
         } else {
             SelectionPlaceholder(text: L.pick("Bir sonuç seç.", "Pick a result."))
+        }
+    }
+
+    private func reader(url: URL, selection: SlidePageSelection) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 18) {
+                Button { controller.prev() } label: { Image(systemName: "chevron.left") }
+                    .disabled(!controller.canGoPrev)
+                Text(controller.pageLabel).font(.callout).monospacedDigit()
+                Button { controller.next() } label: { Image(systemName: "chevron.right") }
+                    .disabled(!controller.canGoNext)
+                Spacer()
+                Label(L.pick("Apple Pencil ile yaz", "Draw with Apple Pencil"), systemImage: "applepencil")
+                    .font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+
+            Divider()
+
+            SlidePencilReader(url: url, startPage: selection.page, controller: controller)
+                .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private func missing(_ url: URL) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "doc.questionmark").font(.largeTitle).foregroundStyle(.secondary)
+            Text(L.pick("Dosya bulunamadı.", "File not found."))
+                .foregroundStyle(.secondary)
+            Text(url.lastPathComponent).font(.caption).foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    private func resolve(_ path: String) -> URL? {
+        guard !path.isEmpty else { return nil }
+        if path.hasPrefix("/") { return URL(filePath: path) }
+        guard let root = library.url else { return nil }
+        return root.appending(path: path)
+    }
+}
+
+/// SwiftUI köprüsü: okuyucu kromunun (sayfa düğmeleri, etiket) tuvali süren
+/// koordinatöre erişmesini sağlar.
+final class SlideReaderController: ObservableObject {
+    weak var coordinator: SlidePencilReader.Coordinator?
+    @Published var pageLabel = ""
+    @Published var canGoPrev = false
+    @Published var canGoNext = false
+    func next() { coordinator?.next() }
+    func prev() { coordinator?.prev() }
+}
+
+/// PDFView (tek sayfa) + üstünde tam-boyut PKCanvasView. Kalem çizer; çizimler
+/// sayfaya hizalı ve sayfa-başı kalıcı.
+struct SlidePencilReader: UIViewRepresentable {
+    let url: URL
+    let startPage: Int
+    let controller: SlideReaderController
+
+    func makeCoordinator() -> Coordinator { Coordinator(url: url) }
+
+    func makeUIView(context: Context) -> UIView {
+        let container = UIView()
+        let coord = context.coordinator
+
+        let pdfView = PDFView()
+        pdfView.autoScales = true
+        pdfView.displayMode = .singlePage
+        pdfView.displayDirection = .horizontal
+        pdfView.backgroundColor = .systemGray5
+        pdfView.translatesAutoresizingMaskIntoConstraints = false
+        pdfView.document = PDFDocument(url: url)
+            ?? (try? Data(contentsOf: url)).flatMap { PDFDocument(data: $0) }
+        container.addSubview(pdfView)
+
+        let canvas = PKCanvasView()
+        canvas.backgroundColor = .clear
+        canvas.isOpaque = false
+        canvas.drawingPolicy = .pencilOnly
+        canvas.tool = PKInkingTool(.pen, color: .systemBlue, width: 5)
+        canvas.delegate = coord
+        canvas.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(canvas)
+
+        NSLayoutConstraint.activate([
+            pdfView.topAnchor.constraint(equalTo: container.topAnchor),
+            pdfView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            pdfView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            pdfView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            canvas.topAnchor.constraint(equalTo: container.topAnchor),
+            canvas.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            canvas.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            canvas.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+
+        coord.pdfView = pdfView
+        coord.canvas = canvas
+        coord.controller = controller
+        controller.coordinator = coord
+
+        // Aranan sayfadan başla. İndeksi açıkça takip ediyoruz; `currentPage`
+        // `go(to:)` sonrası hemen güncellenmediği için ona güvenmiyoruz —
+        // kapat-aç'ta kaydın geri yüklenmesini garantileyen şey bu.
+        coord.start(at: max(0, startPage - 1))
+
+        DispatchQueue.main.async { [weak canvas] in
+            guard let canvas else { return }
+            coord.toolPicker.setVisible(true, forFirstResponder: canvas)
+            coord.toolPicker.addObserver(canvas)
+            canvas.becomeFirstResponder()
+        }
+
+        return container
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+
+    /// Okuyucu kapanırken: son çizimi kaydet ve **araç paletini kapat** — yoksa
+    /// palet okuyucudan sonra da uygulamada asılı kalıyor.
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.finish()
+    }
+
+    final class Coordinator: NSObject, PKCanvasViewDelegate {
+        let url: URL
+        weak var pdfView: PDFView?
+        weak var canvas: PKCanvasView?
+        weak var controller: SlideReaderController?
+        let toolPicker = PKToolPicker()
+
+        /// Gösterilen sayfanın indeksi — açıkça tutuluyor (PDFView.currentPage'in
+        /// zamanlamasına güvenmemek için).
+        private var index = 0
+
+        /// Bir çizimi programla yüklerken true. PencilKit, `canvas.drawing`'i
+        /// elle set edince de `canvasViewDrawingDidChange` çağırıyor; bu bayrak
+        /// o yüklemenin yanlışlıkla (hatta yanlış sayfaya) kaydedilmesini önler.
+        private var suppressSave = false
+
+        init(url: URL) {
+            self.url = url
+            super.init()
+            try? FileManager.default.createDirectory(at: Self.dir(url), withIntermediateDirectories: true)
+        }
+
+        private var pageCount: Int { pdfView?.document?.pageCount ?? 0 }
+
+        func start(at i: Int) {
+            index = min(max(0, i), max(0, pageCount - 1))
+            goToIndex()
+            showDrawing(index)
+            publishState()
+        }
+
+        func next() {
+            saveCurrent()
+            index = min(index + 1, max(0, pageCount - 1))
+            goToIndex()
+            showDrawing(index)
+            publishState()
+        }
+
+        func prev() {
+            saveCurrent()
+            index = max(index - 1, 0)
+            goToIndex()
+            showDrawing(index)
+            publishState()
+        }
+
+        /// Sayfanın kayıtlı çizimini yükler; yükleme sırasında kaydı bastırır
+        /// (sync ve async didChange'i de kapsasın diye bayrağı sonraki döngüde
+        /// sıfırlar).
+        private func showDrawing(_ i: Int) {
+            suppressSave = true
+            canvas?.drawing = load(i)
+            DispatchQueue.main.async { [weak self] in self?.suppressSave = false }
+        }
+
+        private func goToIndex() {
+            if let doc = pdfView?.document, let page = doc.page(at: index) {
+                pdfView?.go(to: page)
+            }
+        }
+
+        /// Kapanış: kaydet + paleti gizle + first responder'ı bırak.
+        func finish() {
+            saveCurrent()
+            if let canvas {
+                toolPicker.setVisible(false, forFirstResponder: canvas)
+                toolPicker.removeObserver(canvas)
+                canvas.resignFirstResponder()
+            }
+        }
+
+        func publishState() {
+            controller?.pageLabel = "\(index + 1) / \(pageCount)"
+            controller?.canGoPrev = index > 0
+            controller?.canGoNext = index + 1 < pageCount
+        }
+
+        func saveCurrent() {
+            guard let canvas else { return }
+            save(canvas.drawing, index)
+        }
+        func canvasViewDrawingDidChange(_ cv: PKCanvasView) {
+            guard !suppressSave else { return }
+            save(cv.drawing, index)
+        }
+
+        // Kalıcılık — her (dosya, sayfa) için bir .drawing dosyası.
+        // "Ink" klasörü (eski "Drawings" değil): önceki hatalı sürümlerden kalan
+        // bozuk çizimlerin yüklenmemesi için temiz bir ad.
+        private static func dir(_ url: URL) -> URL {
+            URL.documentsDirectory
+                .appending(path: "Ink", directoryHint: .isDirectory)
+                .appending(path: url.deletingPathExtension().lastPathComponent, directoryHint: .isDirectory)
+        }
+        private func fileURL(_ i: Int) -> URL { Self.dir(url).appending(path: "\(i).drawing") }
+        private func load(_ i: Int) -> PKDrawing {
+            (try? Data(contentsOf: fileURL(i))).flatMap { try? PKDrawing(data: $0) } ?? PKDrawing()
+        }
+        private func save(_ d: PKDrawing, _ i: Int) {
+            try? d.dataRepresentation().write(to: fileURL(i))
         }
     }
 }

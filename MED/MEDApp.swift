@@ -52,7 +52,15 @@ struct MEDApp: App {
                     .environment(glossaryModel)
                     .environment(referenceLibrary)
                     .modelContainer(modelContainer)
-                    .task { slideIndex.refresh(root: library.url) }
+                    .task {
+                        // iOS: fihristlemeden önce öksüz (kayda bağlı olmayan)
+                        // konteyner dosyalarını temizle, yoksa silinen derslerin
+                        // dosyaları sözlükte/aramada görünmeye devam eder.
+                        #if os(iOS)
+                        ContainerCleanup.removeOrphans(context: modelContainer.mainContext, library: library)
+                        #endif
+                        slideIndex.refresh(root: library.url)
+                    }
                     .onChange(of: library.url) { _, root in
                         slideIndex.refresh(root: root)
                     }
