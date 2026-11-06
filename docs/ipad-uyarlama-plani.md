@@ -78,6 +78,23 @@ Sonuçlar:
 
 > Not: Spike ayrı bir dalda/deneme hedefinde yapılır; üretim koduna karışmaz.
 
+#### Faz 0 — SONUÇ ✅ (2026-11-06, `spike/`)
+Gerçek iPad'de (xcodegen ile üretilen ayrı `MEDSpike` iOS hedefi) **yeşil**:
+- ✅ **Konteyner içe alma** — dış PDF `UIDocumentPicker` ile `Documents/`'a
+  kopyalanıp **security-scoped bookmark olmadan** açılıyor.
+- ✅ **Görüntüleme + sayfa çevirme** — `PDFView`, tek-sayfa modunda.
+- ✅ **Apple Pencil çizimi** — `PKCanvasView`, Apple'ın kendi araç paletiyle,
+  akıcı; sayfaya **hizalı**.
+- ✅ **Sayfa-başı kalıcılık** — her sayfanın çizimi `PKDrawing` olarak diske
+  yazılıp geri yükleniyor (kapat-aç sonrası yerinde).
+
+**Kritik bulgu:** `PDFPageOverlayViewProvider` (eşzamanlı "parmak gez + kalem
+yaz" + otomatik hizalama için Apple'ın resmi API'si) bu ortamda (iPadOS 26 /
+Xcode 27) **hiç tetiklenmedi** — `overlayViewFor` çağrılmıyor. Spike bu yüzden
+tek-sayfa + tam-boyut tuval + ◀▶ düğmeleriyle çalışıyor (finger-scroll/zoom
+yok). Bu bir **fizibilite duvarı değil** (GoodNotes/Notability bunu yapıyor);
+Faz 5'in ilk işi bunu çözmek. → §5'e bak.
+
 ### Faz 1 — İskele (çekirdek iPad'de derlenip açılsın)
 - Multiplatform iOS hedefi ekle; paylaşılan çekirdeği hedefe dahil et.
 - `#if os(iOS)` ile derlemeyi engelleyen AppKit importlarını geçici olarak izole et (gövdeleri boş/stub).
@@ -131,12 +148,29 @@ Mevcut `PDFPageView: NSViewRepresentable` → `UIViewRepresentable`. Çekirdek P
 
 ## 5. PDF + Pencil entegrasyonu — teknik özet
 
-Tarihsel zor kısım (kalem katmanını sayfaya kilitli tutmak) artık resmi API ile çözülü:
+**Kanıtlanan (Faz 0):** PencilKit mürekkebi akıcı ve kaliteli (Apple Notes'un
+motoru); `PKCanvasView` PDF üstüne çiziyor; sayfa-başı kalıcılık çalışıyor.
 
-- **`PDFPageOverlayViewProvider` (iOS 16+):** PDFKit her `PDFPage` için senin verdiğin overlay view'ı (bir `PKCanvasView`) sayfa koordinatına kilitli tutar; zoom/scroll/sayfa değişimi otomatik hizalı.
-- **`drawingPolicy = .pencilOnly`:** ergonominin anahtarı — mod değiştirmeden parmak gezer, kalem yazar.
-- **Mürekkep kalitesi:** PencilKit = Apple Notes'un motoru; "oyuncak" değil.
-- **Tek kanıtlanacak risk:** büyük deste + çok mürekkep akıcılığı → Faz 0 spike bunu ölçer; çözüm tembel/görünür-sayfa canvas oluşturma.
+**Çözülecek (Faz 5'in ilk işi): eşzamanlı "parmak gez + kalem yaz" + hizalama.**
+Apple'ın bunun için olan resmi API'si `PDFPageOverlayViewProvider`, Faz 0
+ortamında (iPadOS 26 / Xcode 27) **tetiklenmedi**. Denenecek yollar, sırayla:
+
+1. **Sağlayıcıyı neden sessiz kaldığını kazı** — doküman/sağlayıcı atama sırası,
+   gerekli bir `layoutDocumentView()` tetiği, display-mode gereksinimi, ya da
+   SDK 27'ye özgü bir davranış. En temiz çözüm bu; çalışırsa her şey (finger-
+   scroll + pencil-draw + hizalama + kalıcılık) bedava gelir.
+2. **Tuvali PDFView'in iç kaydırma katmanına gömmek** — `PKCanvasView`'ı
+   `PDFView`'in iç belge/scroll görünümüne alt-görünüm olarak ekle, kendi
+   kaydırmasını kapat; parmak pan'i üst scroll view'e, kalem tuvale gider.
+   (İç hiyerarşiye eriştiği için kırılgan; dikkatli yapılmalı.)
+3. **Elle jest yönlendirme** — tam-boyut tuval üstte (`.pencilOnly`), üstüne
+   yalnızca parmak için `UIPan/UIPinch` tanıyıcılar ekleyip PDFView'i elle
+   kaydır/zoomla. Kalem PencilKit'e, parmak bize gider.
+4. **Son çare — "Gez/Yaz" modu:** kesin çalışır (spike'ta da gördük: tuval
+   etkileşimi açık=yaz, kapalı=gez), ama "modsuz sihir" değil.
+
+**Not:** Büyük deste akıcılığı Faz 0'da sorun çıkarmadı; asıl açık madde bu
+ergonomi.
 
 ---
 
