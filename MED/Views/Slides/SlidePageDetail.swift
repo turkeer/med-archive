@@ -844,7 +844,7 @@ struct SlidePageDetail: View {
 
             Divider()
 
-            SlidePencilReader(url: url, startPage: selection.page, query: selection.query, controller: controller)
+            SlidePencilReader(url: url, startPage: selection.page, query: selection.query, storageKey: library.storedPath(for: url), controller: controller)
                 // Seçim değişince (başka tanım/sayfa) okuyucu yeniden kurulsun —
                 // boş updateUIView yüzünden yoksa eski slaytta kalıyor. Tam ekran
                 // açılıp kapanınca da yeniden kurulsun ki diskteki (tam ekranda
@@ -890,9 +890,12 @@ struct SlidePencilReader: UIViewRepresentable {
     let url: URL
     let startPage: Int
     let query: String
+    /// Çizimlerin saklanma anahtarı — dosyanın köke göreli yolu (sadece adı
+    /// değil), ki farklı klasörlerdeki aynı adlı slaytların çizimleri karışmasın.
+    let storageKey: String
     let controller: SlideReaderController
 
-    func makeCoordinator() -> Coordinator { Coordinator(url: url) }
+    func makeCoordinator() -> Coordinator { Coordinator(storageKey: storageKey) }
 
     func makeUIView(context: Context) -> PDFView {
         let coord = context.coordinator
@@ -966,7 +969,7 @@ struct SlidePencilReader: UIViewRepresentable {
     /// sayfaya kilitli tutar (zoom/scroll'da hizalı). `.pencilOnly` sayesinde
     /// **parmak PDF'i gezdirir/zoomlar, Apple Pencil çizer** — mod yok.
     final class Coordinator: NSObject, PDFPageOverlayViewProvider, PKCanvasViewDelegate {
-        let url: URL
+        let storageKey: String
         weak var pdfView: PDFView?
         weak var controller: SlideReaderController?
         let toolPicker = PKToolPicker()
@@ -976,10 +979,10 @@ struct SlidePencilReader: UIViewRepresentable {
         /// tuvali olduğu için sayfalar arası sızma olmaz.
         private var canvases: [Int: PKCanvasView] = [:]
 
-        init(url: URL) {
-            self.url = url
+        init(storageKey: String) {
+            self.storageKey = storageKey
             super.init()
-            try? FileManager.default.createDirectory(at: Self.dir(url), withIntermediateDirectories: true)
+            try? FileManager.default.createDirectory(at: Self.dir(storageKey), withIntermediateDirectories: true)
         }
 
         // MARK: Overlay provider
@@ -1063,17 +1066,21 @@ struct SlidePencilReader: UIViewRepresentable {
         }
 
         // MARK: Kalıcılık — her (dosya, sayfa) için bir .drawing dosyası.
-        private static func dir(_ url: URL) -> URL {
-            URL.documentsDirectory
+        // Anahtar: dosyanın köke göreli TAM yolu (sadece adı değil) — farklı
+        // klasörlerdeki aynı adlı slaytların çizimleri çakışmasın.
+        private static func dir(_ key: String) -> URL {
+            let safe = key.hasPrefix("/") ? String(key.dropFirst()) : key
+            let noExt = (safe as NSString).deletingPathExtension
+            return URL.documentsDirectory
                 .appending(path: "Ink", directoryHint: .isDirectory)
-                .appending(path: url.deletingPathExtension().lastPathComponent, directoryHint: .isDirectory)
+                .appending(path: noExt, directoryHint: .isDirectory)
         }
-        private func fileURL(_ i: Int) -> URL { Self.dir(url).appending(path: "\(i).drawing") }
+        private func fileURL(_ i: Int) -> URL { Self.dir(storageKey).appending(path: "\(i).drawing") }
         private func load(_ i: Int) -> PKDrawing {
             (try? Data(contentsOf: fileURL(i))).flatMap { try? PKDrawing(data: $0) } ?? PKDrawing()
         }
         private func save(_ d: PKDrawing, _ i: Int) {
-            try? FileManager.default.createDirectory(at: Self.dir(url), withIntermediateDirectories: true)
+            try? FileManager.default.createDirectory(at: Self.dir(storageKey), withIntermediateDirectories: true)
             try? d.dataRepresentation().write(to: fileURL(i))
         }
     }
