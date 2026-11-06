@@ -24,11 +24,15 @@ enum FileAttaching {
         var records: [LectureFile] = []
 
         for url in urls {
-            let path = library.storedPath(for: url)
+            // macOS: dosya olduğu yerde referans edilir. iOS: konteynere bir
+            // kopya alınır ve yol o kopyaya göre hesaplanır.
+            guard let fileURL = library.prepareForAttach(url) else { continue }
+
+            let path = library.storedPath(for: fileURL)
             guard !taken.contains(path) else { continue }
             taken.insert(path)
 
-            let name = url.lastPathComponent
+            let name = fileURL.lastPathComponent
             records.append(
                 LectureFile(
                     fileName: name,
