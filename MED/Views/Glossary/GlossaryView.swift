@@ -262,7 +262,11 @@ struct GlossaryView: View {
                 ToolbarItem {
                     Menu {
                         Button("Markdown (.md)") { requestExport(.markdown) }
+                        #if os(macOS)
+                        // PDF dışa aktarma macOS-only (NSAttributedString tabanlı);
+                        // iOS'ta düğme sunulmuyor ki boşa tıklanmasın.
                         Button("PDF") { requestExport(.pdf) }
+                        #endif
                     } label: {
                         Label(L.pick("Dışa aktar", "Export"), systemImage: "square.and.arrow.up")
                     }

@@ -16,11 +16,12 @@ enum ContainerCleanup {
     static func removeOrphans(context: ModelContext, library: LibraryRoot) {
         guard let root = library.url else { return }
 
-        // Geçmiş sınav dosyaları da ordinary LectureFile kayıtlarıdır, yani
+        // GÜVENLİK: fetch başarısız olursa HİÇBİR ŞEY silme. Aksi halde boş bir
+        // referans kümesiyle kullanıcının tüm dosyaları silinir (veri kaybı).
+        // Geçmiş sınav dosyaları da ordinary LectureFile kayıtları olduğu için
         // tek fetch ikisini de kapsar.
-        let referenced = Set(
-            ((try? context.fetch(FetchDescriptor<LectureFile>())) ?? []).map(\.relativePath)
-        )
+        guard let records = try? context.fetch(FetchDescriptor<LectureFile>()) else { return }
+        let referenced = Set(records.map(\.relativePath))
 
         let onDisk = (try? FileManager.default.contentsOfDirectory(
             at: root, includingPropertiesForKeys: [.isDirectoryKey]

@@ -35,7 +35,9 @@ struct LectureListView: View {
     @State private var query = ""
     @State private var filter = LectureFilter()
     @State private var newLectureRequest: NewLectureRequest?
+    #if os(macOS)
     @State private var isShowingScan = false
+    #endif
     @State private var isShowingBrokenLinks = false
 
     var body: some View {
@@ -67,6 +69,9 @@ struct LectureListView: View {
                 // yuvasında: ikisi de seyrek, ikisi de aynı soruyu soruyor —
                 // diskteki dosyalarla kayıtlar hâlâ örtüşüyor mu?
                 Menu {
+                    #if os(macOS)
+                    // "Klasörü tara" dış bir klasördeki dosyaları referansla
+                    // bağlar — iOS konteyner modeline uymaz, o yüzden iOS'ta yok.
                     Button {
                         isShowingScan = true
                     } label: {
@@ -76,6 +81,7 @@ struct LectureListView: View {
                         )
                     }
                     .keyboardShortcut("t", modifiers: [.command, .shift])
+                    #endif
 
                     Button {
                         isShowingBrokenLinks = true
@@ -106,9 +112,11 @@ struct LectureListView: View {
         .sheet(item: $newLectureRequest) { request in
             NewLectureSheet(initialDate: request.day, initialSlot: request.slot)
         }
+        #if os(macOS)
         .sheet(isPresented: $isShowingScan) {
             ScanFolderSheet()
         }
+        #endif
         .sheet(isPresented: $isShowingBrokenLinks) {
             BrokenLinksSheet()
         }
