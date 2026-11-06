@@ -16,3 +16,6 @@ DerivedData/
 .swiftpm/
 .build/
 Packages/
+
+# Spike — Xcode projesini xcodegen üretir (kaynak: spike/project.yml)
+spike/MEDSpike.xcodeproj/

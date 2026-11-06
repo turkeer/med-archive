@@ -1,0 +1,25 @@
+name: MEDSpike
+options:
+  bundleIdPrefix: com.turkeer
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  MEDSpike:
+    type: application
+    platform: iOS
+    sources:
+      - path: .
+        excludes:
+          - "README.md"
+          - "project.yml"
+          - "*.xcodeproj"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.turkeer.MEDSpike
+        GENERATE_INFOPLIST_FILE: "YES"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        SWIFT_VERSION: "5.0"
+        # Cihazda çalıştırmak için Xcode'da Signing & Capabilities'ten kendi
+        # Apple ID'ni (Team) seç; otomatik imzalama gerisini halleder.
