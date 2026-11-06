@@ -194,7 +194,7 @@ struct SlideReaderColumn: View {
                 } label: {
                     Label(L.pick("Derse dön", "Back to the lesson"), systemImage: "chevron.left")
                 }
-                .buttonStyle(.link)
+                .linkButtonStyle()
 
                 Spacer(minLength: 8)
 
@@ -213,7 +213,7 @@ struct SlideReaderColumn: View {
                 } label: {
                     Label(L.pick("Tam ekran", "Full screen"), systemImage: "arrow.up.left.and.arrow.down.right")
                 }
-                .buttonStyle(.link)
+                .linkButtonStyle()
                 .help(L.pick("Slaytı tüm pencereyi kaplayacak şekilde oku", "Read the slide filling the whole window"))
             }
             .padding(.horizontal, 14)
@@ -242,7 +242,7 @@ struct SlideFullScreenReader: View {
                 } label: {
                     Label(L.pick("Küçült", "Exit full screen"), systemImage: "arrow.down.right.and.arrow.up.left")
                 }
-                .buttonStyle(.link)
+                .linkButtonStyle()
                 .keyboardShortcut(.cancelAction)
 
                 Spacer(minLength: 8)

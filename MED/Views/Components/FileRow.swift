@@ -1,5 +1,7 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// One attached file, used by both the lecture files section and the past
 /// papers section.
@@ -99,6 +101,7 @@ struct FileRow: View {
                         Divider()
                     }
 
+                    #if os(macOS)
                     Button {
                         NSWorkspace.shared.activateFileViewerSelecting([url])
                     } label: {
@@ -110,6 +113,7 @@ struct FileRow: View {
                     } label: {
                         Label(L.pick("Varsayılan uygulamada aç", "Open in default app"), systemImage: "arrow.up.forward.app")
                     }
+                    #endif
 
                     if setKind != nil || remove != nil {
                         Divider()

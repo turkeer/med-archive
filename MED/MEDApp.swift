@@ -72,11 +72,13 @@ struct MEDApp: App {
             // Dışa aktarma Dosya menüsünde, çünkü oraya bakılır. Panel ve
             // yazma işi `ArchiveExport`'ta: burada tutulacak bir durum yok,
             // o yüzden görünüm katmanına da ihtiyaç yok.
+            #if os(macOS)
             CommandGroup(replacing: .appInfo) {
                 Button(L.pick("MED Hakkında", "About MED")) {
                     AboutPanel.show()
                 }
             }
+            #endif
 
             CommandGroup(replacing: .importExport) {
                 Button(L.pick("JSON olarak dışa aktar…", "Export as JSON…")) {
@@ -89,12 +91,16 @@ struct MEDApp: App {
             }
         }
 
+        // `Settings` sahnesi yalnızca macOS'ta var (⌘,). iPad'de ayarlar
+        // uygulama içi bir ekrandan gelecek (sonraki faz).
+        #if os(macOS)
         Settings {
             SettingsView(storeURL: modelContainer?.configurations.first?.url)
                 .environment(library)
                 .environment(slideIndex)
                 .environment(referenceLibrary)
         }
+        #endif
     }
 }
 

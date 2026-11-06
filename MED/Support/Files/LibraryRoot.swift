@@ -22,8 +22,13 @@ final class LibraryRoot {
 
     /// The folder the design suggests, whether or not it exists yet.
     static var suggestedURL: URL {
+        #if os(macOS)
         FileManager.default.homeDirectoryForCurrentUser
             .appending(path: "Library/Mobile Documents/com~apple~CloudDocs/MED", directoryHint: .isDirectory)
+        #else
+        // iOS: sandbox gereği dosyalar uygulamanın kendi konteynerinde yaşar.
+        URL.documentsDirectory.appending(path: "Library", directoryHint: .isDirectory)
+        #endif
     }
 
     static var suggestionExists: Bool {

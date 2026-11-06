@@ -1,6 +1,10 @@
-import AppKit
 import Foundation
 import SwiftData
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
 /// A JSON copy of the whole archive, kept up to date while the app is open.
 ///
@@ -62,7 +66,13 @@ enum StoreBackup {
     /// never changes and nothing was ever written. Hiding the app did not
     /// change it either. AppKit's own notification does arrive.
     static func writeOnLeaving(from context: ModelContext) async {
-        let left = NotificationCenter.default.notifications(named: NSApplication.didResignActiveNotification)
+        #if canImport(AppKit)
+        let resignName = NSApplication.didResignActiveNotification
+        #else
+        // UIApplication is @MainActor; use the raw name to stay off the actor.
+        let resignName = Notification.Name("UIApplicationWillResignActiveNotification")
+        #endif
+        let left = NotificationCenter.default.notifications(named: resignName)
 
         for await _ in left {
             write(from: context)

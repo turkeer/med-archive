@@ -1,7 +1,9 @@
-import AppKit
 import Foundation
 import SwiftData
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#endif
 
 /// The whole archive as one readable document.
 ///
@@ -259,7 +261,11 @@ enum ArchiveExport {
     }
 
     /// Asks where to put the file, then writes it. Does nothing if cancelled.
+    ///
+    /// macOS: a save panel. iOS: henüz yok — paylaşım sayfasıyla dışa aktarma
+    /// sonraki bir fazda; şimdilik çağrı sessizce bir şey yapmıyor.
     static func save(from context: ModelContext) {
+        #if os(macOS)
         let panel = NSSavePanel()
         panel.title = L.pick("Arşivi dışa aktar", "Export archive")
         panel.nameFieldStringValue = defaultFileName()
@@ -278,5 +284,6 @@ enum ArchiveExport {
             alert.informativeText = String(describing: error)
             alert.runModal()
         }
+        #endif
     }
 }

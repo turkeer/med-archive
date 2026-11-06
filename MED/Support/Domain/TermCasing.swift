@@ -106,11 +106,14 @@ enum TermCasing {
     }
 }
 
-#if canImport(AppKit)
 /// The live casing used by the views: the same rules, with the system
 /// dictionary answering "is this a real word?". Main-actor and cached, because
 /// the glossary asks about the same handful of tokens again and again as the
 /// list redraws.
+///
+/// macOS'ta `NSSpellChecker`, iOS'ta `UITextChecker` — aynı soruya ("gerçek
+/// kelime mi?") iki platformun kendi yazım denetleyicisiyle cevap.
+#if canImport(AppKit)
 @MainActor
 enum TermCasingLive {
     private static var wordCache: [String: Bool] = [:]
@@ -119,6 +122,28 @@ enum TermCasingLive {
         if let hit = wordCache[word] { return hit }
         let range = NSSpellChecker.shared.checkSpelling(of: word, startingAt: 0)
         let known = range.location == NSNotFound
+        wordCache[word] = known
+        return known
+    }
+
+    static func term(_ raw: String) -> String { TermCasing.term(raw, isWord: isWord) }
+    static func definition(_ raw: String) -> String { TermCasing.definition(raw, isWord: isWord) }
+}
+#elseif canImport(UIKit)
+import UIKit
+
+@MainActor
+enum TermCasingLive {
+    private static var wordCache: [String: Bool] = [:]
+    private static let checker = UITextChecker()
+
+    static func isWord(_ word: String) -> Bool {
+        if let hit = wordCache[word] { return hit }
+        let range = NSRange(location: 0, length: word.utf16.count)
+        let misspelled = checker.rangeOfMisspelledWord(
+            in: word, range: range, startingAt: 0, wrap: false, language: "en"
+        )
+        let known = misspelled.location == NSNotFound
         wordCache[word] = known
         return known
     }

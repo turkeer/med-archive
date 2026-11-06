@@ -1,5 +1,7 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Shown when the database cannot be opened.
 ///
@@ -47,9 +49,11 @@ struct StoreFailureView: View {
 
                     Spacer()
 
+                    #if os(macOS)
                     Button(L.pick("Finder'da aç", "Open in Finder")) {
                         NSWorkspace.shared.activateFileViewerSelecting([supportDirectory])
                     }
+                    #endif
                 }
             }
 
@@ -62,9 +66,11 @@ struct StoreFailureView: View {
 
                         Spacer()
 
+                        #if os(macOS)
                         Button(L.pick("Finder'da aç", "Open in Finder")) {
                             NSWorkspace.shared.activateFileViewerSelecting([backup])
                         }
+                        #endif
                     }
                 }
             }

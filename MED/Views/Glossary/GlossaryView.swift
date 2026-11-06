@@ -191,8 +191,13 @@ struct GlossaryView: View {
             exportFile = GlossaryFile(data: Data(GlossaryExport.markdown(items).utf8), type: .plainText)
             exportFilename = "Sözlük.md"
         case .pdf:
+            #if canImport(AppKit)
             exportFile = GlossaryFile(data: GlossaryExport.pdf(items), type: .pdf)
             exportFilename = "Sözlük"
+            #else
+            // PDF dışa aktarma şimdilik macOS-only; iOS'ta sonra paylaşım sayfası.
+            return
+            #endif
         }
         showExporter = true
     }

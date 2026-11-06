@@ -1,7 +1,13 @@
-import AppKit
 import Observation
 import PDFKit
 import SwiftUI
+
+// Bu dosyanın tamamı (uygulama içi PDF okuyucu) şimdilik macOS-only: NSView
+// tabanlı `PDFView` sarmalayıcıları, NSMenu ile terim arama vb. iPad'de gerçek
+// okuyucu Faz 5'te gelecek (spike'taki PencilKit okuyucudan). O zamana dek iOS
+// aşağıdaki yer tutucuyla derlensin diye bütün macOS uygulaması tek #if içinde.
+#if os(macOS)
+import AppKit
 
 /// The page a slide hit points at, shown where the chosen record normally is.
 ///
@@ -787,3 +793,32 @@ private struct TermLookupPopover: View {
         dismiss()
     }
 }
+
+#else
+
+/// iOS yer tutucu — gerçek uygulama içi okuyucu (PencilKit + terim arama) Faz 5'te
+/// gelecek. Şimdilik aynı imzayla derlenir ki paylaşılan ekranlar iPad'de açılsın.
+struct SlidePageDetail: View {
+    let selection: SlidePageSelection?
+
+    var body: some View {
+        if let selection {
+            VStack(spacing: 10) {
+                Image(systemName: "doc.richtext")
+                    .font(.largeTitle)
+                    .foregroundStyle(.secondary)
+                Text(L.pick("Uygulama içi okuyucu iPad'de yakında.", "In-app reader on iPad coming soon."))
+                    .foregroundStyle(.secondary)
+                Text((selection.path as NSString).lastPathComponent + " · " + L.pick("sayfa ", "page ") + "\(selection.page)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+        } else {
+            SelectionPlaceholder(text: L.pick("Bir sonuç seç.", "Pick a result."))
+        }
+    }
+}
+
+#endif

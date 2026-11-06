@@ -1,6 +1,8 @@
-import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#endif
 
 /// Settings, reachable with ⌘, — the library root and where the data lives.
 struct SettingsView: View {
@@ -104,10 +106,12 @@ struct SettingsView: View {
                                 .truncationMode(.head)
                                 .textSelection(.enabled)
 
+                            #if os(macOS)
                             Button(L.showInFinder) {
                                 NSWorkspace.shared.activateFileViewerSelecting([storeURL])
                             }
-                            .buttonStyle(.link)
+                            .linkButtonStyle()
+                            #endif
                         }
                     }
                 } else {
@@ -210,7 +214,7 @@ struct SettingsView: View {
                                 "Ready · \(reference.pageCount) pages"
                             ))
                             Button(L.remove) { reference.removeDownload() }
-                                .buttonStyle(.link)
+                                .linkButtonStyle()
                         }
                     }
 
