@@ -6,19 +6,28 @@ Bu dosya, yeni bir sohbetin tüm kodu okumadan projeyi kavraması içindir.
 ## Uygulama nedir
 MED, bir tıp öğrencisinin kendi ders materyallerini (çoğunlukla PDF slayt)
 toplayıp organize ettiği, içinde arama yaptığı ve çalışırken yanında başvuru
-kaynağı (OpenStax Anatomy & Physiology 2e atlası) bulundurduğu **yerel bir macOS
-uygulaması**. SwiftUI + SwiftData. Tamamen çevrimdışı, tek kullanıcı; hiçbir veri
-buluta gitmez. Arayüz Türkçe ve İngilizce (`L.pick`).
+kaynağı (OpenStax Anatomy & Physiology 2e atlası) bulundurduğu **yerel bir
+macOS + iPadOS uygulaması**. SwiftUI + SwiftData. **Tek kod tabanı:** iki platform
+aynı çekirdeği paylaşır, platforma özel kabuk `#if os(macOS)` / `#if os(iOS)`
+(ya da `#if canImport(AppKit/UIKit)`) ile ayrılır. Tamamen çevrimdışı, tek
+kullanıcı; hiçbir veri buluta gitmez. Arayüz Türkçe ve İngilizce (`L.pick`).
+Asıl hedef giderek iPad (bkz. "iPad uyarlaması" ve `docs/ipad-uyarlama-plani.md`).
 
 ## Derleme ve test
 ```bash
 xcodebuild -scheme MED -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
 ```
 ```bash
+xcodebuild -scheme MED -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+```
+```bash
 xcodebuild -scheme MED -destination 'platform=macOS' test
 ```
+- **Her değişiklikten sonra İKİ platformu da derle** (macOS + iOS). Biri için
+  yazılan kod (ör. AppKit) diğerini kırabilir; `#if os` ayrımı doğru mu kontrol et.
 - **Proje `PBXFileSystemSynchronizedRootGroup` kullanır:** `MED/` altına eklenen
-  yeni `.swift` dosyaları otomatik derlemeye girer. **`.pbxproj` elle düzenleme.**
+  yeni `.swift` dosyaları otomatik derlemeye girer. **`.pbxproj` elle düzenleme**
+  (hedef/destination/Info.plist ayarları kullanıcıya Xcode'da yaptırılır).
 - **SourceKit'in tek-dosya tanılamaları yanıltıcıdır.** Aynı modüldeki tipler için
   sık sık "Cannot find X in scope" der; bunlar **yanlış pozitif**. Tek doğru
   otorite `xcodebuild`; başarıyla derleniyorsa sorun yok.
@@ -26,8 +35,14 @@ xcodebuild -scheme MED -destination 'platform=macOS' test
 ## Mimari — temel fikirler
 - **Merkezde `Lecture` (ders oturumu).** Her şey ona asılı: `Course`,
   `Instructor`, `Committee`, `Tag`, `LectureFile`, `PastExam`.
-- **Dosyalar kopyalanmaz, işaret edilir.** Kullanıcı bir kök klasör seçer;
-  `LectureFile.relativePath` o klasöre görelidir (klasör dışıysa mutlak, `/` ile).
+- **Dosya modeli platforma göre değişir.**
+  - **macOS:** sandbox'sız, dosyalar kopyalanmaz **işaret edilir**; kullanıcı bir
+    kök klasör seçer, `LectureFile.relativePath` o klasöre görelidir (dışıysa
+    mutlak, `/` ile).
+  - **iOS:** sandbox zorunlu; dosyalar uygulamanın konteynerine **kopyalanır**.
+    Kök her zaman `Documents` (bkz. `StoreLocation`/`LibraryRoot` `#if os(iOS)`).
+    `FileAttaching` iOS'ta `library.prepareForAttach` ile kopyalar. Çözümleme yine
+    `LectureFile.url(root:)` = kök + relativePath.
 - **"Konu" kayıttan üstte.** Bir konu birden çok ders saatine/güne yayılabilir;
   bunlar slaytlarını ve "çalışıldı" durumunu paylaşır. Aynı gün otomatik, farklı
   gün elle (`Lecture.topicLinkID`) gruplanır. Tüm gruplama mantığı
@@ -62,18 +77,51 @@ xcodebuild -scheme MED -destination 'platform=macOS' test
     sayfa metni, içindekiler (ünite→bölüm), figürler, Key Terms sözlüğü.
     Key Terms CGPDF içerik akışı + ToUnicode ile okunur (kalın terim / ince
     tanım ayrımı, Yunan harfleri korunur).
-  - `StoreLocation` (depo yolu, `Reference/` alt klasörü), `StoreBackup`,
-    `ArchiveExport` (JSON), `ModelContext+*`.
-- `Support/Files/` — `LibraryRoot`, `FolderScan`, `FileAttaching`, `FileHealth`,
-  dosya adlandırma.
-- `Support/Plumbing/` — `AppNavigation`, `Localization` (`L.pick`/`L.*`),
-  `Palette`/`Color+Hex`, `AboutPanel`.
-- `Views/` — ekranlar. Bölümler: `Workspace/` (çalışma alanı), `Calendar/`,
+  - `StoreLocation` (depo yolu; macOS'ta App Support/MED, iOS'ta `Documents`.
+    `Reference/` alt klasörü), `StoreBackup`, `ArchiveExport` (JSON),
+    `ContainerCleanup` (iOS: kayda bağlı olmayan öksüz dosyaları açılışta siler;
+    **boş depoda hiçbir şey silmez** — göç güvenliği), `ModelContext+*`.
+- `Support/Files/` — `LibraryRoot` (iOS: `prepareForAttach` kopyalar,
+  `organizeDroppedFiles` Finder köküne bırakılan göç dosyalarını Library'ye taşır),
+  `FolderScan`, `FileAttaching`, `FileHealth`, dosya adlandırma.
+- `Support/Plumbing/` — `AppNavigation`, `CommandPalette` (⌘K hızlı git),
+  `Localization` (`L.pick`/`L.*`), `Palette`/`Color+Hex`, `PlatformStyle`
+  (`linkButtonStyle()` — macOS `.link`, iOS `.borderless`), `AboutPanel` (macOS).
+- `Views/` — ekranlar. Bölümler: `Workspace/`, `Calendar/`,
   `Lectures/` (Konular; `LectureFilesSection` dosya ekleme + "slaytı yok" +
-  "uygulamada oku"), `Slides/` (`SlideSearchView`, `SlidePageDetail` = uygulama
-  içi PDF okuyucu + terim arama popover'ı + `PDFReaderController`), `Glossary/`,
-  `Reference/` (atlas), `Records/` (kurs/akademisyen/komite/etiket + geçmiş
-  sınavlar), `Scan/`, `Components/`, `SidebarView`, `SettingsView`, `ContentView`.
+  "uygulamada oku"), `Slides/` (`SlideSearchView`; `SlidePageDetail` = okuyucu —
+  macOS: NSView tabanlı `PDFReaderController`; **iOS: PencilKit okuyucu**
+  (`SlidePencilReader`, overlay-provider + `.pencilOnly` + Çiz/Seç modu + OCR'lı
+  terim seçimi); `TermLookupPopover` ayrı dosyada, **paylaşımlı**), `Glossary/`,
+  `Reference/` (atlas), `Records/`, `Scan/` (macOS-only), `Components/`,
+  `CommandPaletteView`, `AppSettingsSheet` (iOS ayarlar/dil), `SidebarView`,
+  `SettingsView` (macOS Settings sahnesi), `ContentView`.
+- `spike/` — Faz 0 fizibilite denemesi (ayrı iOS hedefi, xcodegen). Üretim değil.
+
+## iPad (iOS) uyarlaması
+- **Dal:** iş `ipad` dalında. Plan ve bulgular: `docs/ipad-uyarlama-plani.md`.
+- **Platform ayrımı:** AppKit'e dayanan her şey `#if os(macOS)` ile sarılı; iOS
+  karşılığı verildi (StoreBackup→UIApplication, TermCasing→UITextChecker,
+  `.buttonStyle(.link)`→`linkButtonStyle()` vb.). Settings sahnesi, About paneli,
+  "Finder'da göster", JSON/PDF dışa aktarma, klasör tarama **macOS-only**.
+- **Veri aynı:** modeller, domain, OCR (Vision), AI (FoundationModels), arama,
+  sözlük hepsi paylaşımlı — iki platformda birebir çalışır. AI yalnızca Apple
+  Intelligence destekli cihazda (opsiyonel; yoksa regex `DefinitionExtractor`).
+- **Mac'ten göç:** `Documents` dosya paylaşımına açık (Info.plist:
+  UIFileSharingEnabled + LSSupportsOpeningDocumentsInPlace). Kullanıcı Finder'dan
+  `MED.store`(+wal/shm), `Index/` (özellikle `definitions.json` = sözlüğün pahalı
+  AI işi, **terime göre** anahtarlı → taşınabilir) ve arşiv klasörlerini MED
+  köküne bırakır; `organizeDroppedFiles` arşivi Library'ye taşır. Göreli yollar
+  birebir çözülür (tüm dosyalar tek kök altında, göreli).
+- **iOS okuyucu (`SlidePencilReader`):** `PDFView` + `PDFPageOverlayViewProvider`
+  (sağlayıcı **belgeden ÖNCE** atanmalı, yoksa tetiklenmez) → sayfa-başı
+  `PKCanvasView`. `.pencilOnly`: parmak gezer/zoomlar, kalem çizer. Çizimler
+  `Documents/Ink/<göreli-yol>/<sayfa>.drawing` (tam yola göre, çakışmasız); özgün
+  PDF'e dokunulmaz. Çiz/Seç modu: Seç'te tuval kapanır, parmakla terim seçilir
+  (tek dokunuş = kelime; kutu çiz = bölge/çok-kelime), metin katmanı yoksa sayfa
+  **anında OCR'lanır**. Terim → `TermLookupPopover` (sözlük + atlas).
+- **Atlas iOS'ta:** aynı `ReferenceLibrary` indirir; ya iPad'de indir ya Mac'teki
+  `Reference/` klasörünü kopyala (yola bağlı değil, indeks de gelir).
 
 ## Önemli kurallar / tuzaklar
 - **Yerel/gizlilikçi çizgiyi koru.** Bulut servisi, harici AI çağrısı, telemetri
@@ -94,11 +142,5 @@ xcodebuild -scheme MED -destination 'platform=macOS' test
   Her yazma için ayrı ve açık onay gerekir (global kural).
 - Commit mesajları Türkçe. Commit sonuna şu satır eklenir:
   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
-- Ana/çalışma dalı: `claude/gracious-hypatia-7j2vla`.
-
-## Durum (2026-11-06)
-Son eklenenler: uygulama içi slayt okuyucu (canlı sayfa, git/zoom/thumbnail,
-eşleşme gezinme), seçili terim için slayt sözlüğü + atlas popover'ı, "slaytı yok"
-muafiyeti. Olası sonraki işler için önceliklendirilmiş fikirler konuşuldu
-(kurul hız sayacı, fonetik TR↔EN eşleşme, kısaltma/etimoloji çözücü, görüntü
-maskeleme, Cmd+K, çok durumlu çalışma takibi).
+- **Dallar:** iPad işi `ipad` dalında (güncel çalışma burada). Çalışan saf macOS
+  sürümü `claude/gracious-hypatia-7j2vla` dalında ve `mac-stable` etiketinde sabit.

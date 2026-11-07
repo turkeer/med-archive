@@ -179,11 +179,28 @@ struct PastExamsSection: View {
               let target = exams.first(where: { $0.persistentModelID == wanted })
         else { return }
 
+        #if os(iOS)
+        // iOS: .pptx dosyaları cihazda PDF'e çevrilip öyle eklenir.
+        Task { @MainActor in
+            let records = await FileAttaching.records(
+                for: result, library: library, existing: target.files, converter: examConverter
+            )
+            for file in records {
+                context.insert(file)
+                target.files.append(file)
+            }
+        }
+        #else
         for file in FileAttaching.records(for: result, library: library, existing: target.files) {
             context.insert(file)
             target.files.append(file)
         }
+        #endif
     }
+
+    #if os(iOS)
+    @State private var examConverter = PptxConverter()
+    #endif
 
     private func remove(_ file: LectureFile) {
         if let owner = file.exam {

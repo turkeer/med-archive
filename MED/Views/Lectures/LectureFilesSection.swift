@@ -29,6 +29,14 @@ struct LectureFilesSection: View {
     @State private var isImporting = false
     @State private var previewURL: URL?
 
+    #if os(iOS)
+    /// pptx → PDF dönüşümü sürerken gösterilir.
+    @State private var converting = false
+    /// Cihaz-içi pptx→PDF dönüştürücü (görünmez WKWebView). İlk kullanımda
+    /// kaynakları yükler, sonra tekrar kullanılır.
+    @State private var converter = PptxConverter()
+    #endif
+
     /// The lectures that are parts of this topic, this one included.
     private var parts: [Lecture] {
         LectureGrouping.parts(of: lecture, among: allLectures)
@@ -94,6 +102,17 @@ struct LectureFilesSection: View {
                 ))
             }
 
+            #if os(iOS)
+            if converting {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text(L.pick("pptx, PDF'e çevriliyor…", "Converting pptx to PDF…"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            #endif
+
             if library.url == nil {
                 Text(L.pick(
                         "Kök klasör seçilmedi. Ayarlar'dan (⌘,) seçersen dosyalar klasöre göre kaydedilir ve klasörü taşısan da bağlar kopmaz.",
@@ -135,10 +154,25 @@ struct LectureFilesSection: View {
         // Dedup against the whole topic, not just this record.
         let existing = parts.flatMap(\.files)
 
+        #if os(iOS)
+        // iOS: .pptx dosyaları cihazda PDF'e çevrilip öyle eklenir; bu asenkron.
+        Task { @MainActor in
+            converting = true
+            let records = await FileAttaching.records(
+                for: result, library: library, existing: existing, converter: converter
+            )
+            for file in records {
+                context.insert(file)
+                lecture.files.append(file)
+            }
+            converting = false
+        }
+        #else
         for file in FileAttaching.records(for: result, library: library, existing: existing) {
             context.insert(file)
             lecture.files.append(file)
         }
+        #endif
     }
 
     /// The file may belong to another part of the topic, so it is detached

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; padding: 0; background: #fff; }
+  #c { padding: 8px; }
+  /* slaytlar arası biraz boşluk, PDF yakalamada karışmasın */
+  #c .slide-wrapper, #c .pptxPreview > * { margin: 0 auto 14px; }
+</style>
+</head>
+<body>
+<div id="c"></div>
+<script src="pptx-preview.browser.js"></script>
+<script>
+  function post(type, extra) {
+    try { window.webkit.messageHandlers.spike.postMessage(Object.assign({ type: type }, extra || {})); }
+    catch (e) {}
+  }
+
+  // Uyarlanabilir slayt seçimi: birkaç olası seçiciden ilk çokluyu kullan.
+  function slideEls() {
+    var sels = [".slide-wrapper", ".pptxPreview .slide", ".pptxPreview > div", "#c > * > *"];
+    for (var i = 0; i < sels.length; i++) {
+      var els = document.querySelectorAll(sels[i]);
+      if (els.length >= 1) return { sel: sels[i], els: Array.prototype.slice.call(els) };
+    }
+    return { sel: "(yok)", els: [] };
+  }
+
+  // PDF için: her slaytın belge koordinatındaki çerçevesi (CSS px).
+  window.__spikeSlides = function () {
+    var found = slideEls().els;
+    return found.map(function (el) {
+      var r = el.getBoundingClientRect();
+      return {
+        x: r.left + window.scrollX,
+        y: r.top + window.scrollY,
+        w: r.width,
+        h: r.height
+      };
+    });
+  };
+
+  window.renderBase64 = async function (b64, w) {
+    try {
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      post("status", { text: "render başlıyor (" + Math.round(bytes.length / 1024) + " KB)" });
+
+      var c = document.getElementById("c");
+      c.innerHTML = "";
+      if (!window.pptxPreviewer || !window.pptxPreviewer.init) {
+        post("status", { text: "pptxPreviewer yüklenmedi!" });
+        return false;
+      }
+      var p = window.pptxPreviewer.init(c, { width: (w || 960) - 16 });
+      await p.preview(bytes.buffer);
+
+      // render tamamlandıktan sonra ölç
+      await new Promise(function (res) { setTimeout(res, 300); });
+      var info = slideEls();
+      post("rendered", { slides: info.els.length, sel: info.sel });
+      return true;
+    } catch (e) {
+      post("status", { text: "render hata: " + (e && e.message || e) });
+      // Swift tarafı 'rendered' bekliyor; hata olsa da bildir ki asılı kalmasın.
+      post("rendered", { slides: 0, sel: "(hata)" });
+      return false;
+    }
+  };
+</script>
+</body>
+</html>
