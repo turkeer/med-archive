@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MED iPad okuyucu — mockup</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --surface-0:#EFEEE9; --surface-1:#F7F6F2; --surface-2:#FFFFFF;
+    --border:rgba(0,0,0,.12); --border-strong:rgba(0,0,0,.22); --border-accent:#378ADD;
+    --text-primary:#1f1f1c; --text-secondary:#5f5e5a; --text-muted:#9b9a94;
+    --text-accent:#185FA5; --bg-accent:#E6F1FB;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --surface-0:#1c1c1e; --surface-1:#2a2a2d; --surface-2:#333336;
+      --border:rgba(255,255,255,.14); --border-strong:rgba(255,255,255,.26); --border-accent:#378ADD;
+      --text-primary:#e8e8ea; --text-secondary:#b6b6b2; --text-muted:#8a8a86;
+      --text-accent:#85B7EB; --bg-accent:#0C447C;
+    }
+  }
+  body{margin:0;background:var(--surface-0);font:14px/1.5 -apple-system,system-ui,sans-serif;color:var(--text-primary);}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+</style>
+</head>
+<body>
+<h2 class="sr-only">MED iPad slayt okuyucusu önerilen arayüz mockup'ı.</h2>
+<div style="padding:1rem 0;">
+  <div style="max-width:660px;margin:0 auto;background:var(--surface-1);border-radius:20px;padding:14px;border:0.5px solid var(--border);">
+    <div style="position:relative;height:470px;background:var(--surface-0);border-radius:12px;overflow:hidden;border:0.5px solid var(--border);">
+
+      <div style="position:absolute;top:0;left:0;bottom:0;width:96px;background:var(--surface-1);border-right:0.5px solid var(--border);padding:54px 12px 14px;display:flex;flex-direction:column;gap:14px;">
+        <div style="height:42px;border-radius:4px;background:var(--surface-2);border:0.5px solid var(--border);"></div>
+        <div style="height:42px;border-radius:4px;background:var(--surface-2);border:2px solid var(--border-accent);position:relative;">
+          <span style="position:absolute;right:4px;bottom:3px;font-size:11px;color:var(--text-accent);">12</span>
+        </div>
+        <div style="height:42px;border-radius:4px;background:var(--surface-2);border:0.5px solid var(--border);"></div>
+        <div style="height:42px;border-radius:4px;background:var(--surface-2);border:0.5px solid var(--border);"></div>
+      </div>
+
+      <div style="position:absolute;left:96px;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;">
+        <div style="width:360px;height:203px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:6px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:18px;left:24px;right:24px;height:14px;border-radius:3px;background:#E24B4A;opacity:0.85;"></div>
+          <div style="position:absolute;top:50px;left:24px;width:150px;height:8px;border-radius:2px;background:var(--border-strong);"></div>
+          <div style="position:absolute;top:50px;left:24px;width:96px;height:12px;border-radius:2px;background:#FAC775;opacity:0.55;"></div>
+          <div style="position:absolute;top:70px;left:24px;width:120px;height:8px;border-radius:2px;background:var(--border-strong);"></div>
+          <div style="position:absolute;top:90px;left:24px;width:135px;height:8px;border-radius:2px;background:var(--border-strong);"></div>
+          <div style="position:absolute;top:50px;right:20px;width:140px;height:120px;border-radius:4px;background:var(--surface-0);border:0.5px solid var(--border);"></div>
+          <svg viewBox="0 0 140 60" style="position:absolute;bottom:14px;left:22px;width:120px;height:52px;" aria-hidden="true">
+            <path d="M4 40 C 24 6, 44 54, 64 24 S 104 20, 128 36" fill="none" stroke="#378ADD" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div style="position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-chevron-left" style="font-size:19px;color:var(--text-primary);" aria-label="geri"></i>
+      </div>
+      <div style="position:absolute;top:12px;left:54px;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-layout-sidebar" style="font-size:18px;color:var(--text-primary);" aria-label="sayfalar"></i>
+      </div>
+
+      <div style="position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 7px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:999px;">
+        <i class="ti ti-chevron-up" style="font-size:16px;color:var(--text-secondary);" aria-label="önceki sayfa"></i>
+        <span style="font-size:13px;color:var(--text-primary);line-height:1;">12</span>
+        <span style="width:16px;height:1px;background:var(--border-strong);"></span>
+        <span style="font-size:13px;color:var(--text-muted);line-height:1;">55</span>
+        <i class="ti ti-chevron-down" style="font-size:16px;color:var(--text-secondary);" aria-label="sonraki sayfa"></i>
+      </div>
+
+      <div style="position:absolute;left:96px;right:0;bottom:70px;display:flex;justify-content:center;pointer-events:none;">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 16px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="width:15px;height:15px;border-radius:50%;background:#2C2C2A;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:#378ADD;outline:2px solid var(--border-accent);outline-offset:2px;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:#E24B4A;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:#639922;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:#BA7517;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:#7F77DD;"></span>
+          </div>
+          <div style="height:0.5px;background:var(--border);"></div>
+          <div style="display:flex;align-items:center;gap:14px;justify-content:center;">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--text-primary);"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--text-primary);"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:var(--text-accent);outline:2px solid var(--border-accent);outline-offset:2px;"></span>
+            <span style="width:16px;height:16px;border-radius:50%;background:var(--text-primary);"></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute;left:96px;right:0;bottom:16px;display:flex;justify-content:center;pointer-events:none;">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:999px;">
+          <span style="width:28px;height:28px;border-radius:50%;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;"><i class="ti ti-pencil" style="font-size:17px;color:#378ADD;" aria-label="kalem mavi"></i></span>
+          <i class="ti ti-pencil" style="font-size:18px;color:#E24B4A;" aria-label="kalem kırmızı"></i>
+          <i class="ti ti-pencil" style="font-size:18px;color:#639922;" aria-label="kalem yeşil"></i>
+          <span style="width:1px;height:18px;background:var(--border);margin:0 2px;"></span>
+          <i class="ti ti-highlight" style="font-size:18px;color:var(--text-secondary);" aria-label="fosforlu"></i>
+          <i class="ti ti-eraser" style="font-size:18px;color:var(--text-secondary);" aria-label="silgi"></i>
+          <i class="ti ti-lasso" style="font-size:18px;color:var(--text-secondary);" aria-label="seçim"></i>
+          <span style="width:1px;height:18px;background:var(--border);margin:0 2px;"></span>
+          <i class="ti ti-arrow-back-up" style="font-size:18px;color:var(--text-secondary);" aria-label="geri al"></i>
+          <span style="width:1px;height:18px;background:var(--border);margin:0 2px;"></span>
+          <i class="ti ti-book" style="font-size:18px;color:var(--text-secondary);" aria-label="sözlük arama modu"></i>
+          <i class="ti ti-settings" style="font-size:18px;color:var(--text-secondary);" aria-label="kalemleri düzenle"></i>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
